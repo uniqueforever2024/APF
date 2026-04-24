@@ -1,0 +1,4797 @@
+{
+  "generatedAt": "2026-04-03T16:09:23.394Z",
+  "entries": [
+    {
+      "id": "seed-fr-annonces-0",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "CLAIMS TOYOTA",
+      "url": "B2BI_archives/RECU/TOYOTACLAIMS2VIA_FR/BMAP/",
+      "backup": "FR.VIA.claimstoyota@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-1",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "DAF FRANCE",
+      "url": "B2BI_archives/RECU/DAF_FR/BMAP/",
+      "backup": "FR.VIA.DAF.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-2",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "DIVA",
+      "url": "B2BI_archives/RECU/DIVA2VIA_FR/",
+      "backup": "FR.DIVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-3",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "DIPOL",
+      "url": "B2BI_archives/RECU/DIPOL2VIA_FR/BMAP",
+      "backup": "FR.VIA.DIPOL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-4",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "DISALCO_OL",
+      "url": "B2BI_archives/RECU/DISALCOOL2VIA_FR/BMAP",
+      "backup": "FR.VIA.DISALCO_OL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-5",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "EADOCR",
+      "url": "B2BI_archives/RECU/EADOCR2VIA",
+      "backup": "LC.VIA.OCR.WAYBILLS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-6",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "EXADIS FRANCE",
+      "url": "B2BI_archives/RECU/EXADIS2VIA_FR/BMAP/",
+      "backup": "FR.VIA.EXADIS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-7",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "FORD FRANCE",
+      "url": "B2BI_archives/RECU/FORD_FR/BMAP/",
+      "backup": "FR.VIA.FORD@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-8",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "FORD UPDATE",
+      "url": "B2BI_archives/RECU/FORD_FR_UPDATE/BMAP/",
+      "backup": "FR.VIA.FORD-UPDATE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-9",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "GEOCODES",
+      "url": "B2BI_archives/RECU/GEOCODE2VIA/",
+      "backup": "LC.VIA.GEOCODES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-10",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "HPD",
+      "url": "B2BI_archives/RECU/HPD/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-11",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "IVECO FR",
+      "url": "B2BI_archives/RECU/IVECO_CNH_MQ/CNH_FR/",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-12",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "IVECO CNH MQ",
+      "url": "B2BI_archives/RECU/IVECO_CNH_MQ/BMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-13",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "IVECO CNH MAIL",
+      "url": "B2BI_archives/RECU/IVECO_CNH_MAIL/",
+      "backup": "LC.VIA.IVECOCNHi.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-14",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "JOHN DEERE",
+      "url": "B2BI_archives/VIA2/JOHNDEERE_FR/JOHNDEERE_FR_IN/BMAP/",
+      "backup": "FR.VIA.JOHN-DEERE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-15",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "KIA",
+      "url": "B2BI_archives/RECU/KIA_FR/BMAP",
+      "backup": "FR.VIA.KIA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-16",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MAN",
+      "url": "B2BI_archives/RECU/MAN_FR/MAN_FR_IN/BMAP",
+      "backup": "FR.VIA.MAN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-17",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MAZDA FRANCE",
+      "url": "B2BI_archives/RECU/MAZDA2VIA_FR/BMAP/",
+      "backup": "FR.VIA.MAZDA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-18",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MERCEDES FR OFTP",
+      "url": "B2BI_archives/RECU/MERCEDES_FR_IN/BMAP/",
+      "backup": "FR.VIA.MERCEDES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-19",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MOTEO FR",
+      "url": "B2BI_archives/RECU/MOTEO_FR_IN/BMAP/",
+      "backup": "FR.VIA.MOTEO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-20",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "REFELX MOTEO FR",
+      "url": "B2BI_archives/RECU/REFELX_MOTEO/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-21",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MOTEO FR OL RECEIPT CONFIRMATION",
+      "url": "B2BI_archives/RECU/MOTEO_FR_OL_REFLEX_RECEIPT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-22",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MOTOBYCAT_FR",
+      "url": "B2BI_archives/RECU/MOTOBYCAT2VIA_FR/BMAP/",
+      "backup": "LC.MBC.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-23",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "MOTOBYCAT2SAP",
+      "url": "B2BI_archives/RECU/MOTOBYCAT2SAP",
+      "backup": "FTP"
+    },
+    {
+      "id": "seed-fr-annonces-24",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSAN",
+      "url": "B2BI_archives/RECU/NISSAN_FR/BMAP/",
+      "backup": "FR.VIA.NISSAN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-25",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSAN CLAIMS FR",
+      "url": "B2BI_archives/RECU/NISSANCLAIMS2VIA_FR/BMAP/",
+      "backup": "FR.VIA.NISSAN.CLAIMS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-26",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSAN_TRACE",
+      "url": "B2BI_archives/RECU/NISSAN_TRACE_LC/BMAP",
+      "backup": "FR.VIA.NISSAN-TRACE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-27",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSAN_LITIGES_FR",
+      "url": "B2BI_archives/RECU/NISSAN_LITIGES/BMAP",
+      "backup": "FR.VIA.NISSAN.LITIGES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-28",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSANENEWS_FR",
+      "url": "B2BI_archives/RECU/NISSAN_ENEWS/BMAP",
+      "backup": "FR.VIA.NISSAN.ENEWS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-29",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "NISSAN_ENEWS_WS",
+      "url": "B2BI_archives/RECU/NISSAN_ENEWS_WS/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-30",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDER PCL",
+      "url": "B2BI_archives/RECU/ORDERPCL2VIA_FR/BMAP/",
+      "backup": "LC.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-31",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDER PCL BE",
+      "url": "B2BI_archives/RECU/ORDERPCL2VIA_BE/BMAP/",
+      "backup": "BE.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-32",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDERQTY BE",
+      "url": "B2BI_archives/RECU/ORDERQTY_BE/BMAP",
+      "backup": "BE.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-33",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDERQTY_FR",
+      "url": "B2BI_archives/RECU/ORDERQTY_FR/BMAP",
+      "backup": "FR.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-34",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDER UPDATE",
+      "url": "B2BI_archives/RECU/ORDER_UPDATE/BMAP/",
+      "backup": "LC.VIA.ORDER-UPDATE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-35",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "ORDERWMS-OL",
+      "url": "B2BI_archives/RECU/ORDERWMSOL_FR/BMAP/",
+      "backup": "FR.VIA.ORDERWMSOL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-36",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "PARCEL-UPDATE",
+      "url": "B2BI_archives/RECU/PARCEL_UPDATE/BMAP/",
+      "backup": "LC.VIA.PARCEL-UPDATE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-37",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "RENAULT ADR",
+      "url": "B2BI_archives/RECU/RNURADR2VIA_FR/",
+      "backup": "FR.VIA.RENAULT.ADR@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-38",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "RENAULT DLPA",
+      "url": "B2BI_archives/RECU/RNURDLPA2VIA_FR/",
+      "backup": "FR.VIA.RENAULT.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-39",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "RENAULT SHIPPEO",
+      "url": "B2BI_archives/RECU/RENAULT_SHIPPEO_FR/BMAP",
+      "backup": "FR.VIA.RENAULT-SHIPPEO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-40",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "RVI Belgique GENT",
+      "url": "B2BI_archives/RECU/RVIGENT_FR/BMAP",
+      "backup": "LC.RVIGENT.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-41",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SCANIA",
+      "url": "B2BI_archives/RECU/SCANIA_D16B/FR/BMAP/",
+      "backup": "LC.VIA.SCANIA-D16B@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-42",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SAP2VIA DEVISE",
+      "url": "B2BI_archives/RECU/SAP2VIA_DEVISE/BMAP",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-43",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SAP2VIA PREIN",
+      "url": "B2BI_archives/RECU/SAP2VIA_PREIN/BMAP",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-44",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SAP2VIA TIERS",
+      "url": "B2BI_archives/RECU/SAP2VIA_TIERS/BMAP",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-45",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SEATMO_FR",
+      "url": "B2BI_archives/RECU/SEATMO_FR/BMAP",
+      "backup": "FR.VIA.SEATMOOL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-46",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI FR",
+      "url": "B2BI_archives/RECU/SUZUKI_FR/BMAP",
+      "backup": "FR.VIA.SUZUKI-CARS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-47",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_FR_REFLEX_PRO",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_FR_REFLEX/SUZUKI_MARINE_FR_REFLEX_PRO",
+      "backup": "FR.REFLEX.SUZUKI_MARINE_PRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-48",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_APPRO_SZM_FR",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_APPRO_SZM_FR",
+      "backup": "FR.REFLEX.SUZUKI_MARINE_APPRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-49",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE Stock_Order(APPRO)",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_APPRO_SZM_FR/BMAP",
+      "backup": "FR.VIA.SUZUKI_MARINE_APPRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-50",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE Sortie_Stock(PREPA)",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_FR_PREPA_SZM_IN/BMAP",
+      "backup": "FR.VIA.SUZUKI_MARINE_PREPA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-51",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE PARCEL-UPDATE",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_PARCEL_UPDATE_SZM_FR_IN/BMAP",
+      "backup": "LC.VIA.PARCEL-UPDATE-SZM@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-52",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE ORDER-UPDATE",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_ORDER_UPDATE_SZM_IN/BMAP",
+      "backup": "LC.VIA.WMS-ORDER-UPDATE-SZM@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-53",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_APPRO_CUSTOM",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_UPDATE_CUSTOM",
+      "backup": "FR.REFLEX.SUZUKI_MARINE_APPRO_CUSTOM@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-54",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_PRO_CUSTOM_UPDATE",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_PRO_CUSTOM_UPDATE",
+      "backup": "FR.REFLEX.SUZUKI_MARINE_PRO_CUSTOM@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-55",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_RECEIPT",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_REFLEX_FR_RECEIPT/BMAP",
+      "backup": "FR.REFLEX.SUZUKI_MARINE_APPRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-56",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "SUZUKI_MARINE_REFLEX_TRANSPORT_ORDER",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_FR_REFLEX/SUZUKI_MARINE_REFLEX_TRANSPORT_ORDER",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-57",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "TOYOTA_FR",
+      "url": "B2BI_archives/RECU/TOYOTA2VIA_FR/BMAP",
+      "backup": "FR.VIA.TOYOTA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-58",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "TRACES RDVS",
+      "url": "B2BI_archives/RECU/TRACES_RVDS_LC/BMAP",
+      "backup": "LC.TRACES.RVDS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-59",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "TYE_FR_IN",
+      "url": "B2BI_archives/RECU/TYE_FR_IN/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-60",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VIA Waybills",
+      "url": "B2BI_archives/RECU/SEDON_ZIP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-61",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLKSWAGEN",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_FR/BMAP",
+      "backup": "FR.VIA.VGF.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-62",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLKSWAGEN VGF",
+      "url": "B2BI_archives/RECU/VGF_FR_IN/BMAP",
+      "backup": "FR.VOLKSWAGEN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-63",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLVO GANT",
+      "url": "B2BI_archives/RECU/VOLVOGANT_FR/",
+      "backup": "FR.VIA.VOLVO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-64",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLVOPARTS BE",
+      "url": "B2BI_archives/RECU/VOLVOPARTS_BE/AMAP/",
+      "backup": "LC.VIA.VOLVOPARTS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-65",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLVOTRUCKS",
+      "url": "B2BI_archives/RECU/VOLVOTRUCKS_FR/BMAP/",
+      "backup": "LC.VIA.VOLVOTRUCKS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-66",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLVO_CARSBE_FR",
+      "url": "B2BI_archives/RECU/VOLVO_CARSBE_FR/BMAP",
+      "backup": "FR.VVC.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-67",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "VOLVOGANTVCE2VIA_FR",
+      "url": "B2BI_archives/RECU/VOLVOVCE_FR/BMAP",
+      "backup": "FR.VIA.VOLVO.VCE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-68",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "WMS REFLEX SUPPLIER",
+      "url": "B2BI_archives/RECU/SUPPLIER_CAT_REFLUX/BMAP",
+      "backup": "LC.WMS.SUPPLIER@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-69",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "WMS REFLEX CONSIGNEE",
+      "url": "B2BI_archives/EMIS/WMS_CONSIGNEE_REFLEX/BMAP",
+      "backup": "LC.WMS.CONSIGNEE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-70",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "YAMAHA_FR",
+      "url": "B2BI_archives/RECU/YAMAHA_FR/BMAP",
+      "backup": "FR.VIA.YAMAHA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annonces-71",
+      "bu": "fr",
+      "type": "annonces",
+      "label": "YAMAHA REFLEX TRANSPORT ORDER",
+      "url": "B2BI_archives/RECU/YAMAHA_REFLEX/TRANSPORT_ORDER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-0",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Bordeaux",
+      "url": "http://bdxa.groupecat.com:8000/arch/RECU/BDXA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-1",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Cavaillon",
+      "url": "http://cava.groupecat.com:8000/arch/RECU/CAVA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-2",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Clermont",
+      "url": "http://clfa.groupecat.com:8000/arch/RECU/CLFA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-3",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Dijon",
+      "url": "http://dija.groupecat.com:8000/arch/RECU/DIJA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-4",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Douai",
+      "url": "http://doua.groupecat.com:8000/arch/RECU/DOUA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-5",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Flins",
+      "url": "http://flia.groupecat.com:8000/arch/RECU/FLIA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-6",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Irigny",
+      "url": "http://irib.groupecat.com:8000/arch/RECU/IRIB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-7",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Paris",
+      "url": "http://mita.groupecat.com:8000/arch/RECU/MITA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-8",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Nancy",
+      "url": "http://nanb.groupecat.com:8000/arch/RECU/NANB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-9",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Rennes",
+      "url": "http://rena.groupecat.com:8000/arch/RECU/RENA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-10",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Rouen",
+      "url": "http://roua.groupecat.com:8000/arch/RECU/ROUA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-11",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Tigery",
+      "url": "http://tgya.groupecat.com:8000/arch/RECU/TGYA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-12",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Toulouse",
+      "url": "http://tlsa.groupecat.com:8000/arch/RECU/TLSA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-13",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Tours",
+      "url": "http://toua.groupecat.com:8000/arch/RECU/TOUA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-14",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Tinqueux",
+      "url": "http://tqxa.groupecat.com:8000/arch/RECU/TQXA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-15",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Villeneuve",
+      "url": "http://vlna.groupecat.com:8000/arch/RECU/VLNA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-16",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Villevorde",
+      "url": "http://vlva.groupecat.com:8000/arch/RECU/VLVA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-scans-17",
+      "bu": "fr",
+      "type": "scans",
+      "label": "Postes client",
+      "url": "http://pgfr.groupecat.com:8000/arch/RECU/PGFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-annoncesCarrierIod-0",
+      "bu": "fr",
+      "type": "annoncesCarrierIod",
+      "label": "HAAK",
+      "url": "http://cof7.groupecat.com:8000/arch/RECU/HAAK/",
+      "backup": "FR.HAAK.IOD@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annoncesCarrierIod-1",
+      "bu": "fr",
+      "type": "annoncesCarrierIod",
+      "label": "HAAK PIAGGIO",
+      "url": "http://cof7.groupecat.com:8000/arch/RECU/HAAK_TNTBE/",
+      "backup": "FR.HAAK.IOD@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-annoncesCarrierIod-2",
+      "bu": "fr",
+      "type": "annoncesCarrierIod",
+      "label": "MITSUBISHI RETURNS CONSTATS",
+      "url": "http://cof7.groupecat.com:8000/arch/RECU/MITSUBRTC/",
+      "backup": "FR.MITSUBISHI.RETURNS.CONSTATS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-fr-extractions-0",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Basware VIA INVOICES(BMAP)",
+      "url": "B2BI_archives/EMIS/BASWARE_INVOICE/VIA_INVOICE/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-1",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Basware VIA INVOICES(AMAP)",
+      "url": "B2BI_archives/EMIS/BASWARE_INVOICE/VIA_INVOICE/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-2",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Basware VIA INVOICES (AMAP DB)",
+      "url": "B2BI_archives/EMIS/BASWARE_INVOICE/VIA_INVOICE/AMAP_DB",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-3",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "CARGLASS",
+      "url": "B2BI_archives/EMIS/VIA2CARGLASS_FR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-4",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "CARGLASS(AMAP)",
+      "url": "B2BI_archives/RECU/CARGLASS_FR_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-5",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "DAF_OUT",
+      "url": "B2BI_archives/EMIS/VIA2DAF_FOURKITES_OUT_FR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-6",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "DAF_OUT_BE",
+      "url": "B2BI_archives/EMIS/VIA2DAF_FOURKITES_OUT_BE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-7",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "EXADIS_FR_OUT",
+      "url": "B2BI_archives/EMIS/VIA2EXADISFR",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-8",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "FORD FR OUT(BMAP)",
+      "url": "B2BI_archives/EMIS/FORD_FR_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-9",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "FORD FR OUT(AMAP)",
+      "url": "B2BI_archives/EMIS/FORD_FR_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-10",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "FORD_FR_ROLLS_OUT",
+      "url": "B2BI_archives/EMIS/FORD_FR_ROLLS_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-11",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "HPD",
+      "url": "B2BI_archives/EMIS/HPD",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-12",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "MOTOBYCAT FR",
+      "url": "B2BI_archives/EMIS/VIA2MOTOBYCAT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-13",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "MOTEO FR OL  REFLEX RECEIPT CONFORMATION",
+      "url": "B2BI_archives/EMIS/MOTEO_FR_OL_REFLEX_RECEIPT_CONFIRMATION",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-14",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "MERCEDES FR IOD",
+      "url": "B2BI_archives/EMIS/MERCEDES_FR_IOD",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-15",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "NISSAN ENEWS OUT",
+      "url": "B2BI_archives/EMIS/VIA2NISSAN_ENEWS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-16",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "NISSAN_ENEWS_OUT_WS",
+      "url": "B2BI_archives/EMIS/NISSAN_ENEWS_OUT_WS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-17",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "RAVE_DISTRIBUTION_FR_OUT",
+      "url": "B2BI_archives/EMIS/RAVE_DISTRIBUTION_FR_OUT/SQL_EXTRACTED_FILES",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-18",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Renault Constat",
+      "url": "B2BI_archives/EMIS/RENAULT_POD_EXTRACTION/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-19",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Renault Shippeo",
+      "url": "B2BI_archives/EMIS/VIA2RENAULT_SHIPPEO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-20",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "Renault Shippeo MANUAL EVENTS",
+      "url": "B2BI_archives/EMIS/VIA2RENAULT_SHIPPEOMANEV",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-21",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "RENAULT SHIPPEO POD",
+      "url": "B2BI_archives/EMIS/VIA2RENAULT_SHIPPEO_POD/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-22",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "RENAULT BACNDU OUT",
+      "url": "B2BI_archives/EMIS/VIA2RENAULTBACNDUOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-23",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SUZUKI CARS FR OUT",
+      "url": "B2BI_archives/EMIS/VIA2SUZUKICARS_FR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-24",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SUZUKI_MARINE_RECEIPT_CONFIRMATION",
+      "url": "B2BI_archives/RECU/SUZUKI_MARINE_FR_REFLEX/SUZUKI_MARINE_FR_REFLEX_RECEIPT_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-25",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SUZUKI_MARINE_FR_REFLEX_PRO_CONFIRMATION",
+      "url": "B2BI_archives/EMIS/SUZUKI_MARINE_FR_REFLEX_PRO_CONFIRMATION",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-26",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SUZUKI_MARINE_ENTRY_CONFIRMATION",
+      "url": "B2BI_archives/EMIS/SUZUKI_MARINE_FR_ENTRY_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-27",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SUZUKI_MARINE_REPORT",
+      "url": "B2BI_archives/EMIS/SUZUKI_MARINE_REPORT_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-28",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SHIPPEO ORDERS AND TRIPS FR OUT",
+      "url": "B2BI_archives/EMIS/SHIPPEO_ORDER_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-29",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SHIPPEO ORDERS AND TRIPS WS FR OUT",
+      "url": "B2BI_archives/EMIS/SHIPPEO_ORDERS_OUT_WS/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-30",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SHIPPEO ORDERS AND TRIPS WS FR OUT REJECTION",
+      "url": "B2BI_archives/EMIS/SHIPPEO_ORDERS_OUT_WS/REJECTIONS",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-31",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SEAT ENTRY OUT",
+      "url": "B2BI_archives/EMIS/SEAT_ENTRY_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-32",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "SEAT DELIVERY OUT",
+      "url": "B2BI_archives/EMIS/SEAT_DELIVERY_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-33",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "TNtFR OUT",
+      "url": "B2BI_archives/EMIS/VIA2TNT_FR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-34",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "VOLVOTRUCKS",
+      "url": "arch/RECU/VOLVOTRUCKS_LC_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-35",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "VOLVOTRUCKS FOURKITE",
+      "url": "arch/EMIS/VIA2VOLVOTRUCKS_FOURK_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractions-36",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "WEXLOG_OUTBOUND",
+      "url": "B2BI_archives/EMIS/WEX_LOG_OUTBOUND/BMAP",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-extractions-37",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "WEXLOG_OUTBOUND_BENELLI_DISALCO",
+      "url": "B2BI_archives/EMIS/WEX_LOG_OUTBOUND_BENELLI_DISALCO/BMAP",
+      "backup": "integration.hp@groupecat.com"
+    },
+    {
+      "id": "seed-fr-extractions-38",
+      "bu": "fr",
+      "type": "extractions",
+      "label": "YAMAHA FR B2Bi",
+      "url": "B2BI_archives/EMIS/VIA2YAMAHAFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractionAnnonceCarrier-0",
+      "bu": "fr",
+      "type": "extractionAnnonceCarrier",
+      "label": "FORD",
+      "url": "http://rff7.groupecat.com:8000/arch/EMIS/FORD/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractionAnnonceCarrier-1",
+      "bu": "fr",
+      "type": "extractionAnnonceCarrier",
+      "label": "HAAK",
+      "url": "http://ww23.cat.ad.groupecat.com:8085/data/BASLC/HAAK/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractionAnnonceCarrier-2",
+      "bu": "fr",
+      "type": "extractionAnnonceCarrier",
+      "label": "MOTOBYCAT",
+      "url": "http://frbs.groupecat.com:8000/arch/RECU/MOTOBYCAT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-extractionAnnonceCarrier-3",
+      "bu": "fr",
+      "type": "extractionAnnonceCarrier",
+      "label": "Transcausse",
+      "url": "http://cof7.groupecat.com:8000/arch/EMIS/TRANSCAUSSE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-0",
+      "bu": "fr",
+      "type": "integration",
+      "label": "BERGERAT MONNOYEUR",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_BERAT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-1",
+      "bu": "fr",
+      "type": "integration",
+      "label": "BMW BIKES",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_BMWAFGFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-2",
+      "bu": "fr",
+      "type": "integration",
+      "label": "BMW PARTS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_BMWFR2/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-3",
+      "bu": "fr",
+      "type": "integration",
+      "label": "CECOP Ordres de Livraison",
+      "url": "http://gen7.groupecat.com:8000/tmp/GDS_CECOP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-4",
+      "bu": "fr",
+      "type": "integration",
+      "label": "CEVA (MAN DE)",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_CEVABE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-5",
+      "bu": "fr",
+      "type": "integration",
+      "label": "CHACON",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_CHACON/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-6",
+      "bu": "fr",
+      "type": "integration",
+      "label": "CHEVROLET",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_CHEVROLET/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-7",
+      "bu": "fr",
+      "type": "integration",
+      "label": "Claims Toyota",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TOYOTACLAIMS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-8",
+      "bu": "fr",
+      "type": "integration",
+      "label": "COLLECTAGE APPRO USINE RENAULT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_DFPVFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-9",
+      "bu": "fr",
+      "type": "integration",
+      "label": "DAF",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_DAFFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-10",
+      "bu": "fr",
+      "type": "integration",
+      "label": "DFPVE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_DFPVEINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-11",
+      "bu": "fr",
+      "type": "integration",
+      "label": "DIVA",
+      "url": "http://cof7.groupecat.com:8000/spool/CMG_INTGDIVA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-12",
+      "bu": "fr",
+      "type": "integration",
+      "label": "DUCATI",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_DUCATIFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-13",
+      "bu": "fr",
+      "type": "integration",
+      "label": "FORD FRANCE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_FORDFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-14",
+      "bu": "fr",
+      "type": "integration",
+      "label": "FUSO",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_DAIMLER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-15",
+      "bu": "fr",
+      "type": "integration",
+      "label": "GIANT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_JCLFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-16",
+      "bu": "fr",
+      "type": "integration",
+      "label": "GM OPEL",
+      "url": "http://cof7.groupecat.com:8000/spool/CMG_OPELINTG/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-17",
+      "bu": "fr",
+      "type": "integration",
+      "label": "GMF FRANCE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_GMFDSO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-18",
+      "bu": "fr",
+      "type": "integration",
+      "label": "GMF TAX",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_GMFTAX/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-19",
+      "bu": "fr",
+      "type": "integration",
+      "label": "HAAK",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_HAAK/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-20",
+      "bu": "fr",
+      "type": "integration",
+      "label": "IMP. MOBILES",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_IMPMOB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-21",
+      "bu": "fr",
+      "type": "integration",
+      "label": "INTEGRATION REFERENCES PIECES",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_INTREFPIE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-22",
+      "bu": "fr",
+      "type": "integration",
+      "label": "IVECO",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_IVECO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-23",
+      "bu": "fr",
+      "type": "integration",
+      "label": "JCLNL",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_JCLNL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-24",
+      "bu": "fr",
+      "type": "integration",
+      "label": "KAWA MOERDJIK",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_KAWAEUFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-25",
+      "bu": "fr",
+      "type": "integration",
+      "label": "KIA",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_KIALC/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-26",
+      "bu": "fr",
+      "type": "integration",
+      "label": "LM2S",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_LM2SFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-27",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MAGNETTI MARELLI",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MARELLIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-28",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MAZDA",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MAZDAINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-29",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MITSUBISHI",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MITSUB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-30",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MITSUBISHI RETURNS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MITSUBRT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-31",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MOTEURS SUZUKI",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_SUZUKIIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-32",
+      "bu": "fr",
+      "type": "integration",
+      "label": "MOTOBYCAT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MBCAT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-33",
+      "bu": "fr",
+      "type": "integration",
+      "label": "NISSAN",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_NISSAN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-34",
+      "bu": "fr",
+      "type": "integration",
+      "label": "NISSAN CLAIMS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_NISSANFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-35",
+      "bu": "fr",
+      "type": "integration",
+      "label": "NISSAN LITIGES",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_NISSANLI/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-36",
+      "bu": "fr",
+      "type": "integration",
+      "label": "NISSAN ENEWS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_NISSFRIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-37",
+      "bu": "fr",
+      "type": "integration",
+      "label": "NORAUTO Ordres de Livraison",
+      "url": "http://gen7.groupecat.com:8000/tmp/GDS_NORAUTODO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-38",
+      "bu": "fr",
+      "type": "integration",
+      "label": "PIAGGIO",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_PIAGGIO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-39",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RENAULT BELGIQUE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_RENBEL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-40",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RENAULT RETURNS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_RENRET/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-41",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RENAULT RNUR",
+      "url": "http://cof7.groupecat.com:8000/spool/CMG_RENAULT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-42",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RENAULT TWIZY",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TWIZYFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-43",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RVI BELGIQUE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_RVIBE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-44",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RVI Belgique GENT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_RVIGE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-45",
+      "bu": "fr",
+      "type": "integration",
+      "label": "RVI CAT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_RVIPRNIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-46",
+      "bu": "fr",
+      "type": "integration",
+      "label": "SCANIA",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_SCANIAIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-47",
+      "bu": "fr",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://cof7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-48",
+      "bu": "fr",
+      "type": "integration",
+      "label": "SITES-DEALERS update",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_SQLLOAD_TIERS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-49",
+      "bu": "fr",
+      "type": "integration",
+      "label": "SUZUKI MARINE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_SUZMARFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-50",
+      "bu": "fr",
+      "type": "integration",
+      "label": "TNT BE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TNTBE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-51",
+      "bu": "fr",
+      "type": "integration",
+      "label": "TNT FR",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TNTVAFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-52",
+      "bu": "fr",
+      "type": "integration",
+      "label": "TNT ITALIE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TNTIF/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-53",
+      "bu": "fr",
+      "type": "integration",
+      "label": "TOYOTA",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_TOYOTAFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-54",
+      "bu": "fr",
+      "type": "integration",
+      "label": "VDH",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_VDHFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-55",
+      "bu": "fr",
+      "type": "integration",
+      "label": "VOLVO CARS BELGIQUE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_VVCFR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-56",
+      "bu": "fr",
+      "type": "integration",
+      "label": "VOLVO GANT",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_VOLVGANT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-57",
+      "bu": "fr",
+      "type": "integration",
+      "label": "VOLVO PARTS BELGIQUE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_VOTBE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-58",
+      "bu": "fr",
+      "type": "integration",
+      "label": "VOLVO PENTA BELGIQUE",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_VOPBE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integration-59",
+      "bu": "fr",
+      "type": "integration",
+      "label": "YAMAHA",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_YAMAFRINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-0",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Bordeaux",
+      "url": "http://bdxa.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-1",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Cavaillon",
+      "url": "http://cava.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-2",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Clermont",
+      "url": "http://clfa.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-3",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Dijon",
+      "url": "http://dija.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-4",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Douai",
+      "url": "http://doua.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-5",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Flins",
+      "url": "http://flia.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-6",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Irigny",
+      "url": "http://irib.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-7",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Paris",
+      "url": "http://mita.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-8",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Nancy",
+      "url": "http://nanb.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-9",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Rennes",
+      "url": "http://rena.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-10",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Rouen",
+      "url": "http://roua.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-11",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Tygery",
+      "url": "http://tgya.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-12",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Toulouse",
+      "url": "http://tlsa.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-13",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Tours",
+      "url": "http://toua.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-14",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Tinqueux",
+      "url": "http://tqxa.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-15",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Vatry",
+      "url": "http://vata.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-16",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Villeneuve",
+      "url": "http://vlna.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-17",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Villevorde",
+      "url": "http://vlva.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-collas-18",
+      "bu": "fr",
+      "type": "collas",
+      "label": "Poste client",
+      "url": "http://acbf.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-integrationIodCarrier-0",
+      "bu": "fr",
+      "type": "integrationIodCarrier",
+      "label": "MITSUBISHI RETURNS CONSTATS",
+      "url": "http://cof7.groupecat.com:8000/tmp/CMG_MITSUBRTC/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-0",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Bordeaux",
+      "url": "http://bdxa.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-1",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Cavaillon",
+      "url": "http://cava.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-2",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Clermont",
+      "url": "http://clfa.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-3",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Dijon",
+      "url": "http://dija.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-4",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Douai",
+      "url": "http://doua.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-5",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Flins",
+      "url": "http://flia.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-6",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Irigny",
+      "url": "http://irib.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-7",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Paris",
+      "url": "http://mita.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-8",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Nancy",
+      "url": "http://nanb.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-9",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Rennes",
+      "url": "http://rena.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-10",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Rouen",
+      "url": "http://roua.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-11",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Tygery",
+      "url": "http://tgya.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-12",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Toulouse",
+      "url": "http://tlsa.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-13",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Tours",
+      "url": "http://toua.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-14",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Tinqueux",
+      "url": "http://tqxa.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-15",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Vatry",
+      "url": "http://vata.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-16",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Villeneuve",
+      "url": "http://vlna.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-17",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Villevorde",
+      "url": "http://vlva.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-impression-18",
+      "bu": "fr",
+      "type": "impression",
+      "label": "Docs. MotoByCAT",
+      "url": "http://wbfr.groupecat.com:8000/bibwork/MBC/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-saisie1SAP2MGlots-0",
+      "bu": "fr",
+      "type": "saisie1SAP2MGlots",
+      "label": "FR10",
+      "url": "http://rff7.groupecat.com:8000/arch/RECU/SAISIE1MGLOT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-saisie2MGlots2SAP-0",
+      "bu": "fr",
+      "type": "saisie2MGlots2SAP",
+      "label": "FR10",
+      "url": "http://rff7.groupecat.com:8000/arch/RECU/SAISIE2MGLOT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-crIntgSaisie1SAP2MGlots-0",
+      "bu": "fr",
+      "type": "crIntgSaisie1SAP2MGlots",
+      "label": "FR10",
+      "url": "http://rff7.groupecat.com:8000/chaine/CMG_SAISIE1MGLOT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-fr-crIntgSaisie2MGlots2SAP-0",
+      "bu": "fr",
+      "type": "crIntgSaisie2MGlots2SAP",
+      "label": "FR10",
+      "url": "http://rff7.groupecat.com:8000/chaine/CMG_SAISIE2MGLOT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-annonces-0",
+      "bu": "it",
+      "type": "annonces",
+      "label": "CEVA - CATTAD",
+      "url": "http://frbs.groupecat.com:8000/arch/RECU/TAD/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-annonces-1",
+      "bu": "it",
+      "type": "annonces",
+      "label": "KAWASAKI",
+      "url": "http://coi7.groupecat.com:8000/arch/RECU/KAWAKN/",
+      "backup": "LC.KN.SHIPMENT-ORDERS.KAWASAKI@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-it-annonces-2",
+      "bu": "it",
+      "type": "annonces",
+      "label": "RENAULT Italie",
+      "url": "http://coi7.groupecat.com:8000/arch/RECU/RENAULTIS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-annonces-3",
+      "bu": "it",
+      "type": "annonces",
+      "label": "SITES - Client startup",
+      "url": "http://frbs.groupecat.com:8000/arch/EMIS/ITREFTIER/",
+      "backup": "IT.REFERENTIEL.TIERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-it-scans-0",
+      "bu": "it",
+      "type": "scans",
+      "label": "San colombano",
+      "url": "http://sizb.groupecat.com:8000/arch/RECU/SIZB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-0",
+      "bu": "it",
+      "type": "extractions",
+      "label": "CEVA CATTAD",
+      "url": "http://sizb.groupecat.com:8000/arch/EMIS/coi7/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-1",
+      "bu": "it",
+      "type": "extractions",
+      "label": "Galliker",
+      "url": "http://coi7.groupecat.com:8000/arch/EMIS/GALLIKER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-2",
+      "bu": "it",
+      "type": "extractions",
+      "label": "OTE",
+      "url": "http://coi7.groupecat.com:8000/arch/EMIS/OTE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-3",
+      "bu": "it",
+      "type": "extractions",
+      "label": "Qualinight",
+      "url": "http://coi7.groupecat.com:8000/arch/EMIS/QUALINIGHT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-4",
+      "bu": "it",
+      "type": "extractions",
+      "label": "SAIMA",
+      "url": "http://coi7.groupecat.com:8000/arch/EMIS/SAIMA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-0",
+      "bu": "it",
+      "type": "integration",
+      "label": "CEVA - CATTAD",
+      "url": "http://coi7.groupecat.com:8000/tmp/CMG_CATTADIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-1",
+      "bu": "it",
+      "type": "integration",
+      "label": "KAWASAKI K&N",
+      "url": "http://coi7.groupecat.com:8000/tmp/CMG_KAWAEUIT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-2",
+      "bu": "it",
+      "type": "integration",
+      "label": "QUALINIGHT",
+      "url": "http://coi7.groupecat.com:8000/bibwork/CMG_INTQUAL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-3",
+      "bu": "it",
+      "type": "integration",
+      "label": "RENAULT IT",
+      "url": "http://coi7.groupecat.com:8000/spool/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-4",
+      "bu": "it",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://coi7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-collas-0",
+      "bu": "it",
+      "type": "collas",
+      "label": "San colombano",
+      "url": "http://sizb.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-impression-0",
+      "bu": "it",
+      "type": "impression",
+      "label": "San colombano",
+      "url": "http://sizb.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-0",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "WMS AADC PRO",
+      "url": "arch/RECU/AADC_PRO",
+      "backup": "PL.WMS.AADC.PRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-1",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "WMS AADC RECEIPT",
+      "url": "arch/RECU/AADC_REFLEX_RECEIPT",
+      "backup": "PL.WMS.AADC.RECEIPT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-2",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "AGCO",
+      "url": "arch/RECU/AGCO_PL/BMAP/",
+      "backup": "PL.VIA.AGCO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-3",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "BAIC TRANSPORT ORDER",
+      "url": "B2BI_archives/RECU/BAIC_REFLEX_TRANSPORT_ORDER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-4",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "BOSCH_PL",
+      "url": "B2BI_archives/RECU/BOSCH_PL/BMAP",
+      "backup": "PL.VIA.RBOSCH.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-5",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "BRIDGESTONE_PL",
+      "url": "B2BI_archives/RECU/BRIDGESTONE_PL/BMAP/",
+      "backup": "LC.BRIDGESTONE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-6",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "CEVA (MAN DE)",
+      "url": "http://frbs.groupecat.com:8000/arch/EMIS/CEVAPL/",
+      "backup": "LC.CEVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-7",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "CLAAS",
+      "url": "B2BI_archives/RECU/CLAAS2VIA_PL/BMAP/",
+      "backup": "PL.VIA.CLAAS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-8",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "EXXON",
+      "url": "B2BI_archives/RECU/EXXON2VIA_PL/BMAP/",
+      "backup": "PL.VIA.EXXON.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-9",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "FORD PL",
+      "url": "B2BI_archives/RECU/FORD_PL/BMAP/",
+      "backup": "PL.VIA.FORD.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-10",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "FUCHS PL",
+      "url": "B2BI_archives/RECU/FUCHS_PL/BMAP/",
+      "backup": "PL.VIA.FUCHS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-11",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HONDA",
+      "url": "B2BI_archives/RECU/HONDA_PL/BMAP/",
+      "backup": "PL.VIA.HONDA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-12",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HONDA BIKES",
+      "url": "B2BI_archives/RECU/HONDA_BIKES_ES_IN/BMAP",
+      "backup": "PL.VIA.HONDA.SHIPMENT-ORDERS.BIKES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-13",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX MATERIAL_ISSUE_NOTES",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/MATERIAL_ISSUE_NOTES",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-14",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX DELIVERY_NOTE",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/DELIVERY_NOTE",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-15",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX CHECKLIST",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/Check_List/RECEIPT",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-16",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX DISPATCH_SCRAPPING",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/Dispatch/Scrapping",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-17",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX DISPATCH_ORDER",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/Dispatch/Order",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-18",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "HYUNDAI REFLEX TRANSPORT_ORDER",
+      "url": "B2BI_archives/RECU/HYUNDAI_REFELX/TRANSPORT_ORDERS",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-19",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "ISUZU_PL",
+      "url": "B2BI_archives/RECU/ISUZU_PL/",
+      "backup": "PL.VIA.ISUZU.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-20",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "IVECO",
+      "url": "B2BI_archives/RECU/IVECO_PL/BMAP",
+      "backup": "PL.VIA.IVECO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-21",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "IVECO_CNHi_OUT",
+      "url": "B2BI_archives/EMIS/VIA2IVECO_CNHi",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-22",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "IODPARTNER_PL",
+      "url": "B2BI_archives/RECU/IODPARTNERS_PL/BMAP/",
+      "backup": "PL.VIA.IODPARTNERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-23",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "KRAMP",
+      "url": "B2BI_archives/RECU/KRAMP_PL/",
+      "backup": "PL.VIA.KRAMP.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-24",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "KUHN_PL",
+      "url": "B2BI_archives/RECU/KUHN_PL/BMAP",
+      "backup": "PL.VIA.KUHN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-25",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "LINDE",
+      "url": "B2BI_archives/RECU/LINDE2VIA_PL/BMAP/",
+      "backup": "PL.VIA.LINDE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-26",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MANDE",
+      "url": "B2BI_archives/RECU/MANDE2VIA_PL/BMAP/",
+      "backup": "PL.VIA.MANDE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-27",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MATEUS PL",
+      "url": "B2BI_archives/RECU/MATEUS_PL/BMAP/",
+      "backup": "PL.VIA.MATEUS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-28",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MAZDA",
+      "url": "B2BI_archives/RECU/MAZDA_PL/BMAP",
+      "backup": "PL.VIA.MAZDA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-29",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MITSUBISHI PL",
+      "url": "B2BI_archives/RECU/MITSUBISHI2VIA_PL/BMAP/",
+      "backup": "LC.VIA.MITSUBISHI.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-30",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "ORDERPCL PL",
+      "url": "B2BI_archives/RECU/ORDERPCL_PL/BMAP/",
+      "backup": "PL.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-31",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MITSUBISHI PL",
+      "url": "B2BI_archives/RECU/MITSUBISHI2VIA_PL/BMAP/",
+      "backup": "LC.VIA.MITSUBISHI.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-32",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "MOBIS_LT",
+      "url": "B2BI_archives/RECU/MOBIS/BMAP",
+      "backup": "PL.VIA.MOBIS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-33",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "NORDGLASS_PL",
+      "url": "B2BI_archives/RECU/NORDGLASS_PL/BMAP",
+      "backup": "PL.VIA.NORDGLASS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-34",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "ORDERQTY PL",
+      "url": "B2BI_archives/RECU/ORDERQTY2VIA_PL",
+      "backup": "PL.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-35",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SCANIA",
+      "url": "B2BI_archives/RECU/SCANIA_D16B/PL/BMAP/",
+      "backup": "LC.VIA.SCANIA-D16B@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-36",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SOLARIS_PL",
+      "url": "B2BI_archives/RECU/SOLARIS_PL/BMAP",
+      "backup": "PL.VIA.SOLARIS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-37",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SPIDERUPDATE2VIA_PL",
+      "url": "B2BI_archives/RECU/SPIDER_UPDATE/BMAP",
+      "backup": "PL.VIA.SPIDER.UPDATE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-38",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "STALGAST2",
+      "url": "B2BI_archives/RECU/STALGAST2VIA_PL/BMAP",
+      "backup": "PL.VIA.STALGAST.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-39",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "STIHL B2Bi",
+      "url": "B2BI_archives/RECU/STIHL2VIA_PL/BMAP",
+      "backup": "PL.VIA.STIHL.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-40",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "STILL PL",
+      "url": "B2BI_archives/RECU/STILL_PL/BMAP",
+      "backup": "PL.VIA.STILL.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-41",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "STELLANTIS_PL_IN",
+      "url": "B2BI_archives/RECU/STELLANTIS_PL_IN/BMAP",
+      "backup": "PL.VIA.STELLANTIS.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-42",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SUZUKI BIKES",
+      "url": "http://frbs.groupecat.com:8000/arch/RECU/SUZUKIPL/",
+      "backup": "PL.SUZUKI.ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-43",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SUZUKI CARS (SUZIE)",
+      "url": "http://cop7.groupecat.com:8000/arch/RECU/SUZIEPL/",
+      "backup": "PL.SUZIE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-44",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "SUZIE_PL",
+      "url": "B2BI_archives/RECU/SUZIE2VIA_PL/BMAP",
+      "backup": "PL.VIA.SUZIE.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-45",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "TIP_PL",
+      "url": "B2BI_archives/RECU/TIP_PL/BMAP",
+      "backup": "PL.VIA.TIP.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-46",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "TVH PL",
+      "url": "B2BI_archives/RECU/TVH_PL/BMAP",
+      "backup": "PL.VIA.TVH.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-47",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "TOYOTA PL",
+      "url": "B2BI_archives/RECU/TOYOTA_PL/BMAP",
+      "backup": "PL.VIA.TOYOTA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-48",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "VCC IN",
+      "url": "B2BI_archives/RECU/VCC_PL_IN",
+      "backup": "PL.VIA.VCC-INBOUND@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-49",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "VOLKSWAGEN",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_PL/BMAP/",
+      "backup": "PL.VIA.VGP.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-50",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "VOLKSWAGEN ADR",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_PL_ADR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-51",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "VOLVO_PL",
+      "url": "B2BI_archives/RECU/VOLVO_PL/BMAP",
+      "backup": "PL.VIA.VOLVO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-52",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "WMS REFLEX SUPPLIER API",
+      "url": "B2BI_archives/RECU/WMS_REFLEX_SUPPLIER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-53",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "WMS REFLEX CONSIGNEE API",
+      "url": "B2BI_archives/EMIS/WMS_REFLEX_CONSIGNEE/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-54",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "WMS_REFLEX_ITEMS API",
+      "url": "B2BI_archives/RECU/WMS_ITEMS",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-annonces-55",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "YAMAHA_BIKES",
+      "url": "B2BI_archives/RECU/YAMAHABIKES2VIA_PL/BMAP",
+      "backup": "PL.VIA.YAMAHA.SHIPMENT-ORDERS.BIKES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-annonces-56",
+      "bu": "pl",
+      "type": "annonces",
+      "label": "YAMAHA_PARTS2",
+      "url": "B2BI_archives/RECU/YAMAHAPARTS_PL/BMAP",
+      "backup": "PL.VIA.YAMAHA2.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-pl-scans-0",
+      "bu": "pl",
+      "type": "scans",
+      "label": "Bydgoszcz",
+      "url": "http://byda.groupecat.com:8000/arch/RECU/BYDA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-scans-1",
+      "bu": "pl",
+      "type": "scans",
+      "label": "Dabrowa",
+      "url": "http://daba.groupecat.com:8000/arch/RECU/DABA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-scans-2",
+      "bu": "pl",
+      "type": "scans",
+      "label": "Srem",
+      "url": "http://srea.groupecat.com:8000/arch/RECU/SREA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-scans-3",
+      "bu": "pl",
+      "type": "scans",
+      "label": "Warszawa",
+      "url": "http://vara.groupecat.com:8000/arch/RECU/VARA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-scans-4",
+      "bu": "pl",
+      "type": "scans",
+      "label": "GPRS",
+      "url": "http://frbs.groupecat.com:8000/arch/RECU/LASGPRSP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-scans-5",
+      "bu": "pl",
+      "type": "scans",
+      "label": "Poste client",
+      "url": "http://acbp.groupecat.com:8000/arch/RECU/ACBP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-0",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "AGCO PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2AGCO_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-1",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BOSCH PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2BOSCHPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-2",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BOSCH CLT OUT",
+      "url": "B2BI_archives/EMIS/VIA2RBOSCHCLT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-3",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BAIC_PL_REFLEX_PRO_CONFIRMATION",
+      "url": "B2BI_archives/RECU/BAIC_PL_REFLEX/PRO_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-4",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BAIC_PL_REFLEX_PRO_CONFIRMATION_WS",
+      "url": "B2BI_archives/EMIS/BAIC_PL/PRO_CONFIRMATION",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-5",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BAIC_PL_REFLEX_RECEIPT_CONFIRMATION",
+      "url": "B2BI_archives/RECU/BAIC_PL_REFLEX/RECEIPT_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-6",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "BAIC_PL_REFLEX_RECEIPT_CONFIRMATION_WS",
+      "url": "B2BI_archives/EMIS/BAIC_PL/RECEIPT_CONFIRMATION",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-7",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "CNHi project P44 i",
+      "url": "arch/EMIS/VIA2IVECO_CNHi/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-8",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "HONDABIKES PL OUT",
+      "url": "B2BI_archives/EMIS/HONDA_BIKES_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-9",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "HYUNDAI REFLEX Material Issue WS Return Note",
+      "url": "B2BI_archives/EMIS/HYUNDAI_REFLEX_MATERIAL_ISSUE/RESPONSE",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-10",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "HYUNDAI REFLEX DELIVERY_NOTE WS Return Note",
+      "url": "B2BI_archives/EMIS/HYUNDAI_REFLEX_DELIVERY_NOTE/RESPONSE",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-11",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "HYUNDAI REFLEX STOCK RETURN",
+      "url": "B2BI_archives/RECU/REFLEX_STOCK_RETURN/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-12",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "IVECOCNHi",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2IVECOCNHi",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-13",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "IVECOCNHi OUT",
+      "url": "B2BI_archives/EMIS/VIA2IVECO_CNHi/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-14",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "KRAMP PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2KRAMP_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-15",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "KTPOL OUT Extraction VIA",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2VOLKSWAGENKTPOL_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-16",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "MAN OUT",
+      "url": "B2BI_archives/EMIS/MAN_PL_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-17",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "MAZDA LC OUT",
+      "url": "B2BI_archives/EMIS/VIA2MAZDA_LC/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-18",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "MAZDA_IOD_OUT_B2Bi",
+      "url": "B2BI_archives/EMIS/MAZDA_PL_IOD/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-19",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "MAZDA_IOD_OUT_WS_RESPONSE",
+      "url": "B2BI_archives/EMIS/API_MAZDA_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-20",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "MAZDA_PL_OUT",
+      "url": "B2BI_archives/EMIS/MAZDA_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-21",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "PEPCO LT",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2PEPCO_LT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-22",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "PEPCO LT OUT",
+      "url": "B2BI_archives/RECU/PEPCO_LT_PL/AMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-23",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "SCANIA_P44",
+      "url": "B2BI_archives/EMIS/SCANIAPL_P44_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-24",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "SCANIA_P44 WS RETURN",
+      "url": "B2BI_archives/EMIS/API_SCANIA_P44_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-25",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "SOLARIS PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2SOLARIS_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-26",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "STILL PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2STILL_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-27",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "STIHL PL OUT",
+      "url": "B2BI_archives/EMIS/STIHL_PL_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-28",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "SUZUKI CARS PL",
+      "url": "B2BI_archives/EMIS/VIA2SUZUKICARS_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-29",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "STELLANTIS PL OUT",
+      "url": "B2BI_archives/EMIS/STELLANTIS_PL_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-30",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "TNTPL OUT",
+      "url": "B2BI_archives/EMIS/VIA2TNTPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-31",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "TNTPL OUT",
+      "url": "B2BI_archives/EMIS/VIA2TNTPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-32",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "TVH PL",
+      "url": "B2BI_archives/EMIS/VIA2TVH_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-33",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "VOLKSWAGEN_KTPOL_OUT",
+      "url": "B2BI_archives/EMIS/VIA2VOLKSWAGEN_KTPOL_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-34",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "YAMAHA PL OUT",
+      "url": "B2BI_archives/EMIS/VIA2YAMAHA_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-extractions-35",
+      "bu": "pl",
+      "type": "extractions",
+      "label": "TNT_PL",
+      "url": "B2BI_archives/EMIS/TNT_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-refclients-0",
+      "bu": "pl",
+      "type": "refclients",
+      "label": "MAN routing",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/MANROUT_PL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-refclients-1",
+      "bu": "pl",
+      "type": "refclients",
+      "label": "VALEO",
+      "url": "http://cop7.groupecat.com:8000/arch/EMIS/VALEO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-refclients-2",
+      "bu": "pl",
+      "type": "refclients",
+      "label": "YAMAHA",
+      "url": "http://cop7.groupecat.com:8000/arch/EMIS/YAMAHATIERS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-0",
+      "bu": "pl",
+      "type": "integration",
+      "label": "ALCOPA",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_ALCOPA/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-1",
+      "bu": "pl",
+      "type": "integration",
+      "label": "CEVA",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_CEVAPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-2",
+      "bu": "pl",
+      "type": "integration",
+      "label": "CLAAS",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_CLAASPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-3",
+      "bu": "pl",
+      "type": "integration",
+      "label": "GM Poland",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_GMPOL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-4",
+      "bu": "pl",
+      "type": "integration",
+      "label": "HAKO",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_HAKO/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-5",
+      "bu": "pl",
+      "type": "integration",
+      "label": "HONDA",
+      "url": "http://cop7.groupecat.com:8000/spool/CMG_HONDAB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-6",
+      "bu": "pl",
+      "type": "integration",
+      "label": "HONDA BIKES",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_HONDBKPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-7",
+      "bu": "pl",
+      "type": "integration",
+      "label": "INNIGHT - BOSCH",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_BOSHPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-8",
+      "bu": "pl",
+      "type": "integration",
+      "label": "INNIGHT - SUZUKI",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_INIGHTPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-9",
+      "bu": "pl",
+      "type": "integration",
+      "label": "JUNGHEINRICH",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_JUNGHPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-10",
+      "bu": "pl",
+      "type": "integration",
+      "label": "KIADE",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_KIADEPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-11",
+      "bu": "pl",
+      "type": "integration",
+      "label": "MANDA",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_MANPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-12",
+      "bu": "pl",
+      "type": "integration",
+      "label": "MANDE",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_MANPROPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-13",
+      "bu": "pl",
+      "type": "integration",
+      "label": "MAGNETTI MARELLI",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_MAGNETTI/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-14",
+      "bu": "pl",
+      "type": "integration",
+      "label": "MAZDA POLOGNE",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_MAZDAPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-15",
+      "bu": "pl",
+      "type": "integration",
+      "label": "MITSUBISHI",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_MITSUB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-16",
+      "bu": "pl",
+      "type": "integration",
+      "label": "RVI France",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_RVIFRPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-17",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SCANIA",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_SCANIAPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-18",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SCANIA (BELGIUM)",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_SCANIAPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-19",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://cop7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-20",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SITES-DEALERS update",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_SQLLOAD_TIERS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-21",
+      "bu": "pl",
+      "type": "integration",
+      "label": "TNTPL (FIAT)",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_TNTPLINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-22",
+      "bu": "pl",
+      "type": "integration",
+      "label": "STALGAST",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_STLPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-23",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SUZUKI BIKES",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_SUZUKINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-24",
+      "bu": "pl",
+      "type": "integration",
+      "label": "SUZUKI CARS (SUZIE)",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_SUZIEPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-25",
+      "bu": "pl",
+      "type": "integration",
+      "label": "TOYOTA",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_TOYPLINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-26",
+      "bu": "pl",
+      "type": "integration",
+      "label": "VALEO",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_VALEPLIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-27",
+      "bu": "pl",
+      "type": "integration",
+      "label": "VOLKSWAGEN",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_KTPOLVW/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-28",
+      "bu": "pl",
+      "type": "integration",
+      "label": "VOLVO CARS",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_VCCAUPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-29",
+      "bu": "pl",
+      "type": "integration",
+      "label": "VOLVO - VOLBE",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_VOLVPLIN/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-30",
+      "bu": "pl",
+      "type": "integration",
+      "label": "VOLVO - VOLPL",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_VOLVOPL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-31",
+      "bu": "pl",
+      "type": "integration",
+      "label": "WCAT",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_WCAT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-32",
+      "bu": "pl",
+      "type": "integration",
+      "label": "YAMAHA BIKES",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_YAMAHAPLBIKES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-integration-33",
+      "bu": "pl",
+      "type": "integration",
+      "label": "YAMAHA PARTS",
+      "url": "http://cop7.groupecat.com:8000/tmp/CMG_YAMAHAPLPARTS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-0",
+      "bu": "pl",
+      "type": "collas",
+      "label": "Bydgoszcz",
+      "url": "http://byda.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-1",
+      "bu": "pl",
+      "type": "collas",
+      "label": "Dabrowa",
+      "url": "http://daba.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-2",
+      "bu": "pl",
+      "type": "collas",
+      "label": "Srem",
+      "url": "http://srea.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-3",
+      "bu": "pl",
+      "type": "collas",
+      "label": "Warszawa",
+      "url": "http://vara.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-4",
+      "bu": "pl",
+      "type": "collas",
+      "label": "GPRS",
+      "url": "http://MGPL.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-collas-5",
+      "bu": "pl",
+      "type": "collas",
+      "label": "Poste client",
+      "url": "http://acbp.groupecat.com:8000/bibwork/integrmg/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-impression-0",
+      "bu": "pl",
+      "type": "impression",
+      "label": "Bydgoszcz",
+      "url": "http://byda.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-impression-1",
+      "bu": "pl",
+      "type": "impression",
+      "label": "Dabrowa",
+      "url": "http://daba.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-impression-2",
+      "bu": "pl",
+      "type": "impression",
+      "label": "Srem",
+      "url": "http://srea.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-impression-3",
+      "bu": "pl",
+      "type": "impression",
+      "label": "Warszawa",
+      "url": "http://vara.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-pl-impression-4",
+      "bu": "pl",
+      "type": "impression",
+      "label": "Poste client",
+      "url": "http://acbp.groupecat.com:8000/bibwork/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ua-annonces-0",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "MICHELIN UA",
+      "url": "B2BI_archives/RECU/MICHELIN_UA/BMAP",
+      "backup": "UA.VIA.MICHELIN@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-1",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "NISSAN UA",
+      "url": "B2BI_archives/RECU/NISSAN_UA/BMAP",
+      "backup": "UA.VIA.NISSAN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-2",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "ORDERQTY_UA",
+      "url": "B2BI_archives/RECU/ORDERQTY_UA/BMAP",
+      "backup": "UA.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-3",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "ORDERQTY UA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ORDERQTY2VIA_UA/",
+      "backup": "UA.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-4",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "ORDERPCL UA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ORDERPCL2VIA_UA/",
+      "backup": "UA.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-5",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "ORDERPCL UA",
+      "url": "B2BI_archives/RECU/ORDERPCL_UA/BMAP",
+      "backup": "UA.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-6",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "ORDERGNPCL UA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ORDERGNPCL2VIA_UA/",
+      "backup": "UA.VIA.ORDERGNPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-annonces-7",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "UKRAINE PDF",
+      "url": "B2BI_archives/EMIS/UKRAINE_PDF",
+      "backup": ""
+    },
+    {
+      "id": "seed-ua-annonces-8",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "UKRAINE PDF RESPONSE",
+      "url": "B2BI_archives/EMIS/LCUKRAINEPDF_WS",
+      "backup": ""
+    },
+    {
+      "id": "seed-ua-annonces-9",
+      "bu": "ua",
+      "type": "annonces",
+      "label": "SITES - Client startup",
+      "url": "http://frbs.groupecat.com:8000/arch/EMIS/UAREFTIER/",
+      "backup": "UA.REFERENTIEL.TIERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ua-integration-0",
+      "bu": "ua",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://cou7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-annonces-0",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "MAZDA",
+      "url": "B2BI_archives/RECU/MAZDA_HR/MAZDA_HR_IN/BMAP/",
+      "backup": "HR.VIA.MAZDAHR.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-1",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "MICHELIN",
+      "url": "B2BI_archives/RECU/MICHELIN2VIA_HR",
+      "backup": "PL.VIA.MICHELIN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-2",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "ORDER PCL",
+      "url": "B2BI_archives/RECU/ORDERPCL2VIA_HR/BMAP/",
+      "backup": "HR.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-3",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "ORDERQTY_HR",
+      "url": "B2BI_archives/RECU/ORDERQTY_HR/BMAP",
+      "backup": "HR.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-4",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "SUZUKI HR",
+      "url": "B2BI_archives/RECU/SUZUKI2VIA_HR/BMAP",
+      "backup": "PL.VIA.SUZHR.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-5",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "VALEO_HR",
+      "url": "B2BI_archives/RECU/VALEO_HR/BMAP",
+      "backup": "HR.VIA.VALEO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-6",
+      "bu": "hr",
+      "type": "annonces",
+      "label": "ZUST_HR",
+      "url": "B2BI_archives/RECU/ZUST_HR/BMAP",
+      "backup": "PL.VIA.ZUST.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-extractions-0",
+      "bu": "hr",
+      "type": "extractions",
+      "label": "MICHELIN HR (XML)",
+      "url": "B2BI_archives/RECU/MICHELIN_HR_OUT/AMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-extractions-1",
+      "bu": "hr",
+      "type": "extractions",
+      "label": "SUZUKI HR OUT",
+      "url": "B2BI_archives/EMIS/VIA2SUZUKI_HR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-integration-0",
+      "bu": "hr",
+      "type": "integration",
+      "label": "Renault - RENHR",
+      "url": "http://coh7.groupecat.com:8000/tmp/CMG_RENHR/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-integration-1",
+      "bu": "hr",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://coh7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-impression-0",
+      "bu": "hr",
+      "type": "impression",
+      "label": "poirieda",
+      "url": "http://lmh7.groupecat.com:8000/bibwork/poirieda/",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-impression-1",
+      "bu": "hr",
+      "type": "impression",
+      "label": "wyszynra",
+      "url": "http://lmh7.groupecat.com:8000/bibwork/wyszynra/",
+      "backup": ""
+    },
+    {
+      "id": "seed-si-annonces-0",
+      "bu": "si",
+      "type": "annonces",
+      "label": "SITES - Client startup",
+      "url": "http://frbs.groupecat.com:8000/arch/EMIS/SIREFTIER/",
+      "backup": "SI.REFERENTIEL.TIERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-si-annonces-1",
+      "bu": "si",
+      "type": "annonces",
+      "label": "TOYOTA",
+      "url": "http://cos7.groupecat.com:8000/arch/RECU/TOYOTA/",
+      "backup": "PL.TOYOTA.SHIPMENT-ORDERS.SLOVENIE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-si-extractions-0",
+      "bu": "si",
+      "type": "extractions",
+      "label": "SLOVENIE",
+      "url": "http://cos7.groupecat.com:8000/arch/EMIS/SLOVENIE/",
+      "backup": ""
+    },
+    {
+      "id": "seed-si-integration-0",
+      "bu": "si",
+      "type": "integration",
+      "label": "SITES - Client startup",
+      "url": "http://cos7.groupecat.com:8000/chaine/CMG_INREFTIER/",
+      "backup": ""
+    },
+    {
+      "id": "seed-si-integration-1",
+      "bu": "si",
+      "type": "integration",
+      "label": "TOYOTA",
+      "url": "http://cos7.groupecat.com:8000/chaine/CMG_TOYPLINT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-lt-annonces-0",
+      "bu": "lt",
+      "type": "annonces",
+      "label": "ORDER PCL",
+      "url": "B2BI_archives/RECU/ORDERPCL2VIA_LT/BMAP/",
+      "backup": "LT.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-lt-annonces-1",
+      "bu": "lt",
+      "type": "annonces",
+      "label": "ORDERQTY LT",
+      "url": "B2BI_archives/RECU/ORDERQTY_LT/BMAP",
+      "backup": "LT.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-lt-annonces-2",
+      "bu": "lt",
+      "type": "annonces",
+      "label": "PEPCO",
+      "url": "B2BI_archives/RECU/PEPCO_LT/BMAP/",
+      "backup": "LT.VIA.PEPCO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-lt-extractions-0",
+      "bu": "lt",
+      "type": "extractions",
+      "label": "BRIDGESTONE P44 LT",
+      "url": "arch/EMIS/VIA2BRIDGESTONE_P44/",
+      "backup": ""
+    },
+    {
+      "id": "seed-lt-extractions-1",
+      "bu": "lt",
+      "type": "extractions",
+      "label": "iVAZ LT OUT",
+      "url": "B2BI_archives/RECU/iVAZ_LT/AMAP/",
+      "backup": "(XML)"
+    },
+    {
+      "id": "seed-lt-extractions-2",
+      "bu": "lt",
+      "type": "extractions",
+      "label": "iVAZ OUT",
+      "url": "arch/EMIS/VIA2iVAZ_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-0",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "AIRE COMPRIMIDO",
+      "url": "B2BI_archives/RECU/AIRE_COMPRIMIDO/",
+      "backup": "IB.VIA.AIRECOMPRIMIDO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-1",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ALERCE",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ALERCE2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-2",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ALERCE",
+      "url": "B2BI_archives/RECU/W2B2VIA_IB/BMAP",
+      "backup": "IB.VIA.ALERCE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-3",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "APRIMATIC",
+      "url": "B2BI_archives/RECU/APRIMATIC_IB/BMAP/",
+      "backup": "IB.VIA.APRIMATIC@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-4",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ATLASCOPCO",
+      "url": "B2BI_archives/RECU/ATLASCOPCO_ES_IN",
+      "backup": "IB.VIA.ATLAS-COPCO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-5",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ANTALA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ANTALA2VIA_IB",
+      "backup": "IB.VIA.ANTALA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-6",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ANTALA IB",
+      "url": "B2BI_archives/RECU/ANTALA_IB/BMAP/",
+      "backup": "IB.VIA.ANTALA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-7",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ANTALIS",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/ANTALISP2VIA_ES/",
+      "backup": "IB.VIA.ANTALIS-IBERIA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-8",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ANTALIS",
+      "url": "B2BI_archives/RECU/ANTALIS2VIA_IB/BMAP/",
+      "backup": "IB.VIA.ANTALIS-IBERIA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-9",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BERCEDO ES",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/BERCEDO2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-10",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BERLANG ES",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/BERLANG2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-11",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BLD",
+      "url": "B2BI_archives/RECU/BLD_IB/BMAP/",
+      "backup": "IB.VIA.BLD@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-12",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BORDADOS HERNANDEZ",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/BORDADOSHERNANDEZ_ES",
+      "backup": "IB.VIA.BORDADOS-HERNANDEZ@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-13",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BP_REFLEX",
+      "url": "B2BI_archives/RECU/BP_REFLEX/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-14",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BP_ES_REFLEX_TRANSPORT",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/TRANSPORT_ORDER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-15",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BP_ES_REFLEX_MATERIALS",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/MATERIALS/BMAP/",
+      "backup": "IB.WMS.REFLEX.MATERIALS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-16",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BP_ES_REFLEX_DELIVERIES",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/DELIVERIES/BMAP/",
+      "backup": "IB.WMS.REFLEX.DELIVERIES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-17",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BP_ES_REFLEX_RECEIPT",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/RECEIPT/BMAP/",
+      "backup": "IB.WMS.REFLEX.RECEIPTS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-18",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "BYG",
+      "url": "B2BI_archives/RECU/BYG2VIA_IB/BMAP/",
+      "backup": "IB.VIA.BYG@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-19",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CABLES RCT",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/CABLESRCT2VIA_ES",
+      "backup": "IB.VIA.CABLESRCT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-20",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CABLES RCT",
+      "url": "B2BI_archives/RECU/CABLESRCT2VIA_IB/BMAP/",
+      "backup": "IB.VIA.CABLESRCT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-21",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CARGLASS",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/CARGLASS2VIA_ES/",
+      "backup": "IB.VIA.CARGLASS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-22",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CATNDEL",
+      "url": "B2BI_archives/RECU/CATNDEL_PL/BMAP/",
+      "backup": "IB.VIA.CATNDEL-WS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-23",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CAYCO",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/CAYCO2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-24",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CAYCO",
+      "url": "B2BI_archives/RECU/W2B2VIA_IB/BMAP",
+      "backup": "IB.VIA.CAYCO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-25",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CHINATA ES",
+      "url": "B2BI_archives/RECU/CHINATA_ES/BMAP/",
+      "backup": "IB.VIA.LACHINATA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-26",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CODORNIU",
+      "url": "B2BI_archives/RECU/CODORNIU2VIA_IB/BMAP/",
+      "backup": "IB.VIA.CODORNIU@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-27",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CONTENEDORES",
+      "url": "B2BI_archives/RECU/CONTENEDORES2VIA_IB/BMAP/",
+      "backup": "IB.VIA.CONTENEDORES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-28",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CONTINENTAL_ES",
+      "url": "B2BI_archives/RECU/CONTINENTAL_ES/BMAP",
+      "backup": "IB.VIA.CONTINENTAL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-29",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CONTINENTAL_ES_PDF",
+      "url": "B2BI_archives/RECU/CONTINENTAL_ES_PDF/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-30",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "CNH_IB",
+      "url": "B2BI_archives/RECU/CNH_IB/BMAP/",
+      "backup": "ES.VIA.CNH@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-31",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "COSAN LUBRICANTES IB",
+      "url": "B2BI_archives/RECU/COSANLUBRICANTES_IB/BMAP/",
+      "backup": "IB.VIA.COSAN-LUBRICANTES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-32",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "COSAN-LUBRICANTES2VIA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/COSAN-LUBRICANTES2VIA_IB",
+      "backup": "IB.VIA.COSAN-LUBRICANTES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-33",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "DAF IB",
+      "url": "B2BI_archives/RECU/DAF_IB/BMAP",
+      "backup": "IB.VIA.DAF@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-34",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "DIESEL-TECHNIC",
+      "url": "B2BI_archives/RECU/DIESEL_TECHNIC_ES/BMAP",
+      "backup": "IB.VIA.DIESEL-TECHNIC@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-35",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "DIVA (DAT)",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/DIVA2VIA_ES",
+      "backup": "IB.VIA.DIVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-36",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "DIVA (ZIP)",
+      "url": "B2BI_archives/RECU/SEDON_ZIP",
+      "backup": "IB.VIA.DIVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-37",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "DIVA (ZIP)",
+      "url": "http://C7LC.groupecat.com:8000/arch/RECU/DIVA2VIA_ES",
+      "backup": "IB.VIA.DIVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-38",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "FORNES ES",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/FORNES2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-39",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "FM LOGISTIC ES",
+      "url": "B2BI_archives/RECU/FM_LOGISTIC_ES/BMAP/",
+      "backup": "IB.VIA.FM-LOGISTIC@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-40",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "GRUPOBERGE",
+      "url": "B2BI_archives/RECU/GRUPOBERGE2VIA_IB/BMAP/",
+      "backup": "IB.VIA.GRUPOBERGE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-41",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "HANKOOK",
+      "url": "B2BI_archives/RECU/HANKOOK_IB/BMAP/",
+      "backup": "IB.VIA.HANKOOK@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-42",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "IOD PARTENERS",
+      "url": "B2BI_archives/RECU/IODPARTNERS_IB/BMAP/",
+      "backup": "IB.VIA.IODPARTNERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-43",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "IVECO B2Bi",
+      "url": "B2BI_archives/RECU/IVECO_IB/",
+      "backup": "IB.VIA.IVECO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-44",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "IVECO CNH MQ EU_50",
+      "url": "B2BI_archives/RECU/IVECO_CNH_MQ/EU_50/BMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-45",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "IVECO CNH MQ EU_50",
+      "url": "B2BI_archives/RECU/IVECO_CNH_MQ/EU_30/BMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-46",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "JEREMIAS ESPANA",
+      "url": "B2BI_archives/RECU/JEREMIAS_ES/BMAP",
+      "backup": "IB.VIA.JEREMIAS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-47",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "KTM SPORT",
+      "url": "B2BI_archives/RECU/KTM_SPORT_GMBH_ES/BMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-48",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "LACHINATA",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/LACHINATA2VIA_ES",
+      "backup": "IB.VIA.LACHINATA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-49",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "LIDERFLOR",
+      "url": "B2BI_archives/RECU/LIDERFLOR2VIA_IB/BMAP/",
+      "backup": "IB.VIA.LIDERFLOR@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-50",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "LOGIMAT",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/LOGIMAT2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-51",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "LODISTOL",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/LODISTOL2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-52",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MAZDA PT",
+      "url": "B2BI_archives/RECU/MAZDA_PT/BMAP/",
+      "backup": "PT.VIA.MAZDA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-53",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MAZDA ES",
+      "url": "B2BI_archives/RECU/MAZDA_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-54",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MAZDA_ES_IN",
+      "url": "B2BI_archives/RECU/MAZDA_ES_IN/BMAP",
+      "backup": "IB.VIA.MAZDA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-55",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MICHELIN",
+      "url": "B2BI_archives/RECU/MICHELIN2VIA_IB/BMAP/",
+      "backup": "IB.VIA.MICHELIN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-56",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MICHELIN HR",
+      "url": "B2BI_archives/RECU/MICHELIN_HR/BMAP/",
+      "backup": "PL.VIA.MICHELIN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-57",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "MICHELIN PKP",
+      "url": "B2BI_archives/RECU/MICHELINPKP2VIA_IB/BMAP/",
+      "backup": "IB.VIA.MICHELIN.PKP@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-58",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "NEX IB",
+      "url": "B2BI_archives/VIA2/NEX_IB/NEX_IB_IN/BMAP",
+      "backup": "IB.VIA.NEX@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-59",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ONE TO ONE",
+      "url": "B2BI_archives/RECU/ONE2ONE2VIA_IB/BMAP/",
+      "backup": "IB.VIA.ONE2ONE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-60",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ONEX_IB",
+      "url": "B2BI_archives/RECU/ONEX_IB_IN/",
+      "backup": "IB.VIA.ONEX@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-61",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ORDER QTY",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/IBORDERQTY2VIA",
+      "backup": "IB.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-62",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ONELEC",
+      "url": "B2BI_archives/RECU/ONELEC2VIA_IB/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-63",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ORDER PCL",
+      "url": "B2BI_archives/RECU/ORDERPCL_IB/BMAP/",
+      "backup": "IB.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-64",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ORDER GN PCL",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/ORDERGNPCL2VIA_ES",
+      "backup": "IB.VIA.ORDERGNPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-65",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ORDER GNPCL",
+      "url": "B2BI_archives/RECU/ORDERGNPCL2VIA_IB/BMAP/",
+      "backup": "IB.VIA.ORDERGNPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-66",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "PARCEL-CONTAINERIZATION",
+      "url": "B2BI_archives/RECU/EDI_PARCEL_CONTAINERIZATION/BMAP",
+      "backup": "LC.VIA.PARCEL-CONTAINERIZATION@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-67",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "PARCELLOADING_ES B2Bi",
+      "url": "B2BI_archives/RECU/PARCELLOADING_ES/BMAP",
+      "backup": "LC.VIA.PARCEL-LOADING@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-68",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "PARCELLOADING_ES",
+      "url": "B2BI_archives/RECU/PARCELLOADING_ES/BMAP",
+      "backup": "LC.VIA.PARCEL-LOADING@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-69",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "PLASTICO ERUM",
+      "url": "B2BI_archives/RECU/PLASTICO_ERUM2VIA_IB/BMAP/",
+      "backup": "IB.VIA.PLASTICO-ERUM@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-70",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "PLASTIMYR IB",
+      "url": "B2BI_archives/RECU/AP_PLASTIMYR2VIA_IB/BMAP/",
+      "backup": "IB.VIA.PLASTIMYR@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-71",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "RIAS BAIXAS",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/RIASBAIXAS2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-72",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "RECSA SAP",
+      "url": "B2BI_archives/RECU/SAPRECSA_IB/BMAP",
+      "backup": "IB.VIA.RECSA-SAP@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-73",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "REDD PARTS",
+      "url": "B2BI_archives/RECU/REDD_PARTS_ES_IN/BMAP",
+      "backup": "ES.VIA.REDD-PARTS-ES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-74",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "Renaults DAYS",
+      "url": "http://EAIR.groupecat.com:8000/arch/RECU/RECSADAY2VIA_ES",
+      "backup": "IB.VIA.RENAULT.DAY00@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-75",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "RENAULT_DAY00",
+      "url": "B2BI_archives/RECU/RECSA_DAY002VIA_IB/BMAP",
+      "backup": "IB.VIA.RENAULT.DAY00@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-76",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "RENAULT NIGHT",
+      "url": "B2BI_archives/RECU/RENAULT_NIGHT_IB/BMAP/",
+      "backup": "IB.VIA.RENAULT.NIGHT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-77",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "Renaults PKP",
+      "url": "B2BI_archives/RECU/RENAULTPKP_IB/BMAP/",
+      "backup": "IB.VIA.RENAULT.PKP@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-78",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "RENAULT_PT_IB",
+      "url": "B2BI_archives/RECU/RENAULT_PT2VIA_IB/BMAP",
+      "backup": "IB.VIA.RENAULT-PT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-79",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "REPSOL-RYLESA",
+      "url": "B2BI_archives/RECU/REPSOLRYLES_IB/BMAP/",
+      "backup": "IB.VIA.REPSOL-RYLESA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-80",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "SAINT-GOBAIN",
+      "url": "B2BI_archives/RECU/SAINT_GOBAIN2VIA_IB/BMAP",
+      "backup": "IB.VIA.SAINT-GOBAIN@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-81",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "SCANIA",
+      "url": "B2BI_archives/RECU/SCANIA_D16B/IB/BMAP/",
+      "backup": "LC.VIA.SCANIA-D16B@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-82",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "SIVA_PT",
+      "url": "B2BI_archives/RECU/SIVA/BMAP",
+      "backup": "IB.VIA.SIVA.PT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-83",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "STELLANTIS_ES",
+      "url": "B2BI_archives/RECU/STELLANTIS_ES/BMAP",
+      "backup": "IB.VIA.STELLANTIS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-84",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TAFATRANS",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/TAFATRANS2VIA_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-85",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TCOS",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/TCOS2VIA_IB",
+      "backup": "IB.VIA.SPAIN.TCOS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-86",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "THU_CREATION",
+      "url": "B2BI_archives/RECU/THU_CREATION/BMAP",
+      "backup": "LC.VIA.THU-CREATION@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-87",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TIRESUR_MAD",
+      "url": "B2BI_archives/RECU/TIRESUR_MAD/BMAP",
+      "backup": "IB.VIA.TIRESUR-MAD@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-88",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "Torraspapel-Order",
+      "url": "B2BI_archives/RECU/TORRASPAPEL_IB/BMAP/",
+      "backup": "IB.VIA.TORRAS-PAPEL.UPDATE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-89",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TRANSAGUEDA_PT",
+      "url": "B2BI_archives/RECU/TRANSAGUEDA_PT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-90",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TOYOTA PT",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/TOYOTA-PT2VIA_IB",
+      "backup": "IB.VIA.TOYOTA-PT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-91",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "TOYOTA XFB PT",
+      "url": "B2BI_archives/RECU/TOYOTA-XFB2VIA_PT/BMAP/",
+      "backup": "IB.VIA.TOYOTA-XFB-PT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-92",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VALEO",
+      "url": "B2BI_archives/RECU/VALEO_IB/BMAP/",
+      "backup": "IB.VIA.VALEOD16B@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-93",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLKSWAGEN_REFLEX",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-94",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLVO TRUCKS_",
+      "url": "B2BI_archives/RECU//VOLVOTRUCKS_ES/BMAP",
+      "backup": "IB.VIA.VOLVO-TRUCKS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-95",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLKSWAGEN_REFLEX RECEIPT",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/RECEIPT/BMAP/",
+      "backup": "IB.WMS.VOLKSWAGEN.RECEIPT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-96",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLKSWAGEN_REFLEX PRO",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/PRO_PROCESS/BMAP/",
+      "backup": "IB.WMS.VOLKSWAGEN.PRO@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-97",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLKSWAGEN_REFLEX ITEMS",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/ITEMS/ITEMS_ITEMLV/BMAP/",
+      "backup": "IB.WMS.VOLKSWAGEN.ITEMS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-98",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "VOLKSWAGEN_REFLEX TRANSPORT_ORDER",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/TRANSPORT_ORDER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-99",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "W2B_IB",
+      "url": "B2BI_archives/RECU/W2B2VIA_IB/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-100",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "YAMAHA_B2C_ES",
+      "url": "B2BI_archives/RECU/YAMAHA_B2C_ES/BMAP",
+      "backup": "IB.VIA.YAMAHA-B2C@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-101",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "YAMAHA ES",
+      "url": "B2BI_archives/RECU/YAMAHA_ES/BMAP",
+      "backup": "IB.VIA.YAMAHA@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-annonces-102",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "YAMAHA REFLUX TRANSPORT ORDER",
+      "url": "B2BI_archives/RECU/YAMAHA_REFLEX/TRANSPORT_ORDER/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-annonces-103",
+      "bu": "ib",
+      "type": "annonces",
+      "label": "ZARGES_ES",
+      "url": "B2BI_archives/RECU/ZARGES_ES/BMAP",
+      "backup": "IB.VIA.ZARGES@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-extractions-0",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "ALERCE",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/ALERCE2OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-1",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BERCEDO ES",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2BERCEDO_ESOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-2",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BERLANG ES",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2BERLANG_ESOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-3",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BP_ES_REFLEX_GOODS_ISSUE",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/GOODS_ISSUE/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-4",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BP_ES_REFLEX_GOODS_RECEIPT_CONFORMATION",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/GOODS_ISSUE_RECEIPT_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-5",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BP_ES_REFLEX_POD",
+      "url": "B2BI_archives/RECU/BP_ES_REFLEX/POD/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-6",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BP_ES_REFLEX_STOCK_INVENTORY",
+      "url": "B2BI_archives/EMIS/BP_ES_REFLEX/INVENTORY",
+      "backup": "IB.WMS.REFLEX.STOCK.INVENTORY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-extractions-7",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "BP_ES_REFLEX_STOCK_MOVEMENT",
+      "url": "B2BI_archives/EMIS/BP_ES_REFLEX/STOCK_MOVEMENT",
+      "backup": "IB.WMS.REFLEX.STOCK.MOVEMENT@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-ib-extractions-8",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "DAF_OUT",
+      "url": "B2BI_archives/EMIS/VIA2DAF_FOURKITES_OUT_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-9",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "CAYCO",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2CAYCOOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-10",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "CATNDEL_WS RESPONSE",
+      "url": "B2BI_archives/EMIS/CATNDEL_WS/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-11",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "FORNES ES",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2FORNES_ESOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-12",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "FM LOGISTIC",
+      "url": "B2BI_archives/EMIS/VIA2FM_LOGISTIC_IB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-13",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "FIAT ES",
+      "url": "B2BI_archives/EMIS/VIA2FIAT_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-14",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "FIELDEAS_IB",
+      "url": "B2BI_archives/EMIS/EXT_FIELDEAS_IB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-15",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "HANKOOK_ES_OUT",
+      "url": "arch/EMIS/HANKOOK_ES_OUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-16",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "INVOICE PT WEBSERVICE",
+      "url": "B2BI_archives/EMIS/INVOICEPT_WS/AMAP/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-17",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "IVECO_P44_ES",
+      "url": "arch/EMIS/IVECO_P44_ES/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-18",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "IVECO_P44_ES API RESPONSE",
+      "url": "arch/EMIS/API_IVECO_P44_ES",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-19",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "LOGIMAT",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2LOGIMATOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-20",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MAZDA PT OUT",
+      "url": "arch/EMIS/VIA2MAZDA_PT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-21",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MAZDA ES SHIPMENT CONFIRMATION",
+      "url": "arch/EMIS/SHIPMENT_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-22",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MAZDA ES OUT",
+      "url": "arch/EMIS/MAZDA_ES_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-23",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MAZDA OUT PT",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2MAZDA_PT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-24",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MIARCO",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2MIARCO_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-25",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MIARCO IB OUT",
+      "url": "B2BI_archives/EMIS/VIA2MIARCO_IB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-26",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MICHELIN (csv)",
+      "url": "http://eair.groupecat.com:8000/arch/RECU/VIA2MICHELIN_ES_SPLIT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-27",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MICHELIN",
+      "url": "B2BI_archives/RECU/MICHELIN_IB_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-28",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "MICHELIN",
+      "url": "B2BI_archives/RECU/MICHELIN_IB_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-29",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "NEX IB OUT",
+      "url": "B2BI_archives/EMIS/NEX_IB_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-30",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "ONE TO ONE",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2O2O_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-31",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "ONE2ONE",
+      "url": "B2BI_archives/EMIS/ONE2ONE_WS_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-32",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "RIAS BAIXAS",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2RIASBAIXASOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-33",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "RECSA SAP",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/SAPHESES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-34",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "Recsa SAP OUT ES",
+      "url": "B2BI_archives/EMIS/SAPHESES",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-35",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL (csv)",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2REPSOL_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-36",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL (xml)",
+      "url": "http://eair.groupecat.com:8000/arch/EMIS/VIA2REPSOL_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-37",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL ORDER (csv)",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/VIA2REPSOL_ORD_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-38",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL ORDER (xml)",
+      "url": "http://eair.groupecat.com:8000/arch/EMIS/VIA2REPSOL_ORD_ES/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-39",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL",
+      "url": "B2BI_archives/EMIS/VIA2REPSOL_ES/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-40",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REPSOL OUT WS RESPONSE",
+      "url": "B2BI_archives/EMIS/REPSOL_WS/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-41",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "REDD PARTS OUT",
+      "url": "B2BI_archives/EMIS/REDD_PARTS_IB_OUT",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-42",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "ST GOBAIN FIELDEAS",
+      "url": "http://c7lc.groupecat.com:8000/arch/EMIS/EXT_S_G_FIELDEAS_IB",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-43",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "SAINT_GOBAIN",
+      "url": "arch/EMIS/SAINT_GOBAIN_IB_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-44",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "SAINT_GOBAIN_WS",
+      "url": "arch/EMIS/SAINT_GOBAINS_WS",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-45",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "STELLANTIS_IB_OUT_03",
+      "url": "B2BI_archives/EMIS/STELLANTIS_IB_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-46",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "STELLANTIS_IB_OUT B2Bi",
+      "url": "B2BI_archives/EMIS/STELLANTIS_IB_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-47",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "STELLANTIS_INVOICE_OUT",
+      "url": "B2BI_archives/EMIS/STELLANTIS_INVOICE_OUT/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-48",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "TORRAS PAPEL",
+      "url": "B2BI_archives/EMIS/VIA2TORRASPAPEL/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-49",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "TAFATRANS",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/VIA2TAFATRANS/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-50",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "TRANSPORTES ESTEBAN",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/VIA2TTRANSESTEBAN_IB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-51",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "VALOINSA",
+      "url": "http://comr.groupecat.com:8000/arch/RECU/WEX2VALOINSAOUT/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-52",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "VOLKSWAGEN_REFLEX PRO_CONFIRMATION",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/PRO_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-53",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "VOLKSWAGEN_REFLEX RECEIPT_CONFIRMATION",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/RECEIPT_CONFIRMATION/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-54",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "VOLKSWAGEN_REFLEX FOTO_STOCK",
+      "url": "B2BI_archives/RECU/VOLKSWAGEN_REFLEX/FOTO_PROCESS/BMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-55",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "YAMAHA IB OUT",
+      "url": "B2BI_archives/EMIS/VIA2YAMAHAIB/",
+      "backup": ""
+    },
+    {
+      "id": "seed-ib-extractions-56",
+      "bu": "ib",
+      "type": "extractions",
+      "label": "YAMAHA_B2C_ES_OUT",
+      "url": "arch/EMIS/YAMAHAB2C_OUT/BMAP",
+      "backup": ""
+    }
+  ]
+}

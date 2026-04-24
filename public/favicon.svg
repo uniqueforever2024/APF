@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="apf-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#46afff" />
+      <stop offset="58%" stop-color="#0e76d0" />
+      <stop offset="100%" stop-color="#0a5294" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#apf-bg)" />
+  <circle cx="48" cy="16" r="13" fill="#ffffff" fill-opacity="0.16" />
+  <circle cx="32" cy="32" r="22" fill="#ffffff" fill-opacity="0.96" />
+  <circle cx="32" cy="32" r="20.5" fill="#f8fbff" />
+  <image
+    href="data:image/png;base64,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"
+    x="14"
+    y="14"
+    width="36"
+    height="36"
+    preserveAspectRatio="xMidYMid meet"
+  />
+</svg>
