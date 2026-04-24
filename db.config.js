@@ -6,7 +6,7 @@ loadEnvFile(path.join(__dirname, ".env"));
 const ROOT_DIR = __dirname;
 const PORT = Number(process.env.DIRECTORY_API_PORT || 3001);
 const DATA_FILE = path.join(ROOT_DIR, "public", "APF_NEW.json");
-const BACKUP_DIR = path.join(ROOT_DIR, "APF_BACKUPS");
+const BACKUP_DIR = path.join(ROOT_DIR, "backups");
 const PROJECT_APPS = {
   documentation: path.join(ROOT_DIR, "DOCUMENTATION_NEW"),
   sftp: path.join(ROOT_DIR, "SFTP_NEW"),

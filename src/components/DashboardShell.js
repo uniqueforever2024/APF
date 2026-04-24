@@ -120,6 +120,36 @@ function DashboardShell({
       : t("darkMode", "Dark mode");
   const homeLabel = t("home", "Home");
   const logoutLabel = t("logout", "Logout");
+  const getSectionTabTone = (sectionId) =>
+    sectionId === SECTION_ORDER[0] ? "inbound" : "outbound";
+  const renderSectionTabs = (className = "directory-section-tabs") => (
+    <div className={className}>
+      {SECTION_ORDER.map((item) => {
+        const tone = getSectionTabTone(item);
+
+        return (
+          <button
+            key={item}
+            type="button"
+            className={`tab directory-section-tab directory-section-tab-${tone} ${
+              currentSection === item ? "active" : ""
+            }`.trim()}
+            onClick={() =>
+              navigate({
+                page: "directory",
+                bu: currentBu,
+                lang: route.lang,
+                section: item
+              })
+            }
+          >
+            {t(SECTION_META[item].labelKey, SECTION_META[item].labelKey)}
+            <span className="count-badge">{sectionCounts[item] || 0}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 
   useEffect(() => {
     if (route.page !== "directory") {
@@ -290,52 +320,40 @@ function DashboardShell({
             className={`content-panel ${isFocusedEntryView ? "content-panel-focused" : ""}`.trim()}
           >
             {!isFocusedEntryView ? (
-              <div className="content-toolbar content-toolbar-compact">
-                <div>
-                  <div className="eyebrow">{currentBuLabel}</div>
-                  <h2>{currentSectionLabel}</h2>
-                  <p className="section-description">
-                    {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
-                    in this view.
-                  </p>
+              <>
+                <div className="content-toolbar content-toolbar-compact">
+                  <div>
+                    <div className="eyebrow">{currentBuLabel}</div>
+                    <h2>{currentSectionLabel}</h2>
+                    <p className="section-description">
+                      {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
+                      in this view.
+                    </p>
+                  </div>
                 </div>
 
-                <form className="search-box search-box-single" onSubmit={handlePartnerSearchSubmit}>
-                  <input
-                    ref={partnerSearchInputRef}
-                    type="search"
-                    value={partnerSearchValue}
-                    placeholder={t("searchPartnerPlaceholder", "Search partner")}
-                    onChange={(event) => setPartnerSearchValue(event.target.value)}
-                  />
-                </form>
-              </div>
+                <div className="directory-list-controls">
+                  {renderSectionTabs("directory-section-tabs directory-section-tabs-list")}
+
+                  <form
+                    className="search-box search-box-single directory-partner-search"
+                    onSubmit={handlePartnerSearchSubmit}
+                  >
+                    <input
+                      ref={partnerSearchInputRef}
+                      type="search"
+                      value={partnerSearchValue}
+                      placeholder={t("searchPartnerPlaceholder", "Search partner")}
+                      onChange={(event) => setPartnerSearchValue(event.target.value)}
+                    />
+                  </form>
+                </div>
+              </>
             ) : null}
 
-            <div
-              className={`directory-section-tabs ${
-                isFocusedEntryView ? "directory-section-tabs-focused" : ""
-              }`.trim()}
-            >
-              {SECTION_ORDER.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={`tab ${currentSection === item ? "active" : ""}`}
-                  onClick={() =>
-                    navigate({
-                      page: "directory",
-                      bu: currentBu,
-                      lang: route.lang,
-                      section: item
-                    })
-                  }
-                >
-                  {t(SECTION_META[item].labelKey, SECTION_META[item].labelKey)}
-                  <span className="count-badge">{sectionCounts[item] || 0}</span>
-                </button>
-              ))}
-            </div>
+            {isFocusedEntryView
+              ? renderSectionTabs("directory-section-tabs directory-section-tabs-focused")
+              : null}
 
             <DirectoryWorkspace
               activeEntry={activeEntry}
@@ -368,47 +386,49 @@ function DirectoryWorkspace({
   t,
   visibleEntries
 }) {
-  if (!activeEntry && visibleEntries.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>{t("noEntries", "No entries are available in this section yet.")}</p>
-        <span>
-          {canManage
-            ? t("emptyHint", "Use the manager to add the first link.")
-            : t("noLinkAvailable", "No link is available here yet.")}
-        </span>
-      </div>
-    );
-  }
-
   const isFocusedEntryView = Boolean(activeEntry);
 
   if (!isFocusedEntryView) {
     return (
       <div className="directory-workspace directory-workspace-list-only">
         <div className={`partner-table-shell ${canManage ? "admin-table-shell" : ""}`.trim()}>
-          <div className="partner-table-header">
-            <span>{t("partnerColumn", "Partner")}</span>
-            <span>{t("supportColumn", "Contact")}</span>
-          </div>
+          {visibleEntries.length === 0 ? (
+            <div className="partner-table-empty-body">
+              <div className="empty-state empty-state-table">
+                <p>{t("noEntries", "No entries are available in this section yet.")}</p>
+                <span>
+                  {canManage
+                    ? t("emptyHint", "Use the manager to add the first link.")
+                    : t("noLinkAvailable", "No link is available here yet.")}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="partner-table-header">
+                <span>{t("partnerColumn", "Partner")}</span>
+                <span>{t("supportColumn", "Contact")}</span>
+              </div>
 
-          <div className="partner-table-body">
-            {visibleEntries.map((entry) => {
-              const contactValue = entry.backup || t("contactUnavailable", "Not available");
+              <div className="partner-table-body">
+                {visibleEntries.map((entry) => {
+                  const contactValue = entry.backup || t("contactUnavailable", "Not available");
 
-              return (
-                <button
-                  key={entry.id}
-                  type="button"
-                  className="partner-table-row"
-                  onClick={() => onSelectEntry(entry.id)}
-                >
-                  <span className="partner-table-cell partner-table-name">{entry.label}</span>
-                  <span className="partner-table-cell partner-table-contact">{contactValue}</span>
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      className="partner-table-row"
+                      onClick={() => onSelectEntry(entry.id)}
+                    >
+                      <span className="partner-table-cell partner-table-name">{entry.label}</span>
+                      <span className="partner-table-cell partner-table-contact">{contactValue}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -541,34 +561,43 @@ function PartnerPreviewPanel({
         </div>
 
         <div className="preview-actions">
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={clearSelectedEntry}
-          >
-            <span className="header-command-icon" aria-hidden="true">
-              <HeaderActionIcon type="back" />
-            </span>
-            <span>{t("backToList", "Back to list")}</span>
-          </button>
-          <form className="search-box preview-search-box preview-topbar-search" onSubmit={handleFileSearch}>
-            <input
-              ref={fileSearchInputRef}
-              type="search"
-              value={fileSearchValue}
-              placeholder={t("searchFilePlaceholder", "Search file")}
-              onChange={(event) => setFileSearchValue(event.target.value)}
-            />
-            <button className="secondary-button search-file-button" type="submit">
+          <div className="preview-primary-actions">
+            <form
+              className="search-box preview-search-box preview-topbar-search"
+              onSubmit={handleFileSearch}
+            >
+              <input
+                ref={fileSearchInputRef}
+                type="search"
+                value={fileSearchValue}
+                placeholder={t("searchFilePlaceholder", "Search file")}
+                onChange={(event) => setFileSearchValue(event.target.value)}
+              />
+              <button
+                className="secondary-button search-file-button search-file-button-icon-only"
+                type="submit"
+                aria-label={t("searchFile", "Search File")}
+                title={t("searchFile", "Search File")}
+              >
+                <span className="header-command-icon" aria-hidden="true">
+                  <HeaderActionIcon type="search" />
+                </span>
+              </button>
+            </form>
+            <button
+              className="secondary-button preview-back-button"
+              type="button"
+              onClick={clearSelectedEntry}
+            >
               <span className="header-command-icon" aria-hidden="true">
-                <HeaderActionIcon type="search" />
+                <HeaderActionIcon type="back" />
               </span>
-              <span>{t("searchFile", "Search File")}</span>
+              <span>{t("back", "Back")}</span>
             </button>
-          </form>
+          </div>
           {canManage ? (
             <button
-              className="secondary-button"
+              className="secondary-button preview-edit-button"
               type="button"
               onClick={() => editEntry(activeEntry)}
             >
@@ -596,7 +625,7 @@ function HeaderActionIcon({ type }) {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
-          d="M4.75 10.5L12 4.75l7.25 5.75"
+          d="M3.75 10.5L12 3.75l8.25 6.75"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
@@ -604,7 +633,15 @@ function HeaderActionIcon({ type }) {
           strokeLinejoin="round"
         />
         <path
-          d="M7.5 9.75V19.25H16.5V9.75"
+          d="M5.25 9.75V19.5a.75.75 0 0 0 .75.75h12a.75.75 0 0 0 .75-.75V9.75"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10.25 20.25V14.5a.75.75 0 0 1 .75-.75h2a.75.75 0 0 1 .75.75v5.75"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"

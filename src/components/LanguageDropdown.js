@@ -63,9 +63,6 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
         <span className="language-dropdown-current">
           {getLanguageCode(currentLanguage)}
         </span>
-        <span className="language-dropdown-caret" aria-hidden="true">
-          {open ? "^" : "v"}
-        </span>
       </button>
 
       {open ? (

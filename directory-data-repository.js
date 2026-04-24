@@ -9,6 +9,8 @@ const {
 
 const SUPPORTED_CLIENTS = new Set(["mssql", "mysql", "postgres"]);
 const DIRECTORY_FIELDS = ["id", "bu", "type", "label", "url", "backup"];
+const BACKUP_FILE_PREFIX = "directory-data-backup-";
+const MAX_BACKUP_FILES = 30;
 
 function validateIdentifier(value, label) {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(String(value || ""))) {
@@ -145,7 +147,64 @@ async function ensureBackupDirectory() {
 
 function buildBackupName() {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  return `directory-data-backup-${stamp}.json`;
+  return `${BACKUP_FILE_PREFIX}${stamp}.json`;
+}
+
+function buildBackupPayload(entries, source, extra = {}) {
+  return {
+    backupCreatedAt: new Date().toISOString(),
+    source,
+    entries: entries.map(normalizeStoredEntry),
+    ...extra
+  };
+}
+
+async function pruneBackupDirectory() {
+  let directoryEntries = [];
+
+  try {
+    directoryEntries = await fs.readdir(BACKUP_DIR, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return;
+    }
+
+    throw error;
+  }
+
+  const backupFiles = directoryEntries
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        entry.name.startsWith(BACKUP_FILE_PREFIX) &&
+        entry.name.endsWith(".json")
+    )
+    .map((entry) => entry.name)
+    .sort();
+  const staleFiles = backupFiles.slice(
+    0,
+    Math.max(0, backupFiles.length - MAX_BACKUP_FILES)
+  );
+
+  await Promise.all(
+    staleFiles.map((fileName) =>
+      fs.unlink(path.join(BACKUP_DIR, fileName)).catch((error) => {
+        if (error.code !== "ENOENT") {
+          throw error;
+        }
+      })
+    )
+  );
+}
+
+async function writeBackupSnapshot(payload) {
+  await ensureBackupDirectory();
+  await fs.writeFile(
+    path.join(BACKUP_DIR, buildBackupName()),
+    JSON.stringify(payload, null, 2),
+    "utf8"
+  );
+  await pruneBackupDirectory();
 }
 
 async function readJsonFileEntries() {
@@ -164,25 +223,28 @@ async function readJsonFileEntries() {
   }
 }
 
-async function writeJsonFileEntries(entries) {
+async function writeJsonFileEntries(entries, backupSource = "json") {
   await ensureBackupDirectory();
-
-  try {
-    const currentContent = await fs.readFile(DATA_FILE, "utf8");
-    const backupPath = path.join(BACKUP_DIR, buildBackupName());
-    await fs.writeFile(backupPath, currentContent, "utf8");
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      throw error;
-    }
-  }
 
   const nextPayload = {
     generatedAt: new Date().toISOString(),
     entries: entries.map(normalizeStoredEntry)
   };
 
-  await fs.writeFile(DATA_FILE, JSON.stringify(nextPayload, null, 2), "utf8");
+  const temporaryFile = `${DATA_FILE}.tmp`;
+
+  try {
+    await fs.writeFile(temporaryFile, JSON.stringify(nextPayload, null, 2), "utf8");
+    await fs.rename(temporaryFile, DATA_FILE);
+  } finally {
+    await fs.rm(temporaryFile, { force: true }).catch(() => {});
+  }
+
+  await writeBackupSnapshot(
+    buildBackupPayload(nextPayload.entries, backupSource, {
+      generatedAt: nextPayload.generatedAt
+    })
+  );
 }
 
 function createJsonRepository(note, source = "json") {
@@ -197,7 +259,7 @@ function createJsonRepository(note, source = "json") {
     },
     async writeData(entries) {
       const normalizedEntries = entries.map(normalizeStoredEntry);
-      await writeJsonFileEntries(normalizedEntries);
+      await writeJsonFileEntries(normalizedEntries, meta.source);
       return buildPayload(normalizedEntries, meta);
     },
     async getHealth() {
@@ -266,6 +328,12 @@ async function createPostgresRepository() {
         client.release();
       }
 
+      await writeBackupSnapshot(
+        buildBackupPayload(rows, "database", {
+          client: db.client
+        })
+      );
+
       return buildPayload(rows, meta);
     },
     async getHealth() {
@@ -333,6 +401,12 @@ async function createMySqlRepository() {
       } finally {
         connection.release();
       }
+
+      await writeBackupSnapshot(
+        buildBackupPayload(rows, "database", {
+          client: db.client
+        })
+      );
 
       return buildPayload(rows, meta);
     },
@@ -413,6 +487,12 @@ async function createMsSqlRepository() {
         await transaction.rollback();
         throw error;
       }
+
+      await writeBackupSnapshot(
+        buildBackupPayload(rows, "database", {
+          client: db.client
+        })
+      );
 
       return buildPayload(rows, meta);
     },

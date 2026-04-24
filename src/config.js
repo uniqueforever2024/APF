@@ -14,7 +14,7 @@ export const BU_OPTIONS = [
   { id: "hr", label: "BU HR", name: "Croatia" },
   { id: "si", label: "BU SI", name: "Slovenia" },
   { id: "lt", label: "BU LT", name: "Lithuania" },
-  { id: "ib", label: "BU IB", name: "Iberia" }
+  { id: "ib", label: "BU IB", name: "Spain" }
 ];
 
 export const MAP_LINKS = [

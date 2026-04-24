@@ -145,11 +145,17 @@ function AuthScreen({
 
                       {loginError ? <div className="login-error">{loginError}</div> : null}
 
-                      <button className="primary-button login-submit" type="submit">
+                      <button
+                        className="secondary-button login-submit login-sign-in-button"
+                        type="submit"
+                      >
                         {t("signIn", "Sign in")}
                       </button>
 
-                      <a className="secondary-button login-submit" href={SUPPORT_EMAIL_HREF}>
+                      <a
+                        className="primary-button login-submit login-support-button"
+                        href={SUPPORT_EMAIL_HREF}
+                      >
                         {t("supportButton", "Email support")}
                       </a>
 
@@ -166,10 +172,16 @@ function AuthScreen({
                       <div className="client-login-box">
                         <span className="client-login-title">{welcomeBackLabel}</span>
                         {loginError ? <div className="login-error">{loginError}</div> : null}
-                        <button className="primary-button login-submit" type="submit">
+                        <button
+                          className="secondary-button login-submit login-sign-in-button"
+                          type="submit"
+                        >
                           {t("signIn", "Sign in")}
                         </button>
-                        <a className="secondary-button login-submit" href={SUPPORT_EMAIL_HREF}>
+                        <a
+                          className="primary-button login-submit login-support-button"
+                          href={SUPPORT_EMAIL_HREF}
+                        >
                           {t("supportButton", "Email support")}
                         </a>
                       </div>

@@ -17,9 +17,15 @@ function DirectoryManagerModal({
 
   return (
     <div className="manager-overlay" onClick={() => setManagerOpen(false)}>
-      <div className="manager-panel manager-panel-form" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="manager-panel manager-panel-form"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="manager-dialog-title"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="manager-header">
-          <h2>{t("addPartnerTitle", "Add New Partner")}</h2>
+          <h2 id="manager-dialog-title">{t("addPartnerTitle", "Add New Partner")}</h2>
           <button
             className="modal-close-button"
             type="button"
