@@ -1078,7 +1078,7 @@
       "bu": "fr",
       "type": "extractionAnnonceCarrier",
       "label": "MOTOBYCAT",
-      "url": "http://frbs.groupecat.com:8000/arch/RECU/MOTOBYCAT/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/RECU/MOTOBYCAT/",
       "backup": ""
     },
     {
@@ -1918,7 +1918,7 @@
       "bu": "it",
       "type": "annonces",
       "label": "CEVA - CATTAD",
-      "url": "http://frbs.groupecat.com:8000/arch/RECU/TAD/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/RECU/TAD/",
       "backup": ""
     },
     {
@@ -1942,7 +1942,7 @@
       "bu": "it",
       "type": "annonces",
       "label": "SITES - Client startup",
-      "url": "http://frbs.groupecat.com:8000/arch/EMIS/ITREFTIER/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/EMIS/ITREFTIER/",
       "backup": "IT.REFERENTIEL.TIERS@lc.re7.groupecat.com"
     },
     {
@@ -2102,7 +2102,7 @@
       "bu": "pl",
       "type": "annonces",
       "label": "CEVA (MAN DE)",
-      "url": "http://frbs.groupecat.com:8000/arch/EMIS/CEVAPL/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/EMIS/CEVAPL/",
       "backup": "LC.CEVA.SHIPMENT-ORDERS@lc.re7.groupecat.com"
     },
     {
@@ -2390,7 +2390,7 @@
       "bu": "pl",
       "type": "annonces",
       "label": "SUZUKI BIKES",
-      "url": "http://frbs.groupecat.com:8000/arch/RECU/SUZUKIPL/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/RECU/SUZUKIPL/",
       "backup": "PL.SUZUKI.ORDERS@lc.re7.groupecat.com"
     },
     {
@@ -2542,7 +2542,7 @@
       "bu": "pl",
       "type": "scans",
       "label": "GPRS",
-      "url": "http://frbs.groupecat.com:8000/arch/RECU/LASGPRSP/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/RECU/LASGPRSP/",
       "backup": ""
     },
     {
@@ -3302,7 +3302,7 @@
       "bu": "ua",
       "type": "annonces",
       "label": "SITES - Client startup",
-      "url": "http://frbs.groupecat.com:8000/arch/EMIS/UAREFTIER/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/EMIS/UAREFTIER/",
       "backup": "UA.REFERENTIEL.TIERS@lc.re7.groupecat.com"
     },
     {
@@ -3422,7 +3422,7 @@
       "bu": "si",
       "type": "annonces",
       "label": "SITES - Client startup",
-      "url": "http://frbs.groupecat.com:8000/arch/EMIS/SIREFTIER/",
+      "url": "http://frb2bcdu01.groupecat.com:8000/arch/EMIS/SIREFTIER/",
       "backup": "SI.REFERENTIEL.TIERS@lc.re7.groupecat.com"
     },
     {

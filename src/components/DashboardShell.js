@@ -7,7 +7,7 @@ import {
   SECTION_ORDER
 } from "../config";
 import LanguageDropdown from "./LanguageDropdown";
-import { buildDirectoryPreviewUrl, buildDirectoryUrl } from "../utils";
+import { buildDirectoryPreviewUrl } from "../utils";
 import ThemeToggle from "./ThemeToggle";
 
 function DashboardShell({
@@ -118,6 +118,8 @@ function DashboardShell({
     themeMode === "dark"
       ? t("lightMode", "Light mode")
       : t("darkMode", "Dark mode");
+  const homeLabel = t("home", "Home");
+  const logoutLabel = t("logout", "Logout");
 
   useEffect(() => {
     if (route.page !== "directory") {
@@ -178,24 +180,28 @@ function DashboardShell({
               </button>
             ) : null}
             <button
-              className={`header-command-button ${route.page === "home" ? "active" : ""}`}
+              className={`header-command-button header-command-button-icon-only ${
+                route.page === "home" ? "active" : ""
+              }`}
               type="button"
               onClick={() => navigate({ page: "home", lang: route.lang })}
+              aria-label={homeLabel}
+              title={homeLabel}
             >
               <span className="header-command-icon" aria-hidden="true">
                 <HeaderActionIcon type="home" />
               </span>
-              <span>{t("home", "Home")}</span>
             </button>
             <button
-              className="header-command-button"
+              className="header-command-button header-command-button-icon-only"
               type="button"
               onClick={logout}
+              aria-label={logoutLabel}
+              title={logoutLabel}
             >
               <span className="header-command-icon" aria-hidden="true">
                 <HeaderActionIcon type="logout" />
               </span>
-              <span>{t("logout", "Logout")}</span>
             </button>
           </div>
         </div>
@@ -441,7 +447,48 @@ function PartnerPreviewPanel({
   const [fileSearchValue, setFileSearchValue] = useState("");
   const [fileHighlightValue, setFileHighlightValue] = useState("");
   const [fileSearchReloadKey, setFileSearchReloadKey] = useState(0);
+  const [previewTargetUrl, setPreviewTargetUrl] = useState("");
   const fileSearchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!activeEntry) {
+      setFileSearchValue("");
+      setFileHighlightValue("");
+      setFileSearchReloadKey(0);
+      setPreviewTargetUrl("");
+      return;
+    }
+
+    setFileSearchValue("");
+    setFileHighlightValue("");
+    setFileSearchReloadKey(0);
+    setPreviewTargetUrl(activeEntry.url);
+  }, [activeEntry]);
+
+  useEffect(() => {
+    if (!activeEntry) {
+      return undefined;
+    }
+
+    const handlePreviewNavigation = (event) => {
+      if (event.data?.type !== "apf-directory-location") {
+        return;
+      }
+
+      if (event.data.context && event.data.context !== activeEntry.id) {
+        return;
+      }
+
+      if (typeof event.data.remoteUrl === "string" && event.data.remoteUrl.trim()) {
+        setPreviewTargetUrl(event.data.remoteUrl.trim());
+      }
+    };
+
+    window.addEventListener("message", handlePreviewNavigation);
+    return () => {
+      window.removeEventListener("message", handlePreviewNavigation);
+    };
+  }, [activeEntry]);
 
   if (!activeEntry) {
     return (
@@ -454,19 +501,12 @@ function PartnerPreviewPanel({
     );
   }
 
-  const activeEntryUrl = buildDirectoryUrl(activeEntry.url);
-  const previewFrameUrl = fileHighlightValue
-    ? `${buildDirectoryPreviewUrl(
-        activeEntry.url,
-        fileHighlightValue
-      )}&reload=${fileSearchReloadKey}`
-    : activeEntryUrl;
-
-  useEffect(() => {
-    setFileSearchValue("");
-    setFileHighlightValue("");
-    setFileSearchReloadKey(0);
-  }, [activeEntry.id]);
+  const resolvedPreviewTargetUrl = previewTargetUrl || activeEntry.url;
+  const previewFrameUrl = buildDirectoryPreviewUrl(resolvedPreviewTargetUrl, {
+    highlight: fileHighlightValue,
+    reloadKey: fileSearchReloadKey,
+    context: activeEntry.id
+  });
 
   const handleFileSearch = (event) => {
     event.preventDefault();

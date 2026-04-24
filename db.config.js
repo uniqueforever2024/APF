@@ -146,6 +146,28 @@ const directoryTarget = {
   port: String(process.env.DIRECTORY_TARGET_PORT || "8000")
 };
 
+const directoryProxyProtocol = readStringEnv("DIRECTORY_PROXY_PROTOCOL", "http") || "http";
+const directoryProxyHost = readStringEnv("DIRECTORY_PROXY_HOST");
+const directoryProxy = {
+  protocol: directoryProxyProtocol,
+  host: directoryProxyHost,
+  port: String(
+    process.env.DIRECTORY_PROXY_PORT ||
+      (directoryProxyHost ? (directoryProxyProtocol === "https" ? "443" : "80") : "")
+  ),
+  username: readStringEnv("DIRECTORY_PROXY_USERNAME"),
+  password: readStringEnv("DIRECTORY_PROXY_PASSWORD"),
+  bypassHosts: readStringEnv("DIRECTORY_PROXY_BYPASS_HOSTS")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+};
+
+const adminAuth = {
+  username: readStringEnv("APF_ADMIN_USERNAME", "admin").toLowerCase(),
+  password: readStringEnv("APF_ADMIN_PASSWORD", "admin123")
+};
+
 module.exports = {
   PORT,
   ROOT_DIR,
@@ -154,5 +176,7 @@ module.exports = {
   PROJECT_APPS,
   db,
   canUseDatabase,
-  directoryTarget
+  directoryTarget,
+  directoryProxy,
+  adminAuth
 };

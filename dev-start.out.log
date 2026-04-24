@@ -1,0 +1,23 @@
+certificate app directory is not present in this workspace. The APF portal will still run.
+documentation app directory is not present in this workspace. The APF portal will still run.
+sftp app directory is not present in this workspace. The APF portal will still run.
+Directory data API listening on http://localhost:3001
+Directory target: http://frb2bcdu01.groupecat.com:8000
+Directory proxy: http://forcepoint.groupecat.com:80
+Directory data source: json (json)
+Directory data note: Bundled local storage is active until database details are provided.
+Starting the development server...
+
+Compiled successfully!
+
+You can now view apf_new in the browser.
+
+  http://localhost:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m

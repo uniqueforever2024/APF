@@ -11,9 +11,8 @@ function ThemeToggle({ themeMode, onToggle, label, className = "" }) {
       title={label}
     >
       <span className="theme-toggle-icon" aria-hidden="true">
-        {isDark ? <SunIcon /> : <MoonIcon />}
+        {isDark ? <MoonIcon /> : <SunIcon />}
       </span>
-      <span className="theme-toggle-label">{label}</span>
     </button>
   );
 }

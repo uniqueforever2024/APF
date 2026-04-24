@@ -6,6 +6,7 @@ const DIRECTORY_TARGET_HOST =
   process.env.REACT_APP_DIRECTORY_TARGET_HOST || "frb2bcdu01.groupecat.com";
 const DIRECTORY_TARGET_PORT =
   process.env.REACT_APP_DIRECTORY_TARGET_PORT || "8000";
+const LEGACY_DIRECTORY_TARGET_HOSTS = ["frbs.groupecat.com"];
 const DIRECTORY_API_BASE =
   process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
 const ENTRY_SORTER = new Intl.Collator(undefined, {
@@ -16,6 +17,59 @@ const ENTRY_SORTER = new Intl.Collator(undefined, {
 function buildTargetOrigin() {
   const portPart = DIRECTORY_TARGET_PORT ? `:${DIRECTORY_TARGET_PORT}` : "";
   return `${DIRECTORY_TARGET_PROTOCOL}://${DIRECTORY_TARGET_HOST}${portPart}`;
+}
+
+function isKnownDirectoryTargetHost(hostname) {
+  const normalizedHostname = String(hostname || "").trim().toLowerCase();
+
+  return (
+    normalizedHostname === DIRECTORY_TARGET_HOST.toLowerCase() ||
+    LEGACY_DIRECTORY_TARGET_HOSTS.includes(normalizedHostname)
+  );
+}
+
+function rewriteKnownDirectoryTargetUrl(value) {
+  const trimmedValue = String(value || "").trim();
+
+  if (!trimmedValue) {
+    return trimmedValue;
+  }
+
+  if (isAbsoluteUrl(trimmedValue)) {
+    try {
+      const parsedUrl = new URL(trimmedValue);
+
+      if (
+        isKnownDirectoryTargetHost(parsedUrl.hostname) &&
+        (!parsedUrl.port || parsedUrl.port === DIRECTORY_TARGET_PORT)
+      ) {
+        return `${buildTargetOrigin()}${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+      }
+    } catch (error) {
+      return trimmedValue;
+    }
+
+    return trimmedValue;
+  }
+
+  if (isHostPath(trimmedValue)) {
+    const [hostPart, ...pathParts] = trimmedValue.split("/");
+
+    try {
+      const parsedHost = new URL(`http://${hostPart}`);
+
+      if (
+        isKnownDirectoryTargetHost(parsedHost.hostname) &&
+        (!parsedHost.port || parsedHost.port === DIRECTORY_TARGET_PORT)
+      ) {
+        return `${buildTargetOrigin()}/${pathParts.join("/")}`;
+      }
+    } catch (error) {
+      return trimmedValue;
+    }
+  }
+
+  return trimmedValue;
 }
 
 function isAbsoluteUrl(value) {
@@ -64,7 +118,7 @@ export function sortEntriesAlphabetically(entries) {
 }
 
 export function buildDirectoryUrl(url) {
-  const trimmedUrl = String(url || "").trim();
+  const trimmedUrl = rewriteKnownDirectoryTargetUrl(url);
 
   if (!trimmedUrl) {
     return "#";
@@ -82,12 +136,27 @@ export function buildDirectoryUrl(url) {
 }
 
 export function buildDirectoryPreviewUrl(url, highlight = "") {
+  const trimmedUrl = rewriteKnownDirectoryTargetUrl(url);
+  const options =
+    typeof highlight === "string"
+      ? { highlight }
+      : highlight && typeof highlight === "object"
+        ? highlight
+        : {};
   const params = new URLSearchParams({
-    url: String(url || "").trim()
+    url: trimmedUrl
   });
 
-  if (String(highlight || "").trim()) {
-    params.set("highlight", String(highlight).trim());
+  if (String(options.highlight || "").trim()) {
+    params.set("highlight", String(options.highlight).trim());
+  }
+
+  if (String(options.reloadKey || "").trim()) {
+    params.set("reload", String(options.reloadKey).trim());
+  }
+
+  if (String(options.context || "").trim()) {
+    params.set("context", String(options.context).trim());
   }
 
   return `${DIRECTORY_API_BASE}/api/directory-preview?${params.toString()}`;

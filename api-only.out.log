@@ -1,0 +1,5 @@
+Directory data API listening on http://localhost:3001
+Directory target: http://frb2bcdu01.groupecat.com:8000
+Directory proxy: http://forcepoint.groupecat.com:80
+Directory data source: json (json)
+Directory data note: Bundled local storage is active until database details are provided.

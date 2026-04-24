@@ -18,9 +18,8 @@ import DirectoryManagerModal from "./components/DirectoryManagerModal";
 
 const AUTH_STORAGE_KEY = "apf_new_auth_session_v1";
 const THEME_STORAGE_KEY = "apf_new_theme_mode_v1";
-const DEFAULT_CREDENTIALS = {
-  admin: { username: "admin", password: "admin123" }
-};
+const DIRECTORY_API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
+const AUTH_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
 
 function readStoredSession() {
   try {
@@ -199,7 +198,7 @@ function App() {
     setLoginForm({ username: "", password: "" });
   };
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
 
     if (loginMode === "client") {
@@ -211,22 +210,35 @@ function App() {
       return;
     }
 
-    const expectedCredentials = DEFAULT_CREDENTIALS.admin;
-    const normalizedUsername = loginForm.username.trim().toLowerCase();
+    try {
+      const response = await fetch(AUTH_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: loginForm.username,
+          password: loginForm.password
+        })
+      });
 
-    if (
-      normalizedUsername !== expectedCredentials.username ||
-      loginForm.password !== expectedCredentials.password
-    ) {
+      if (!response.ok) {
+        setLoginError(text.loginErrorAdmin || "Admin access details are not correct.");
+        return;
+      }
+
+      const payload = await response.json();
+      const normalizedUsername = String(payload.username || loginForm.username)
+        .trim()
+        .toLowerCase();
+      const nextSession = { role: loginMode, username: normalizedUsername };
+      window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
+      setSession(nextSession);
+      setLoginError("");
+      setLoginForm({ username: "", password: "" });
+    } catch (error) {
       setLoginError(text.loginErrorAdmin || "Admin access details are not correct.");
-      return;
     }
-
-    const nextSession = { role: loginMode, username: normalizedUsername };
-    window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
-    setSession(nextSession);
-    setLoginError("");
-    setLoginForm({ username: "", password: "" });
   };
 
   const logout = () => {

@@ -2,10 +2,13 @@ const http = require("http");
 const https = require("https");
 const fs = require("fs/promises");
 const path = require("path");
+const zlib = require("zlib");
 const {
   PORT,
   PROJECT_APPS,
-  directoryTarget
+  directoryTarget,
+  directoryProxy,
+  adminAuth
 } = require("./db.config");
 const { createDirectoryRepository } = require("./directory-data-repository");
 
@@ -13,6 +16,28 @@ const repositoryPromise = createDirectoryRepository();
 const DIRECTORY_TARGET_PROTOCOL = directoryTarget.protocol;
 const DIRECTORY_TARGET_HOST = directoryTarget.host;
 const DIRECTORY_TARGET_PORT = directoryTarget.port;
+const LEGACY_DIRECTORY_TARGET_HOSTS = ["frbs.groupecat.com"];
+const DIRECTORY_PROXY_PROTOCOL = directoryProxy.protocol || "http";
+const DIRECTORY_PROXY_HOST = directoryProxy.host;
+const DIRECTORY_PROXY_PORT = directoryProxy.port;
+const DIRECTORY_PROXY_USERNAME = directoryProxy.username;
+const DIRECTORY_PROXY_PASSWORD = directoryProxy.password;
+const DIRECTORY_PROXY_BYPASS_HOSTS = new Set(
+  [
+    DIRECTORY_TARGET_HOST.toLowerCase(),
+    ...LEGACY_DIRECTORY_TARGET_HOSTS,
+    ...(directoryProxy.bypassHosts || [])
+  ].map((host) => String(host || "").trim().toLowerCase()).filter(Boolean)
+);
+const HAS_DIRECTORY_PROXY = Boolean(DIRECTORY_PROXY_HOST);
+const DIRECTORY_PROXY_AUTH_HEADER =
+  DIRECTORY_PROXY_USERNAME || DIRECTORY_PROXY_PASSWORD
+    ? `Basic ${Buffer.from(
+        `${DIRECTORY_PROXY_USERNAME}:${DIRECTORY_PROXY_PASSWORD}`
+      ).toString("base64")}`
+    : "";
+const ADMIN_USERNAME = String(adminAuth.username || "admin").trim().toLowerCase();
+const ADMIN_PASSWORD = String(adminAuth.password || "");
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -30,8 +55,61 @@ function normalizeTargetPath(value) {
   return value.replace(/^\/+/, "");
 }
 
-function normalizeStoredUrl(value) {
+function isKnownDirectoryTargetHost(hostname) {
+  const normalizedHostname = String(hostname || "").trim().toLowerCase();
+
+  return (
+    normalizedHostname === DIRECTORY_TARGET_HOST.toLowerCase() ||
+    LEGACY_DIRECTORY_TARGET_HOSTS.includes(normalizedHostname)
+  );
+}
+
+function rewriteKnownDirectoryTargetUrl(value) {
   const trimmedValue = String(value || "").trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  if (isAbsoluteUrl(trimmedValue)) {
+    try {
+      const parsedUrl = new URL(trimmedValue);
+
+      if (
+        isKnownDirectoryTargetHost(parsedUrl.hostname) &&
+        (!parsedUrl.port || parsedUrl.port === DIRECTORY_TARGET_PORT)
+      ) {
+        return `${buildTargetOrigin()}${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+      }
+    } catch (error) {
+      return trimmedValue;
+    }
+
+    return trimmedValue;
+  }
+
+  if (isHostPath(trimmedValue)) {
+    const [hostPart, ...pathParts] = trimmedValue.split("/");
+
+    try {
+      const parsedHost = new URL(`http://${hostPart}`);
+
+      if (
+        isKnownDirectoryTargetHost(parsedHost.hostname) &&
+        (!parsedHost.port || parsedHost.port === DIRECTORY_TARGET_PORT)
+      ) {
+        return `${buildTargetOrigin()}/${pathParts.join("/")}`;
+      }
+    } catch (error) {
+      return trimmedValue;
+    }
+  }
+
+  return trimmedValue;
+}
+
+function normalizeStoredUrl(value) {
+  const trimmedValue = rewriteKnownDirectoryTargetUrl(value);
 
   if (!trimmedValue) {
     return "";
@@ -46,7 +124,7 @@ function normalizeStoredUrl(value) {
 
       if (
         protocol === DIRECTORY_TARGET_PROTOCOL.toLowerCase() &&
-        hostname === DIRECTORY_TARGET_HOST.toLowerCase() &&
+        isKnownDirectoryTargetHost(hostname) &&
         port === DIRECTORY_TARGET_PORT
       ) {
         return normalizeTargetPath(
@@ -61,7 +139,9 @@ function normalizeStoredUrl(value) {
   }
 
   const targetHostPattern = new RegExp(
-    `^${escapeRegExp(DIRECTORY_TARGET_HOST)}(?::${escapeRegExp(
+    `^(?:${[DIRECTORY_TARGET_HOST, ...LEGACY_DIRECTORY_TARGET_HOSTS]
+      .map((host) => escapeRegExp(host))
+      .join("|")})(?::${escapeRegExp(
       DIRECTORY_TARGET_PORT
     )})?/`,
     "i"
@@ -112,8 +192,160 @@ function buildTargetOrigin() {
   return `${DIRECTORY_TARGET_PROTOCOL}://${DIRECTORY_TARGET_HOST}${portPart}`;
 }
 
-function resolveDirectoryPreviewUrl(value) {
+function getProxyOrigin() {
+  const portPart = DIRECTORY_PROXY_PORT ? `:${DIRECTORY_PROXY_PORT}` : "";
+  return `${DIRECTORY_PROXY_PROTOCOL}://${DIRECTORY_PROXY_HOST}${portPart}`;
+}
+
+function buildPreviewProxyUrl(targetUrl, context = "") {
+  const params = new URLSearchParams({
+    url: targetUrl
+  });
+
+  if (String(context || "").trim()) {
+    params.set("context", String(context).trim());
+  }
+
+  return `/api/directory-preview?${params.toString()}`;
+}
+
+function shouldRewriteResourceUrl(value) {
   const trimmedValue = String(value || "").trim();
+
+  if (!trimmedValue) {
+    return false;
+  }
+
+  return !/^(#|mailto:|tel:|javascript:|data:)/i.test(trimmedValue);
+}
+
+function rewriteHtmlResourceLinks(html, targetUrl, context = "") {
+  const htmlWithoutBaseTag = html.replace(/<base\b[^>]*>/gi, "");
+
+  return htmlWithoutBaseTag.replace(
+    /\b(href|src|action)=("([^"]*)"|'([^']*)')/gi,
+    (fullMatch, attributeName, quotedValue, doubleQuotedValue, singleQuotedValue) => {
+      const rawValue =
+        doubleQuotedValue !== undefined ? doubleQuotedValue : singleQuotedValue;
+
+      if (!shouldRewriteResourceUrl(rawValue)) {
+        return fullMatch;
+      }
+
+      try {
+        const resolvedUrl = new URL(rawValue, targetUrl).toString();
+        const rewrittenValue = escapeHtml(
+          buildPreviewProxyUrl(resolvedUrl, context)
+        );
+        const quote = doubleQuotedValue !== undefined ? '"' : "'";
+
+        return `${attributeName}=${quote}${rewrittenValue}${quote}`;
+      } catch (error) {
+        return fullMatch;
+      }
+    }
+  );
+}
+
+function getRequestClient(protocol) {
+  return protocol === "https" || protocol === "https:" ? https : http;
+}
+
+function shouldBypassProxy(targetUrl) {
+  try {
+    const parsedTargetUrl = new URL(targetUrl);
+    return DIRECTORY_PROXY_BYPASS_HOSTS.has(parsedTargetUrl.hostname.toLowerCase());
+  } catch (error) {
+    return false;
+  }
+}
+
+function createRemoteRequest(targetUrl) {
+  const parsedTargetUrl = new URL(targetUrl);
+  const commonHeaders = {
+    Accept: "*/*",
+    "Accept-Encoding": "identity",
+    "User-Agent": "APF Directory Proxy/1.0",
+    Host: parsedTargetUrl.host
+  };
+
+  if (
+    HAS_DIRECTORY_PROXY &&
+    parsedTargetUrl.protocol === "http:" &&
+    !shouldBypassProxy(targetUrl)
+  ) {
+    const proxyHeaders = {
+      ...commonHeaders
+    };
+
+    if (DIRECTORY_PROXY_AUTH_HEADER) {
+      proxyHeaders["Proxy-Authorization"] = DIRECTORY_PROXY_AUTH_HEADER;
+    }
+
+    return {
+      client: getRequestClient(DIRECTORY_PROXY_PROTOCOL),
+      options: {
+        host: DIRECTORY_PROXY_HOST,
+        port:
+          Number(DIRECTORY_PROXY_PORT) ||
+          (DIRECTORY_PROXY_PROTOCOL === "https" ? 443 : 80),
+        method: "GET",
+        path: targetUrl,
+        headers: proxyHeaders
+      }
+    };
+  }
+
+  return {
+    client: getRequestClient(parsedTargetUrl.protocol),
+    options: {
+      host: parsedTargetUrl.hostname,
+      port:
+        Number(parsedTargetUrl.port) ||
+        (parsedTargetUrl.protocol === "https:" ? 443 : 80),
+      method: "GET",
+      path: `${parsedTargetUrl.pathname}${parsedTargetUrl.search}`,
+      headers: commonHeaders
+    }
+  };
+}
+
+function readRemoteBody(remoteResponse) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+
+    remoteResponse.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    remoteResponse.on("end", () => resolve(Buffer.concat(chunks)));
+    remoteResponse.on("error", reject);
+  });
+}
+
+function decodeRemoteBody(body, contentEncoding) {
+  const normalizedEncoding = String(contentEncoding || "").toLowerCase();
+
+  if (!normalizedEncoding || normalizedEncoding === "identity") {
+    return body;
+  }
+
+  if (normalizedEncoding.includes("gzip")) {
+    return zlib.gunzipSync(body);
+  }
+
+  if (normalizedEncoding.includes("deflate")) {
+    return zlib.inflateSync(body);
+  }
+
+  if (normalizedEncoding.includes("br")) {
+    return zlib.brotliDecompressSync(body);
+  }
+
+  return body;
+}
+
+function resolveDirectoryPreviewUrl(value) {
+  const trimmedValue = rewriteKnownDirectoryTargetUrl(value);
 
   if (!trimmedValue) {
     return "";
@@ -130,10 +362,10 @@ function resolveDirectoryPreviewUrl(value) {
   return `${buildTargetOrigin()}/${normalizeTargetPath(trimmedValue)}`;
 }
 
-function fetchRemoteText(targetUrl, redirectCount = 0) {
+function requestRemoteResource(targetUrl, redirectCount = 0) {
   return new Promise((resolve, reject) => {
-    const client = targetUrl.startsWith("https:") ? https : http;
-    const request = client.get(targetUrl, (remoteResponse) => {
+    const { client, options } = createRemoteRequest(targetUrl);
+    const request = client.request(options, async (remoteResponse) => {
       const statusCode = Number(remoteResponse.statusCode || 0);
 
       if (
@@ -153,36 +385,44 @@ function fetchRemoteText(targetUrl, redirectCount = 0) {
         ).toString();
 
         remoteResponse.resume();
-        resolve(fetchRemoteText(redirectedUrl, redirectCount + 1));
+        resolve(requestRemoteResource(redirectedUrl, redirectCount + 1));
         return;
       }
 
-      if (statusCode < 200 || statusCode >= 300) {
-        reject(
-          new Error(`Remote request failed with status ${statusCode || "unknown"}.`)
-        );
-        remoteResponse.resume();
-        return;
-      }
-
-      let body = "";
-      remoteResponse.setEncoding("utf8");
-      remoteResponse.on("data", (chunk) => {
-        body += chunk;
-      });
-      remoteResponse.on("end", () => {
+      try {
+        const body = await readRemoteBody(remoteResponse);
         resolve({
           body,
+          headers: remoteResponse.headers,
+          statusCode,
           finalUrl: targetUrl
         });
-      });
+      } catch (error) {
+        reject(error);
+      }
     });
 
-    request.setTimeout(15000, () => {
+    request.setTimeout(20000, () => {
       request.destroy(new Error("Remote request timed out."));
     });
     request.on("error", reject);
+    request.end();
   });
+}
+
+function isHtmlLikeResponse(headers, targetUrl) {
+  const contentType = String(headers["content-type"] || "").toLowerCase();
+
+  if (contentType.includes("text/html")) {
+    return true;
+  }
+
+  try {
+    const parsedUrl = new URL(targetUrl);
+    return parsedUrl.pathname.endsWith("/") || /\.html?$/i.test(parsedUrl.pathname);
+  } catch (error) {
+    return false;
+  }
 }
 
 function highlightDirectoryHtml(html, highlightValue) {
@@ -237,20 +477,24 @@ function highlightDirectoryHtml(html, highlightValue) {
   };
 }
 
-function buildDirectoryPreviewDocument(remoteHtml, targetUrl, highlightValue) {
+function buildDirectoryPreviewDocument(remoteHtml, targetUrl, highlightValue, context = "") {
+  const rewrittenHtml = rewriteHtmlResourceLinks(remoteHtml, targetUrl, context);
   const { html: highlightedHtml, matchCount } = highlightDirectoryHtml(
-    remoteHtml,
+    rewrittenHtml,
     highlightValue
   );
-  const escapedTargetUrl = escapeHtml(targetUrl);
   const escapedHighlight = escapeHtml(highlightValue);
+  const navigationPayload = JSON.stringify({
+    type: "apf-directory-location",
+    remoteUrl: targetUrl,
+    context
+  });
   const searchBanner = String(highlightValue || "").trim()
     ? matchCount > 0
       ? `<div class="apf-search-banner">Highlighted ${matchCount} matching file${matchCount === 1 ? "" : "s"} for "<strong>${escapedHighlight}</strong>".</div>`
       : `<div class="apf-search-banner apf-search-banner-empty">No file matched "<strong>${escapedHighlight}</strong>".</div>`
     : "";
   const injectedHead = `
-<base href="${escapedTargetUrl}">
 <style>
   html, body {
     margin: 0;
@@ -297,6 +541,10 @@ function buildDirectoryPreviewDocument(remoteHtml, targetUrl, highlightValue) {
 <\/style>
 <script>
   window.addEventListener("DOMContentLoaded", function () {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(${navigationPayload}, "*");
+    }
+
     var firstMatch = document.querySelector(".apf-file-match");
 
     if (firstMatch) {
@@ -326,6 +574,34 @@ function buildDirectoryPreviewDocument(remoteHtml, targetUrl, highlightValue) {
   }
 
   return documentHtml;
+}
+
+function sendRemoteResponse(response, remoteResource) {
+  const responseHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Length": String(remoteResource.body.length)
+  };
+  const passthroughHeaderNames = [
+    "content-disposition",
+    "content-language",
+    "content-type",
+    "cache-control",
+    "etag",
+    "last-modified"
+  ];
+
+  passthroughHeaderNames.forEach((headerName) => {
+    const headerValue = remoteResource.headers[headerName];
+
+    if (headerValue) {
+      responseHeaders[headerName] = headerValue;
+    }
+  });
+
+  response.writeHead(remoteResource.statusCode || 200, responseHeaders);
+  response.end(remoteResource.body);
 }
 
 function getContentType(filePath) {
@@ -428,6 +704,13 @@ async function readRequestBody(request) {
   });
 }
 
+function isValidAdminLogin(username, password) {
+  return (
+    String(username || "").trim().toLowerCase() === ADMIN_USERNAME &&
+    String(password || "") === ADMIN_PASSWORD
+  );
+}
+
 const server = http.createServer(async (request, response) => {
   if (!request.url) {
     sendJson(response, 404, { error: "Not found" });
@@ -457,6 +740,30 @@ const server = http.createServer(async (request, response) => {
         ok: false,
         error: "Directory repository is not ready."
       });
+    }
+    return;
+  }
+
+  if (requestPath === "/api/auth/login" && request.method === "POST") {
+    try {
+      const body = await readRequestBody(request);
+      const parsedBody = body ? JSON.parse(body) : {};
+      const username = String(parsedBody.username || "").trim();
+      const password = String(parsedBody.password || "");
+
+      if (!isValidAdminLogin(username, password)) {
+        sendJson(response, 401, { ok: false, error: "Invalid admin credentials." });
+        return;
+      }
+
+      sendJson(response, 200, {
+        ok: true,
+        role: "admin",
+        username: ADMIN_USERNAME
+      });
+    } catch (error) {
+      console.error("POST /api/auth/login failed", error);
+      sendJson(response, 400, { ok: false, error: "Unable to process admin login." });
     }
     return;
   }
@@ -524,6 +831,7 @@ const server = http.createServer(async (request, response) => {
   if (requestPath === "/api/directory-preview" && request.method === "GET") {
     const targetUrl = resolveDirectoryPreviewUrl(requestUrl.searchParams.get("url"));
     const highlightValue = String(requestUrl.searchParams.get("highlight") || "").trim();
+    const previewContext = String(requestUrl.searchParams.get("context") || "").trim();
 
     if (!targetUrl) {
       sendHtml(
@@ -535,13 +843,27 @@ const server = http.createServer(async (request, response) => {
     }
 
     try {
-      const { body, finalUrl } = await fetchRemoteText(targetUrl);
-      const previewDocument = buildDirectoryPreviewDocument(
-        body,
-        finalUrl,
-        highlightValue
+      const remoteResource = await requestRemoteResource(targetUrl);
+      const decodedBody = decodeRemoteBody(
+        remoteResource.body,
+        remoteResource.headers["content-encoding"]
       );
-      sendHtml(response, 200, previewDocument);
+
+      if (!isHtmlLikeResponse(remoteResource.headers, remoteResource.finalUrl)) {
+        sendRemoteResponse(response, {
+          ...remoteResource,
+          body: decodedBody
+        });
+        return;
+      }
+
+      const previewDocument = buildDirectoryPreviewDocument(
+        decodedBody.toString("utf8"),
+        remoteResource.finalUrl,
+        highlightValue,
+        previewContext
+      );
+      sendHtml(response, remoteResource.statusCode || 200, previewDocument);
     } catch (error) {
       console.error("GET /api/directory-preview failed", error);
       sendHtml(
@@ -563,6 +885,9 @@ server.listen(PORT, () => {
   console.log(
     `Directory target: ${DIRECTORY_TARGET_PROTOCOL}://${DIRECTORY_TARGET_HOST}:${DIRECTORY_TARGET_PORT}`
   );
+  if (HAS_DIRECTORY_PROXY) {
+    console.log(`Directory proxy: ${getProxyOrigin()}`);
+  }
   repositoryPromise
     .then((repository) => repository.getHealth())
     .then((health) => {

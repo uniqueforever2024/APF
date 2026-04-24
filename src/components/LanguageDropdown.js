@@ -42,6 +42,12 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
     return null;
   }
 
+  const getLanguageCode = (language) =>
+    String(language?.label || language?.id || "")
+      .trim()
+      .slice(0, 2)
+      .toUpperCase();
+
   return (
     <div
       ref={rootRef}
@@ -54,10 +60,9 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
         aria-expanded={open}
         onClick={() => setOpen((previous) => !previous)}
       >
-        <span className="language-flag" aria-hidden="true">
-          {currentLanguage.flag}
+        <span className="language-dropdown-current">
+          {getLanguageCode(currentLanguage)}
         </span>
-        <span className="language-dropdown-current">{currentLanguage.nativeLabel}</span>
         <span className="language-dropdown-caret" aria-hidden="true">
           {open ? "^" : "v"}
         </span>
@@ -76,10 +81,10 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
                 setOpen(false);
               }}
             >
-              <span className="language-flag" aria-hidden="true">
-                {language.flag}
+              <span className="language-dropdown-code">
+                {getLanguageCode(language)}
               </span>
-              <span>{language.nativeLabel}</span>
+              <span className="language-dropdown-name">{language.nativeLabel}</span>
             </button>
           ))}
         </div>
