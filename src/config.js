@@ -12,14 +12,110 @@ const makeFlagEmoji = (countryCode) =>
     .join("");
 
 export const BU_OPTIONS = [
-  { id: "fr", label: "BU FR", name: "France", flag: makeFlagEmoji("FR") },
-  { id: "it", label: "BU IT", name: "Italy", flag: makeFlagEmoji("IT") },
-  { id: "pl", label: "BU PL", name: "Poland", flag: makeFlagEmoji("PL") },
-  { id: "ua", label: "BU UA", name: "Ukraine", flag: makeFlagEmoji("UA") },
-  { id: "hr", label: "BU HR", name: "Croatia", flag: makeFlagEmoji("HR") },
-  { id: "si", label: "BU SI", name: "Slovenia", flag: makeFlagEmoji("SI") },
-  { id: "lt", label: "BU LT", name: "Lithuania", flag: makeFlagEmoji("LT") },
-  { id: "ib", label: "BU IB", name: "Spain", flag: makeFlagEmoji("ES") }
+  {
+    id: "fr",
+    label: "BU FR",
+    name: "France",
+    flag: makeFlagEmoji("FR"),
+    flagId: "fr",
+    palette: {
+      base: "#2563eb",
+      soft: "rgba(37, 99, 235, 0.16)",
+      glow: "rgba(239, 68, 68, 0.16)",
+      text: "#1d4ed8"
+    }
+  },
+  {
+    id: "it",
+    label: "BU IT",
+    name: "Italy",
+    flag: makeFlagEmoji("IT"),
+    flagId: "it",
+    palette: {
+      base: "#16a34a",
+      soft: "rgba(22, 163, 74, 0.16)",
+      glow: "rgba(220, 38, 38, 0.14)",
+      text: "#15803d"
+    }
+  },
+  {
+    id: "pl",
+    label: "BU PL",
+    name: "Poland",
+    flag: makeFlagEmoji("PL"),
+    flagId: "pl",
+    palette: {
+      base: "#dc2626",
+      soft: "rgba(220, 38, 38, 0.16)",
+      glow: "rgba(244, 114, 182, 0.16)",
+      text: "#be123c"
+    }
+  },
+  {
+    id: "ua",
+    label: "BU UA",
+    name: "Ukraine",
+    flag: makeFlagEmoji("UA"),
+    flagId: "ua",
+    palette: {
+      base: "#2563eb",
+      soft: "rgba(37, 99, 235, 0.16)",
+      glow: "rgba(250, 204, 21, 0.2)",
+      text: "#1d4ed8"
+    }
+  },
+  {
+    id: "hr",
+    label: "BU HR",
+    name: "Croatia",
+    flag: makeFlagEmoji("HR"),
+    flagId: "hr",
+    palette: {
+      base: "#dc2626",
+      soft: "rgba(220, 38, 38, 0.16)",
+      glow: "rgba(37, 99, 235, 0.14)",
+      text: "#b91c1c"
+    }
+  },
+  {
+    id: "si",
+    label: "BU SI",
+    name: "Slovenia",
+    flag: makeFlagEmoji("SI"),
+    flagId: "si",
+    palette: {
+      base: "#2563eb",
+      soft: "rgba(37, 99, 235, 0.14)",
+      glow: "rgba(22, 163, 74, 0.14)",
+      text: "#1d4ed8"
+    }
+  },
+  {
+    id: "lt",
+    label: "BU LT",
+    name: "Lithuania",
+    flag: makeFlagEmoji("LT"),
+    flagId: "lt",
+    palette: {
+      base: "#ca8a04",
+      soft: "rgba(202, 138, 4, 0.18)",
+      glow: "rgba(22, 163, 74, 0.14)",
+      text: "#92400e"
+    }
+  },
+  {
+    id: "ib",
+    label: "BU IB",
+    name: "Spain",
+    flag: makeFlagEmoji("ES"),
+    flagId: "es",
+    palette: {
+      base: "#dc2626",
+      soft: "rgba(220, 38, 38, 0.14)",
+      glow: "rgba(245, 158, 11, 0.2)",
+      text: "#b45309"
+    }
+  }
 ];
 
 export const MAP_LINKS = [

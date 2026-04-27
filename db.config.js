@@ -6,6 +6,7 @@ loadEnvFile(path.join(__dirname, ".env"));
 const ROOT_DIR = __dirname;
 const PORT = Number(process.env.DIRECTORY_API_PORT || 3001);
 const DATA_FILE = path.join(ROOT_DIR, "public", "APF_NEW.json");
+const BUSINESS_UNITS_FILE = path.join(ROOT_DIR, "public", "APF_BUSINESS_UNITS.json");
 const BACKUP_DIR = path.join(ROOT_DIR, "backups");
 const PROJECT_APPS = {
   documentation: path.join(ROOT_DIR, "DOCUMENTATION_NEW"),
@@ -172,6 +173,7 @@ module.exports = {
   PORT,
   ROOT_DIR,
   DATA_FILE,
+  BUSINESS_UNITS_FILE,
   BACKUP_DIR,
   PROJECT_APPS,
   db,

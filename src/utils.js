@@ -13,6 +13,10 @@ const ENTRY_SORTER = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base"
 });
+const BUSINESS_UNIT_SORTER = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base"
+});
 
 function buildTargetOrigin() {
   const portPart = DIRECTORY_TARGET_PORT ? `:${DIRECTORY_TARGET_PORT}` : "";
@@ -115,6 +119,88 @@ export function sortEntriesAlphabetically(entries) {
     const match = comparisons.find((value) => value !== 0);
     return match || ENTRY_SORTER.compare(left.id, right.id);
   });
+}
+
+export function normalizeBusinessUnit(businessUnit) {
+  const id = String(businessUnit?.id || "")
+    .trim()
+    .toLowerCase();
+  const label = String(
+    businessUnit?.label || (id ? `BU ${id.toUpperCase()}` : "")
+  ).trim();
+  const name = String(businessUnit?.name || label || id.toUpperCase()).trim();
+  const flag = String(businessUnit?.flag || "").trim();
+  const flagId = String(businessUnit?.flagId || "").trim().toLowerCase();
+  const palette =
+    businessUnit?.palette && typeof businessUnit.palette === "object"
+      ? {
+          base: String(businessUnit.palette.base || "").trim(),
+          soft: String(businessUnit.palette.soft || "").trim(),
+          glow: String(businessUnit.palette.glow || "").trim(),
+          text: String(businessUnit.palette.text || "").trim()
+        }
+      : null;
+  const removed = businessUnit?.removed === true;
+
+  return {
+    id,
+    label,
+    name,
+    flag,
+    flagId,
+    palette,
+    removed
+  };
+}
+
+export function sortBusinessUnitsAlphabetically(businessUnits) {
+  return [...businessUnits].sort((leftUnit, rightUnit) => {
+    const left = normalizeBusinessUnit(leftUnit);
+    const right = normalizeBusinessUnit(rightUnit);
+    const comparisons = [
+      BUSINESS_UNIT_SORTER.compare(left.label, right.label),
+      BUSINESS_UNIT_SORTER.compare(left.name, right.name),
+      BUSINESS_UNIT_SORTER.compare(left.id, right.id)
+    ];
+
+    return comparisons.find((value) => value !== 0) || 0;
+  });
+}
+
+export function mergeBusinessUnits(defaultUnits, customUnits) {
+  const mergedUnits = new Map();
+
+  [...defaultUnits, ...customUnits].forEach((businessUnit) => {
+    const normalizedUnit = normalizeBusinessUnit(businessUnit);
+
+    if (!normalizedUnit.id) {
+      return;
+    }
+
+    const previousUnit = mergedUnits.get(normalizedUnit.id) || {};
+
+    if (normalizedUnit.removed) {
+      mergedUnits.set(normalizedUnit.id, {
+        ...previousUnit,
+        ...normalizedUnit,
+        removed: true
+      });
+      return;
+    }
+
+    mergedUnits.set(normalizedUnit.id, {
+      ...previousUnit,
+      ...normalizedUnit,
+      palette: normalizedUnit.palette || previousUnit.palette || null,
+      removed: false
+    });
+  });
+
+  return sortBusinessUnitsAlphabetically(
+    [...mergedUnits.values()].filter(
+      (businessUnit) => businessUnit.id && businessUnit.name && !businessUnit.removed
+    )
+  );
 }
 
 export function buildDirectoryUrl(url) {

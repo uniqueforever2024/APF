@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { normalizeEntry, sortEntriesAlphabetically } from "./utils";
+import {
+  normalizeBusinessUnit,
+  normalizeEntry,
+  sortBusinessUnitsAlphabetically,
+  sortEntriesAlphabetically
+} from "./utils";
 
 const API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
 const API_URL = `${API_BASE}/api/directory-data`;
@@ -8,6 +13,8 @@ const FALLBACK_DATA_PATH = `${process.env.PUBLIC_URL || ""}/APF_NEW.json`;
 export default function useDirectoryData() {
   const [seedEntries, setSeedEntries] = useState([]);
   const [entries, setEntries] = useState([]);
+  const [seedBusinessUnits, setSeedBusinessUnits] = useState([]);
+  const [businessUnits, setBusinessUnits] = useState([]);
   const [dataMeta, setDataMeta] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -17,6 +24,14 @@ export default function useDirectoryData() {
     const parseEntries = (dataFile) =>
       Array.isArray(dataFile.entries)
         ? sortEntriesAlphabetically(dataFile.entries.map(normalizeEntry))
+        : [];
+    const parseBusinessUnits = (dataFile) =>
+      Array.isArray(dataFile.businessUnits)
+        ? sortBusinessUnitsAlphabetically(
+            dataFile.businessUnits
+              .map(normalizeBusinessUnit)
+              .filter((businessUnit) => businessUnit.id && businessUnit.name)
+          )
         : [];
 
     const loadEntries = async () => {
@@ -31,8 +46,11 @@ export default function useDirectoryData() {
           }
 
           const parsedSeed = parseEntries(dataFile);
+          const parsedBusinessUnits = parseBusinessUnits(dataFile);
           setSeedEntries(parsedSeed);
           setEntries(parsedSeed);
+          setSeedBusinessUnits(parsedBusinessUnits);
+          setBusinessUnits(parsedBusinessUnits);
           setDataMeta(dataFile.meta || null);
           setLoaded(true);
           return;
@@ -50,8 +68,11 @@ export default function useDirectoryData() {
         }
 
         const parsedSeed = parseEntries(dataFile);
+        const parsedBusinessUnits = parseBusinessUnits(dataFile);
         setSeedEntries(parsedSeed);
         setEntries(parsedSeed);
+        setSeedBusinessUnits(parsedBusinessUnits);
+        setBusinessUnits(parsedBusinessUnits);
         setDataMeta({
           source: "json-fallback",
           activeClient: "json",
@@ -65,6 +86,8 @@ export default function useDirectoryData() {
 
         setSeedEntries([]);
         setEntries([]);
+        setSeedBusinessUnits([]);
+        setBusinessUnits([]);
         setDataMeta(null);
         setLoaded(true);
       }
@@ -77,15 +100,21 @@ export default function useDirectoryData() {
     };
   }, []);
 
-  const persistEntries = async (nextEntries) => {
+  const persistData = async (nextEntries, nextBusinessUnits = businessUnits) => {
     const normalizedEntries = sortEntriesAlphabetically(nextEntries.map(normalizeEntry));
+    const normalizedBusinessUnits = sortBusinessUnitsAlphabetically(
+      nextBusinessUnits
+        .map(normalizeBusinessUnit)
+        .filter((businessUnit) => businessUnit.id && businessUnit.name)
+    );
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        entries: normalizedEntries
+        entries: normalizedEntries,
+        businessUnits: normalizedBusinessUnits
       })
     });
 
@@ -97,39 +126,84 @@ export default function useDirectoryData() {
     const savedEntries = Array.isArray(savedPayload.entries)
       ? sortEntriesAlphabetically(savedPayload.entries.map(normalizeEntry))
       : [];
+    const savedBusinessUnits = Array.isArray(savedPayload.businessUnits)
+      ? sortBusinessUnitsAlphabetically(
+          savedPayload.businessUnits
+            .map(normalizeBusinessUnit)
+            .filter((businessUnit) => businessUnit.id && businessUnit.name)
+        )
+      : [];
 
     setSeedEntries(savedEntries);
     setEntries(savedEntries);
+    setSeedBusinessUnits(savedBusinessUnits);
+    setBusinessUnits(savedBusinessUnits);
     setDataMeta(savedPayload.meta || null);
   };
 
   const actions = useMemo(
     () => ({
       async addEntry(entry) {
-        await persistEntries([...entries, normalizeEntry(entry)]);
+        await persistData([...entries, normalizeEntry(entry)]);
       },
       async updateEntry(id, updates) {
         const nextEntries = entries.map((entry) =>
           entry.id === id ? normalizeEntry({ ...entry, ...updates }) : entry
         );
-        await persistEntries(nextEntries);
+        await persistData(nextEntries);
       },
       async removeEntry(id) {
-        await persistEntries(entries.filter((entry) => entry.id !== id));
+        await persistData(entries.filter((entry) => entry.id !== id));
       },
       async importEntries(importedEntries) {
-        await persistEntries(importedEntries.map(normalizeEntry));
+        await persistData(importedEntries.map(normalizeEntry));
+      },
+      async addBusinessUnit(businessUnit) {
+        const normalizedBusinessUnit = normalizeBusinessUnit(businessUnit);
+        const nextBusinessUnits = [
+          ...businessUnits.filter(
+            (existingBusinessUnit) =>
+              normalizeBusinessUnit(existingBusinessUnit).id !== normalizedBusinessUnit.id
+          ),
+          normalizedBusinessUnit
+        ];
+        await persistData(entries, nextBusinessUnits);
+      },
+      async removeBusinessUnit(id, defaultBusinessUnits = []) {
+        const normalizedId = String(id || "").trim().toLowerCase();
+
+        if (!normalizedId) {
+          return;
+        }
+
+        const nextEntries = entries.filter((entry) => entry.bu !== normalizedId);
+        const nextBusinessUnits = businessUnits.filter(
+          (businessUnit) => normalizeBusinessUnit(businessUnit).id !== normalizedId
+        );
+        const matchingDefaultUnit = defaultBusinessUnits
+          .map(normalizeBusinessUnit)
+          .find((businessUnit) => businessUnit.id === normalizedId);
+
+        if (matchingDefaultUnit) {
+          nextBusinessUnits.push({
+            ...matchingDefaultUnit,
+            removed: true
+          });
+        }
+
+        await persistData(nextEntries, nextBusinessUnits);
       },
       async resetToSeed() {
-        await persistEntries(seedEntries);
+        await persistData(seedEntries, seedBusinessUnits);
       }
     }),
-    [entries, seedEntries]
+    [businessUnits, entries, seedBusinessUnits, seedEntries]
   );
 
   return {
     seedEntries,
     entries,
+    businessUnits,
     dataMeta,
     loaded,
     actions

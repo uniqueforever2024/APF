@@ -6,6 +6,7 @@ const zlib = require("zlib");
 const {
   PORT,
   PROJECT_APPS,
+  BUSINESS_UNITS_FILE,
   directoryTarget,
   directoryProxy,
   adminAuth
@@ -674,6 +675,41 @@ function sanitizeEntry(entry, index) {
   };
 }
 
+function sanitizeBusinessUnit(businessUnit, index) {
+  const id = String(businessUnit?.id || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+  const fallbackCode = id || `bu-${index + 1}`;
+  const label = String(
+    businessUnit?.label || `BU ${fallbackCode.toUpperCase()}`
+  ).trim();
+  const name = String(businessUnit?.name || label).trim();
+  const flag = String(businessUnit?.flag || "").trim();
+  const flagId = String(businessUnit?.flagId || "").trim().toLowerCase();
+  const rawPalette = businessUnit?.palette;
+  const palette =
+    rawPalette && typeof rawPalette === "object"
+      ? {
+          base: String(rawPalette.base || "").trim(),
+          soft: String(rawPalette.soft || "").trim(),
+          glow: String(rawPalette.glow || "").trim(),
+          text: String(rawPalette.text || "").trim()
+        }
+      : null;
+  const removed = businessUnit?.removed === true;
+
+  return {
+    id: fallbackCode,
+    label,
+    name,
+    flag,
+    flagId,
+    palette,
+    removed
+  };
+}
+
 function sanitizePayload(payload) {
   const rawEntries = Array.isArray(payload?.entries) ? payload.entries : [];
   const entries = rawEntries
@@ -684,6 +720,66 @@ function sanitizePayload(payload) {
     generatedAt: new Date().toISOString(),
     entries
   };
+}
+
+function sanitizeBusinessUnits(rawBusinessUnits) {
+  const normalizedBusinessUnits = (Array.isArray(rawBusinessUnits) ? rawBusinessUnits : [])
+    .map((businessUnit, index) => sanitizeBusinessUnit(businessUnit, index))
+    .filter((businessUnit) => businessUnit.id && businessUnit.name);
+  const uniqueBusinessUnits = new Map();
+
+  normalizedBusinessUnits.forEach((businessUnit) => {
+    uniqueBusinessUnits.set(businessUnit.id, businessUnit);
+  });
+
+  return [...uniqueBusinessUnits.values()].sort((leftUnit, rightUnit) =>
+    String(leftUnit.label || leftUnit.name).localeCompare(
+      String(rightUnit.label || rightUnit.name),
+      undefined,
+      {
+        numeric: true,
+        sensitivity: "base"
+      }
+    )
+  );
+}
+
+async function readBusinessUnitsFile() {
+  try {
+    const rawContent = await fs.readFile(BUSINESS_UNITS_FILE, "utf8");
+    const parsedValue = JSON.parse(rawContent.replace(/^\uFEFF/, ""));
+    const businessUnits = Array.isArray(parsedValue?.businessUnits)
+      ? parsedValue.businessUnits
+      : Array.isArray(parsedValue)
+        ? parsedValue
+        : [];
+
+    return sanitizeBusinessUnits(businessUnits);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+async function writeBusinessUnitsFile(businessUnits) {
+  const normalizedBusinessUnits = sanitizeBusinessUnits(businessUnits);
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    businessUnits: normalizedBusinessUnits
+  };
+  const temporaryFile = `${BUSINESS_UNITS_FILE}.tmp`;
+
+  try {
+    await fs.writeFile(temporaryFile, JSON.stringify(payload, null, 2), "utf8");
+    await fs.rename(temporaryFile, BUSINESS_UNITS_FILE);
+  } finally {
+    await fs.rm(temporaryFile, { force: true }).catch(() => {});
+  }
+
+  return normalizedBusinessUnits;
 }
 
 async function readRequestBody(request) {
@@ -804,8 +900,14 @@ const server = http.createServer(async (request, response) => {
   if (requestPath === "/api/directory-data" && request.method === "GET") {
     try {
       const repository = await repositoryPromise;
-      const payload = await repository.readData();
-      sendJson(response, 200, payload);
+      const [payload, businessUnits] = await Promise.all([
+        repository.readData(),
+        readBusinessUnitsFile()
+      ]);
+      sendJson(response, 200, {
+        ...payload,
+        businessUnits
+      });
     } catch (error) {
       console.error("GET /api/directory-data failed", error);
       sendJson(response, 500, { error: "Unable to read directory data." });
@@ -818,9 +920,16 @@ const server = http.createServer(async (request, response) => {
       const body = await readRequestBody(request);
       const parsedBody = body ? JSON.parse(body) : {};
       const nextPayload = sanitizePayload(parsedBody);
+      const nextBusinessUnits = sanitizeBusinessUnits(parsedBody?.businessUnits);
       const repository = await repositoryPromise;
-      const savedPayload = await repository.writeData(nextPayload.entries);
-      sendJson(response, 200, savedPayload);
+      const [savedPayload, savedBusinessUnits] = await Promise.all([
+        repository.writeData(nextPayload.entries),
+        writeBusinessUnitsFile(nextBusinessUnits)
+      ]);
+      sendJson(response, 200, {
+        ...savedPayload,
+        businessUnits: savedBusinessUnits
+      });
     } catch (error) {
       console.error("POST /api/directory-data failed", error);
       sendJson(response, 400, { error: "Unable to save directory data." });

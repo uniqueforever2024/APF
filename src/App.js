@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   buildBulkTemplateCsv,
   buildDirectoryPreviewUrl,
@@ -6,6 +7,7 @@ import {
   createHashRoute,
   downloadFile,
   getEntriesForSection,
+  mergeBusinessUnits,
   mergeBulkEntries,
   parseBulkImportCsv,
   parseHashRoute
@@ -28,16 +30,6 @@ const AUTH_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
 const SUPPORT_EMAIL_HREF = "mailto:HCL-EDI_TEAM@gmail.com?subject=EDI%20LC%20APF%20Support";
 const GROUPECAT_WEBSITE_HREF = "https://www.groupecat.com/";
 const HCLTECH_WEBSITE_HREF = "https://www.hcltech.com/";
-const BU_COLORS = {
-  fr: "#f59e0b",
-  it: "#eab308",
-  pl: "#d97706",
-  ua: "#facc15",
-  hr: "#f97316",
-  si: "#ca8a04",
-  lt: "#fbbf24",
-  ib: "#eab308"
-};
 const LANGUAGE_FLAGS = {
   de: "🇩🇪",
   fr: "🇫🇷",
@@ -45,6 +37,51 @@ const LANGUAGE_FLAGS = {
   it: "🇮🇹",
   pl: "🇵🇱"
 };
+
+const DEFAULT_BU_PALETTE = {
+  base: "#f59e0b",
+  soft: "rgba(245, 158, 11, 0.16)",
+  glow: "rgba(251, 191, 36, 0.18)",
+  text: "#b45309"
+};
+const BUSINESS_UNIT_PALETTES = [
+  {
+    base: "#2563eb",
+    soft: "rgba(37, 99, 235, 0.16)",
+    glow: "rgba(96, 165, 250, 0.16)",
+    text: "#1d4ed8"
+  },
+  {
+    base: "#16a34a",
+    soft: "rgba(22, 163, 74, 0.16)",
+    glow: "rgba(74, 222, 128, 0.14)",
+    text: "#15803d"
+  },
+  {
+    base: "#dc2626",
+    soft: "rgba(220, 38, 38, 0.14)",
+    glow: "rgba(248, 113, 113, 0.16)",
+    text: "#b91c1c"
+  },
+  {
+    base: "#7c3aed",
+    soft: "rgba(124, 58, 237, 0.15)",
+    glow: "rgba(167, 139, 250, 0.16)",
+    text: "#6d28d9"
+  },
+  {
+    base: "#0f766e",
+    soft: "rgba(15, 118, 110, 0.16)",
+    glow: "rgba(45, 212, 191, 0.14)",
+    text: "#0f766e"
+  },
+  {
+    base: "#c2410c",
+    soft: "rgba(194, 65, 12, 0.16)",
+    glow: "rgba(251, 146, 60, 0.16)",
+    text: "#9a3412"
+  }
+];
 
 function readStoredSession() {
   try {
@@ -65,6 +102,27 @@ function readStoredTheme() {
   }
 }
 
+function getBusinessUnitStyle(bu) {
+  const palette = bu.palette || DEFAULT_BU_PALETTE;
+
+  return {
+    "--bu-color": palette.base || DEFAULT_BU_PALETTE.base,
+    "--bu-color-soft": palette.soft || DEFAULT_BU_PALETTE.soft,
+    "--bu-color-glow": palette.glow || DEFAULT_BU_PALETTE.glow,
+    "--bu-color-text": palette.text || palette.base || DEFAULT_BU_PALETTE.text
+  };
+}
+
+function buildBusinessUnitPalette(seedValue, offset = 0) {
+  const normalizedSeed = String(seedValue || "").trim().toLowerCase();
+  const hash = Array.from(normalizedSeed).reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  );
+  const index = (hash + offset) % BUSINESS_UNIT_PALETTES.length;
+  return BUSINESS_UNIT_PALETTES[index] || DEFAULT_BU_PALETTE;
+}
+
 function App() {
   const [route, setRoute] = useState(() => parseHashRoute(window.location.hash));
   const [session, setSession] = useState(() => readStoredSession());
@@ -76,6 +134,11 @@ function App() {
   const [managerError, setManagerError] = useState("");
   const [managerNotice, setManagerNotice] = useState("");
   const [managerSaving, setManagerSaving] = useState(false);
+  const [businessUnitFormState, setBusinessUnitFormState] = useState({
+    code: "",
+    name: "",
+    countryCode: ""
+  });
   const [partnerSearchValue, setPartnerSearchValue] = useState("");
   const [activeEntryId, setActiveEntryId] = useState("");
   const [managerFilters, setManagerFilters] = useState({
@@ -91,11 +154,23 @@ function App() {
     backup: ""
   });
 
-  const { entries, loaded, actions } = useDirectoryData();
+  const { entries, businessUnits: savedBusinessUnits, loaded, actions } = useDirectoryData();
+  const businessUnits = useMemo(
+    () => mergeBusinessUnits(BU_OPTIONS, savedBusinessUnits),
+    [savedBusinessUnits]
+  );
   const text = getText(route.lang);
   const t = (key, fallback) => text[key] || fallback;
   const canManage = session?.role === "admin";
-  const currentBu = route.bu || "fr";
+  const currentBu = useMemo(() => {
+    const requestedBu = String(route.bu || "").trim().toLowerCase();
+
+    if (requestedBu && businessUnits.some((businessUnit) => businessUnit.id === requestedBu)) {
+      return requestedBu;
+    }
+
+    return businessUnits[0]?.id || "fr";
+  }, [businessUnits, route.bu]);
   const currentSection = SECTION_ORDER.includes(route.section)
     ? route.section
     : DEFAULT_SECTION;
@@ -122,15 +197,15 @@ function App() {
   useEffect(() => {
     setManagerFilters((previous) => ({
       ...previous,
-      bu: route.bu || previous.bu,
+      bu: currentBu || previous.bu,
       type: currentSection || previous.type
     }));
     setFormState((previous) => ({
       ...previous,
-      bu: route.bu || previous.bu,
+      bu: currentBu || previous.bu,
       type: currentSection || previous.type
     }));
-  }, [currentSection, route.bu]);
+  }, [currentBu, currentSection]);
 
   useEffect(() => {
     if (!formState.id) {
@@ -183,21 +258,42 @@ function App() {
   }, [currentEntries, route.page]);
 
   useEffect(() => {
-    if (route.page !== "directory" || route.section === currentSection) return;
+    const normalizedRouteBu = String(route.bu || "").trim().toLowerCase();
+
+    if (
+      route.page !== "directory" ||
+      (route.section === currentSection && normalizedRouteBu === currentBu)
+    ) {
+      return;
+    }
+
     navigate({
       page: "directory",
       bu: currentBu,
       lang: route.lang || "en",
       section: currentSection
     });
-  }, [currentBu, currentSection, route.lang, route.page, route.section]);
+  }, [currentBu, currentSection, route.bu, route.lang, route.page, route.section]);
 
   const navigate = (nextRoute) => {
     window.location.hash = createHashRoute(nextRoute);
   };
 
   const toggleThemeMode = () => {
-    setThemeMode((previous) => (previous === "dark" ? "light" : "dark"));
+    const switchThemeMode = () => {
+      setThemeMode((previous) => (previous === "dark" ? "light" : "dark"));
+    };
+
+    if (typeof document.startViewTransition === "function") {
+      document.startViewTransition(() => {
+        flushSync(() => {
+          switchThemeMode();
+        });
+      });
+      return;
+    }
+
+    switchThemeMode();
   };
 
   const clearSessionState = () => {
@@ -273,10 +369,15 @@ function App() {
 
   const openManagerForCurrentContext = () => {
     if (!canManage) return;
-    setManagerFilters({ bu: route.bu || "fr", type: currentSection });
+    setManagerFilters({ bu: currentBu || businessUnits[0]?.id || "fr", type: currentSection });
+    setBusinessUnitFormState({
+      code: "",
+      name: "",
+      countryCode: ""
+    });
     setFormState({
       id: "",
-      bu: route.bu || "fr",
+      bu: currentBu || businessUnits[0]?.id || "fr",
       type: currentSection,
       label: "",
       url: "",
@@ -285,6 +386,165 @@ function App() {
     setManagerError("");
     setManagerNotice("");
     setManagerOpen(true);
+  };
+
+  const createBusinessUnit = async (event) => {
+    event.preventDefault();
+    if (!canManage) return;
+
+    const code = String(businessUnitFormState.code || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
+    const name = String(businessUnitFormState.name || "").trim();
+    const countryCode = String(businessUnitFormState.countryCode || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z]/g, "")
+      .slice(0, 2);
+
+    if (!code || !name) {
+      setManagerError(
+        t("businessUnitCreateError", "Enter a BU code and business unit name first.")
+      );
+      setManagerNotice("");
+      return;
+    }
+
+    if (businessUnits.some((businessUnit) => businessUnit.id === code)) {
+      setManagerError(
+        t("businessUnitExistsError", "This business unit code already exists.")
+      );
+      setManagerNotice("");
+      return;
+    }
+
+    setManagerSaving(true);
+    setManagerError("");
+    setManagerNotice("");
+
+    try {
+      const nextBusinessUnit = {
+        id: code,
+        label: `BU ${code.toUpperCase()}`,
+        name,
+        flagId: countryCode || code,
+        palette: buildBusinessUnitPalette(code, businessUnits.length)
+      };
+
+      await actions.addBusinessUnit(nextBusinessUnit);
+      setBusinessUnitFormState({
+        code: "",
+        name: "",
+        countryCode: ""
+      });
+      setManagerFilters({ bu: nextBusinessUnit.id, type: currentSection });
+      setFormState({
+        id: "",
+        bu: nextBusinessUnit.id,
+        type: currentSection,
+        label: "",
+        url: "",
+        backup: ""
+      });
+      setManagerNotice(
+        t(
+          "businessUnitCreateSuccess",
+          "Business unit created. You can now add inbound and outbound partners for it."
+        )
+      );
+      navigate({
+        page: "directory",
+        bu: nextBusinessUnit.id,
+        lang: route.lang || "en",
+        section: currentSection
+      });
+    } catch (error) {
+      setManagerError(
+        t(
+          "businessUnitCreateSaveError",
+          "Unable to create the business unit right now. Please make sure the directory data service is running."
+        )
+      );
+    } finally {
+      setManagerSaving(false);
+    }
+  };
+
+  const deleteBusinessUnit = async (businessUnitId) => {
+    const normalizedId = String(businessUnitId || "").trim().toLowerCase();
+    const targetBusinessUnit = businessUnits.find((businessUnit) => businessUnit.id === normalizedId);
+
+    if (!canManage || !targetBusinessUnit) {
+      return;
+    }
+
+    const remainingBusinessUnits = businessUnits.filter(
+      (businessUnit) => businessUnit.id !== normalizedId
+    );
+
+    if (remainingBusinessUnits.length === 0) {
+      setManagerError(
+        t("businessUnitDeleteLastError", "At least one business unit must remain available.")
+      );
+      setManagerNotice("");
+      return;
+    }
+
+    const linkedEntries = entries.filter((entry) => entry.bu === normalizedId);
+    const confirmMessage = linkedEntries.length
+      ? `Delete ${targetBusinessUnit.label} and remove ${linkedEntries.length} linked partner entries?`
+      : `Delete ${targetBusinessUnit.label}?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setManagerSaving(true);
+    setManagerError("");
+    setManagerNotice("");
+
+    try {
+      await actions.removeBusinessUnit(normalizedId, BU_OPTIONS);
+      const nextBusinessUnit = remainingBusinessUnits[0] || null;
+
+      setFormState({
+        id: "",
+        bu: nextBusinessUnit?.id || "",
+        type: currentSection,
+        label: "",
+        url: "",
+        backup: ""
+      });
+      setManagerFilters({
+        bu: nextBusinessUnit?.id || "",
+        type: currentSection
+      });
+      setManagerNotice(
+        t(
+          "businessUnitDeleteSuccess",
+          "Business unit removed. Its inbound and outbound partners were removed as well."
+        )
+      );
+
+      if (route.page === "directory") {
+        navigate({
+          page: "directory",
+          bu: nextBusinessUnit?.id || "",
+          lang: route.lang || "en",
+          section: currentSection
+        });
+      }
+    } catch (error) {
+      setManagerError(
+        t(
+          "businessUnitDeleteSaveError",
+          "Unable to delete the business unit right now. Please make sure the directory data service is running."
+        )
+      );
+    } finally {
+      setManagerSaving(false);
+    }
   };
 
   const submitEntry = async (event) => {
@@ -342,6 +602,11 @@ function App() {
   const editEntry = (entry) => {
     if (!canManage) return;
     setManagerFilters({ bu: entry.bu, type: entry.type });
+    setBusinessUnitFormState({
+      code: "",
+      name: "",
+      countryCode: ""
+    });
     setFormState(entry);
     setManagerError("");
     setManagerNotice("");
@@ -438,6 +703,7 @@ function App() {
       <div className="portal-content">
         {route.page === "home" ? (
           <HomeView
+            businessUnits={businessUnits}
             text={text}
             entries={entries}
             route={route}
@@ -445,6 +711,7 @@ function App() {
           />
         ) : (
           <DirectoryView
+            businessUnits={businessUnits}
             text={text}
             route={route}
             navigate={navigate}
@@ -466,6 +733,12 @@ function App() {
 
       {managerOpen && canManage ? (
         <ManagerModal
+          businessUnits={businessUnits}
+          entries={entries}
+          businessUnitFormState={businessUnitFormState}
+          setBusinessUnitFormState={setBusinessUnitFormState}
+          createBusinessUnit={createBusinessUnit}
+          deleteBusinessUnit={deleteBusinessUnit}
           text={text}
           formState={formState}
           setFormState={setFormState}
@@ -483,18 +756,18 @@ function App() {
   );
 }
 
-function BusinessUnitStrip({ text, entries, route, navigate, currentBu }) {
+function BusinessUnitStrip({ businessUnits, text, entries, route, navigate, currentBu }) {
   const t = (key, fallback) => text[key] || fallback;
   return (
     <section className="portal-bu-strip" aria-label={t("businessUnit", "Business unit")}>
       <div className="portal-bu-row">
-        {BU_OPTIONS.map((bu) => {
+        {businessUnits.map((bu) => {
           const total = entries.filter((entry) => entry.bu === bu.id).length;
           return (
             <button
               key={bu.id}
               className={`country-card bu-card portal-bu-card ${currentBu === bu.id ? "active" : ""}`.trim()}
-              style={{ "--bu-color": BU_COLORS[bu.id] || "#f59e0b" }}
+              style={getBusinessUnitStyle(bu)}
               type="button"
               onClick={() =>
                 navigate({
@@ -506,7 +779,7 @@ function BusinessUnitStrip({ text, entries, route, navigate, currentBu }) {
               }
             >
               <span className="country-flag" aria-hidden="true">
-                {bu.flag || bu.label}
+                <FlagIcon id={bu.flagId || bu.id} />
               </span>
               <div>
                 <h3>{bu.label}</h3>
@@ -711,9 +984,10 @@ function PortalNav({
   );
 }
 
-function HomeView({ text, entries, route, navigate }) {
+function HomeView({ businessUnits, text, entries, route, navigate }) {
   const t = (key, fallback) => text[key] || fallback;
   const imageBase = process.env.PUBLIC_URL || "";
+  const visibleBusinessUnitIds = new Set(businessUnits.map((businessUnit) => businessUnit.id));
 
   return (
     <main className="home-shell home-shell-modern">
@@ -728,13 +1002,13 @@ function HomeView({ text, entries, route, navigate }) {
           </p>
         </div>
         <div className="home-bu-grid">
-          {BU_OPTIONS.map((bu) => {
+          {businessUnits.map((bu) => {
             const total = entries.filter((entry) => entry.bu === bu.id).length;
             return (
               <button
                 key={bu.id}
                 className="country-card bu-card"
-                style={{ "--bu-color": BU_COLORS[bu.id] || "#f59e0b" }}
+                style={getBusinessUnitStyle(bu)}
                 type="button"
                 onClick={() =>
                   navigate({
@@ -746,7 +1020,7 @@ function HomeView({ text, entries, route, navigate }) {
                 }
               >
                 <span className="country-flag" aria-hidden="true">
-                  {bu.flag || bu.label}
+                  <FlagIcon id={bu.flagId || bu.id} />
                 </span>
                 <div>
                   <h3>{bu.label}</h3>
@@ -767,8 +1041,8 @@ function HomeView({ text, entries, route, navigate }) {
         </div>
         <div className="map-panel map-panel-modern">
           <img src={`${imageBase}/Europe2.png`} alt="Europe map" />
-          {MAP_LINKS.map((point) => {
-            const bu = BU_OPTIONS.find((item) => item.id === point.id);
+          {MAP_LINKS.filter((point) => visibleBusinessUnitIds.has(point.id)).map((point) => {
+            const bu = businessUnits.find((item) => item.id === point.id);
             return (
               <button
                 key={point.id}
@@ -795,6 +1069,7 @@ function HomeView({ text, entries, route, navigate }) {
 }
 
 function DirectoryView({
+  businessUnits,
   text,
   route,
   navigate,
@@ -812,59 +1087,63 @@ function DirectoryView({
   editEntry
 }) {
   const t = (key, fallback) => text[key] || fallback;
-  const currentBuMeta = BU_OPTIONS.find((bu) => bu.id === currentBu);
+  const currentBuMeta = businessUnits.find((bu) => bu.id === currentBu);
+  const isPreviewingEntry = Boolean(activeEntry);
   const currentSectionLabel = t(
     SECTION_META[currentSection].labelKey,
     SECTION_META[currentSection].labelKey
   );
 
   return (
-    <main className={`directory-shell directory-shell-modern ${activeEntry ? "directory-shell-preview" : ""}`.trim()}>
-      <BusinessUnitStrip
-        text={text}
-        entries={entries}
-        route={route}
-        navigate={navigate}
-        currentBu={currentBu}
-      />
-
-      <section className="directory-content">
-        <div className="directory-toolbar">
-          <div className="directory-toolbar-meta">
-            <span className="eyebrow">{t("businessUnit", "Business unit")}</span>
-            <h1>{currentSectionLabel}</h1>
-            <p>
-              {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
-              in this view.
-            </p>
-          </div>
-          {!activeEntry ? (
-            <div className="directory-search">
-              <input
-                type="search"
-                value={partnerSearchValue}
-                placeholder={t("searchPartnerPlaceholder", "Search partner")}
-                onChange={(event) => setPartnerSearchValue(event.target.value)}
-              />
-            </div>
-          ) : null}
-        </div>
-
-        <div className="directory-current-bu">
-          <span className="eyebrow">{currentBuMeta?.name || currentBu.toUpperCase()}</span>
-        </div>
-
-        <SectionTabs
-          className="section-tabs directory-section-tabs-row"
+    <main className={`directory-shell directory-shell-modern ${isPreviewingEntry ? "directory-shell-preview" : ""}`.trim()}>
+      {!isPreviewingEntry ? (
+        <BusinessUnitStrip
+          businessUnits={businessUnits}
           text={text}
+          entries={entries}
           route={route}
           navigate={navigate}
           currentBu={currentBu}
-          currentSection={currentSection}
-          sectionCounts={sectionCounts}
         />
+      ) : null}
 
-        <div className="directory-body">
+      <section className={`directory-content ${isPreviewingEntry ? "directory-content-preview" : ""}`.trim()}>
+        {!isPreviewingEntry ? (
+          <>
+            <div className="directory-toolbar">
+              <div className="directory-toolbar-meta">
+                <span className="eyebrow">{t("country", "Country")}</span>
+                <h1>{currentSectionLabel}</h1>
+                <p>
+                  {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
+                  in this view.
+                </p>
+              </div>
+              <div className="directory-search">
+                <input
+                  type="search"
+                  value={partnerSearchValue}
+                  placeholder={t("searchPartnerPlaceholder", "Search partner")}
+                  onChange={(event) => setPartnerSearchValue(event.target.value)}
+                />
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {!isPreviewingEntry ? (
+          <SectionTabs
+            className="section-tabs directory-section-tabs-row"
+            text={text}
+            route={route}
+            navigate={navigate}
+            currentBu={currentBu}
+            currentSection={currentSection}
+            sectionCounts={sectionCounts}
+          />
+        ) : null}
+
+        <div className={`directory-body ${isPreviewingEntry ? "directory-body-preview" : ""}`.trim()}>
           {activeEntry ? (
             <PreviewPanel
               text={text}
@@ -1058,6 +1337,12 @@ function PreviewPanel({
 }
 
 function ManagerModal({
+  businessUnits,
+  entries,
+  businessUnitFormState,
+  setBusinessUnitFormState,
+  createBusinessUnit,
+  deleteBusinessUnit,
   text,
   formState,
   setFormState,
@@ -1071,6 +1356,7 @@ function ManagerModal({
   setManagerOpen
 }) {
   const t = (key, fallback) => text[key] || fallback;
+  const canDeleteBusinessUnit = businessUnits.length > 1;
 
   return (
     <div className="manager-overlay" onClick={() => setManagerOpen(false)}>
@@ -1085,6 +1371,96 @@ function ManagerModal({
           </button>
         </div>
         <p>{t("managerCopy", "Changes are saved through the directory data service.")}</p>
+
+        <div className="manager-subsection">
+          <div className="manager-subsection-head">
+            <div>
+              <span className="eyebrow">{t("businessUnitSetup", "Business unit setup")}</span>
+              <h3>{t("createBusinessUnitTitle", "Create business unit")}</h3>
+            </div>
+            <p>
+              {t(
+                "createBusinessUnitCopy",
+                "New business units appear immediately and use the same inbound and outbound sections as the existing ones."
+              )}
+            </p>
+          </div>
+          <form className="manager-bu-form" onSubmit={createBusinessUnit}>
+            <label>
+              {t("businessUnitCode", "BU code")}
+              <input
+                type="text"
+                value={businessUnitFormState.code}
+                placeholder={t("businessUnitCodePlaceholder", "fr")}
+                onChange={(event) =>
+                  setBusinessUnitFormState((previous) => ({
+                    ...previous,
+                    code: event.target.value
+                  }))
+                }
+              />
+            </label>
+            <label>
+              {t("businessUnitCountryCode", "Flag country code")}
+              <input
+                type="text"
+                value={businessUnitFormState.countryCode}
+                placeholder={t("businessUnitCountryCodePlaceholder", "fr")}
+                onChange={(event) =>
+                  setBusinessUnitFormState((previous) => ({
+                    ...previous,
+                    countryCode: event.target.value
+                  }))
+                }
+              />
+            </label>
+            <label className="manager-bu-form-name">
+              {t("businessUnitName", "Business unit name")}
+              <input
+                type="text"
+                value={businessUnitFormState.name}
+                placeholder={t("businessUnitNamePlaceholder", "France")}
+                onChange={(event) =>
+                  setBusinessUnitFormState((previous) => ({
+                    ...previous,
+                    name: event.target.value
+                  }))
+                }
+              />
+            </label>
+            <div className="manager-bu-form-actions">
+              <button className="button button-primary" type="submit" disabled={managerSaving}>
+                {t("createBusinessUnitAction", "Add business unit")}
+              </button>
+            </div>
+          </form>
+
+          <div className="manager-bu-list">
+            {businessUnits.map((businessUnit) => {
+              const linkedEntries = entries.filter((entry) => entry.bu === businessUnit.id).length;
+
+              return (
+                <div className="manager-bu-list-item" key={businessUnit.id}>
+                  <div className="manager-bu-list-copy">
+                    <strong>{businessUnit.label}</strong>
+                    <span>
+                      {businessUnit.name} • {linkedEntries}{" "}
+                      {linkedEntries === 1 ? "partner" : "partners"}
+                    </span>
+                  </div>
+                  <button
+                    className="button button-secondary danger"
+                    type="button"
+                    disabled={managerSaving || !canDeleteBusinessUnit}
+                    onClick={() => deleteBusinessUnit(businessUnit.id)}
+                  >
+                    {t("deleteBusinessUnitAction", "Delete BU")}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="bulk-actions">
           <button className="button button-secondary" type="button" disabled={managerSaving} onClick={downloadBulkTemplate}>
@@ -1114,7 +1490,7 @@ function ManagerModal({
                 setFormState((previous) => ({ ...previous, bu: event.target.value }))
               }
             >
-              {BU_OPTIONS.map((bu) => (
+              {businessUnits.map((bu) => (
                 <option key={bu.id} value={bu.id}>{bu.label}</option>
               ))}
             </select>
@@ -1304,23 +1680,41 @@ function FlagIcon({ id }) {
     de: { type: "horizontal", colors: ["#000000", "#dd0000", "#ffce00"] },
     fr: { type: "vertical", colors: ["#0055a4", "#ffffff", "#ef4135"] },
     it: { type: "vertical", colors: ["#009246", "#ffffff", "#ce2b37"] },
-    pl: { type: "horizontal", colors: ["#ffffff", "#dc143c"] }
+    pl: { type: "horizontal", colors: ["#ffffff", "#dc143c"] },
+    ua: { type: "horizontal", colors: ["#0057b7", "#ffd700"] },
+    hr: { type: "horizontal", colors: ["#ff0000", "#ffffff", "#171796"] },
+    si: { type: "horizontal", colors: ["#ffffff", "#0b66c3", "#dc2626"] },
+    lt: { type: "horizontal", colors: ["#fdb913", "#006a44", "#c1272d"] },
+    es: {
+      type: "horizontal",
+      colors: ["#aa151b", "#f1bf00", "#aa151b"],
+      ratios: [1, 2, 1]
+    }
   };
   const flag = flags[id] || { type: "vertical", colors: ["#4aa3ff", "#ffffff", "#0b66c3"] };
   const horizontal = flag.type === "horizontal";
+  const segments = flag.ratios || flag.colors.map(() => 1);
+  const totalUnits = segments.reduce((sum, value) => sum + value, 0);
+  let offset = 0;
 
   return (
     <svg className="flag-svg" viewBox="0 0 32 22" aria-hidden="true">
-      {flag.colors.map((color, index) => (
-        <rect
-          key={`${id}-${color}`}
-          x={horizontal ? 0 : (32 / flag.colors.length) * index}
-          y={horizontal ? (22 / flag.colors.length) * index : 0}
-          width={horizontal ? 32 : 32 / flag.colors.length}
-          height={horizontal ? 22 / flag.colors.length : 22}
-          fill={color}
-        />
-      ))}
+      {flag.colors.map((color, index) => {
+        const size = segments[index] || 1;
+        const start = offset;
+        offset += size;
+
+        return (
+          <rect
+            key={`${id}-${color}`}
+            x={horizontal ? 0 : (32 / totalUnits) * start}
+            y={horizontal ? (22 / totalUnits) * start : 0}
+            width={horizontal ? 32 : (32 / totalUnits) * size}
+            height={horizontal ? (22 / totalUnits) * size : 22}
+            fill={color}
+          />
+        );
+      })}
       <rect width="32" height="22" rx="4" fill="none" stroke="rgba(0,0,0,0.22)" />
     </svg>
   );
