@@ -108,7 +108,9 @@ function DashboardShell({
       className={className}
       onClick={() => goToBusinessUnit(bu.id)}
     >
-      <span className="home-bu-button-code">{bu.label}</span>
+      <span className="home-bu-button-code" aria-hidden="true">
+        {bu.flag || bu.label}
+      </span>
       <span>{bu.name}</span>
     </button>
   );

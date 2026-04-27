@@ -6,7 +6,6 @@ const TEXT = {
     lightMode: "Light mode",
     headerLabel: "Quick links",
     home: "Home",
-    homeTitle: "Quick access",
     homeSubtitle:
       "Open links by business unit and keep the list updated without backend code changes.",
     homeHint:
@@ -64,7 +63,6 @@ const TEXT = {
       "Unable to import the bulk file right now. Please check the template and try again.",
     saveStateLocal: "Saved in browser storage",
     csvSeedLabel: "Starter data loaded",
-    quickAccess: "Quick access",
     supportTitle: "Need support?",
     supportMessage:
       "If the site is not working as expected, contact the support team directly.",
@@ -131,7 +129,6 @@ const TEXT = {
     lightMode: "Mode clair",
     headerLabel: "Acces rapide",
     home: "Accueil",
-    homeTitle: "Acces rapide",
     homeSubtitle:
       "Ouvrez les liens par business unit et gardez la liste a jour sans changement de code backend.",
     homeHint:
@@ -192,7 +189,6 @@ const TEXT = {
       "Impossible d'importer le fichier en masse pour le moment. Verifiez le modele et reessayez.",
     saveStateLocal: "Sauvegarde dans le navigateur",
     csvSeedLabel: "Base initiale chargee",
-    quickAccess: "Acces rapide",
     supportTitle: "Besoin d'aide ?",
     supportMessage:
       "Si le site ne fonctionne pas comme prevu, contactez directement l'equipe support.",
@@ -259,7 +255,6 @@ const TEXT = {
     lightMode: "Hellmodus",
     headerLabel: "Schnellzugriff",
     home: "Start",
-    homeTitle: "Schnellzugriff",
     homeSubtitle:
       "Oeffnen Sie Links nach Business Unit und halten Sie die Liste ohne Backend-Code-Aenderungen aktuell.",
     homeHint:
@@ -320,7 +315,6 @@ const TEXT = {
       "Die Massendatei kann gerade nicht importiert werden. Bitte pruefen Sie die Vorlage und versuchen Sie es erneut.",
     saveStateLocal: "Im Browser gespeichert",
     csvSeedLabel: "Startdaten geladen",
-    quickAccess: "Schnellzugriff",
     supportTitle: "Support benoetigt?",
     supportMessage:
       "Wenn die Seite nicht wie erwartet funktioniert, kontaktieren Sie bitte direkt das Support-Team.",
@@ -387,7 +381,6 @@ const TEXT = {
     lightMode: "Modalita chiara",
     headerLabel: "Accesso rapido",
     home: "Home",
-    homeTitle: "Accesso rapido",
     homeSubtitle:
       "Apri i link per business unit e mantieni l'elenco aggiornato senza modifiche al codice backend.",
     homeHint:
@@ -448,7 +441,6 @@ const TEXT = {
       "Impossibile importare il file in blocco in questo momento. Controlla il modello e riprova.",
     saveStateLocal: "Salvato nel browser",
     csvSeedLabel: "Dati iniziali caricati",
-    quickAccess: "Accesso rapido",
     supportTitle: "Serve supporto?",
     supportMessage:
       "Se il sito non funziona come previsto, contatta direttamente il team di supporto.",
@@ -515,7 +507,6 @@ const TEXT = {
     lightMode: "Tryb jasny",
     headerLabel: "Szybki dostep",
     home: "Home",
-    homeTitle: "Szybki dostep",
     homeSubtitle:
       "Otwieraj linki wedlug business unit i utrzymuj liste bez zmian w kodzie backendu.",
     homeHint:
@@ -576,7 +567,6 @@ const TEXT = {
       "Nie mozna teraz zaimportowac pliku zbiorczego. Sprawdz szablon i sprobuj ponownie.",
     saveStateLocal: "Zapisano w przegladarce",
     csvSeedLabel: "Dane poczatkowe zaladowane",
-    quickAccess: "Szybki dostep",
     supportTitle: "Potrzebujesz wsparcia?",
     supportMessage:
       "Jesli strona nie dziala zgodnie z oczekiwaniami, skontaktuj sie bezposrednio z zespolem wsparcia.",

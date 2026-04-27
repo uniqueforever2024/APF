@@ -25,15 +25,18 @@ const AUTH_STORAGE_KEY = "apf_new_auth_session_v1";
 const THEME_STORAGE_KEY = "apf_new_theme_mode_v1";
 const DIRECTORY_API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
 const AUTH_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
+const SUPPORT_EMAIL_HREF = "mailto:HCL-EDI_TEAM@gmail.com?subject=EDI%20LC%20APF%20Support";
+const GROUPECAT_WEBSITE_HREF = "https://www.groupecat.com/";
+const HCLTECH_WEBSITE_HREF = "https://www.hcltech.com/";
 const BU_COLORS = {
-  fr: "#3b82f6",
-  it: "#16a34a",
-  pl: "#dc2626",
+  fr: "#f59e0b",
+  it: "#eab308",
+  pl: "#d97706",
   ua: "#facc15",
-  hr: "#ef4444",
-  si: "#22c55e",
-  lt: "#f59e0b",
-  ib: "#8b5cf6"
+  hr: "#f97316",
+  si: "#ca8a04",
+  lt: "#fbbf24",
+  ib: "#eab308"
 };
 const LANGUAGE_FLAGS = {
   de: "🇩🇪",
@@ -90,6 +93,7 @@ function App() {
 
   const { entries, loaded, actions } = useDirectoryData();
   const text = getText(route.lang);
+  const t = (key, fallback) => text[key] || fallback;
   const canManage = session?.role === "admin";
   const currentBu = route.bu || "fr";
   const currentSection = SECTION_ORDER.includes(route.section)
@@ -479,6 +483,44 @@ function App() {
   );
 }
 
+function BusinessUnitStrip({ text, entries, route, navigate, currentBu }) {
+  const t = (key, fallback) => text[key] || fallback;
+  return (
+    <section className="portal-bu-strip" aria-label={t("businessUnit", "Business unit")}>
+      <div className="portal-bu-row">
+        {BU_OPTIONS.map((bu) => {
+          const total = entries.filter((entry) => entry.bu === bu.id).length;
+          return (
+            <button
+              key={bu.id}
+              className={`country-card bu-card portal-bu-card ${currentBu === bu.id ? "active" : ""}`.trim()}
+              style={{ "--bu-color": BU_COLORS[bu.id] || "#f59e0b" }}
+              type="button"
+              onClick={() =>
+                navigate({
+                  page: "directory",
+                  bu: bu.id,
+                  lang: route.lang,
+                  section: SECTION_ORDER[0]
+                })
+              }
+            >
+              <span className="country-flag" aria-hidden="true">
+                {bu.flag || bu.label}
+              </span>
+              <div>
+                <h3>{bu.label}</h3>
+                <p>{bu.name}</p>
+              </div>
+              <span>{total}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function AuthView({
   loginMode,
   switchLoginMode,
@@ -499,80 +541,110 @@ function AuthView({
   return (
     <div className="site-shell auth-shell auth-shell-modern">
       <main className={`auth-clean-stage ${isAdmin ? "admin-mode" : "client-mode"}`.trim()}>
-        <section className="auth-clean-card">
-          <header className="auth-clean-topbar">
-            <div className="auth-clean-logo">
-              <img src={`${imageBase}/groupecatlogo.png`} alt="Groupe CAT" />
-            </div>
+        <header className="auth-clean-topbar">
+          <a
+            className="auth-clean-logo"
+            href={GROUPECAT_WEBSITE_HREF}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="Open Groupe CAT website"
+            title="Open Groupe CAT website"
+          >
+            <img src={`${imageBase}/groupecatlogo.png`} alt="Groupe CAT" />
+          </a>
 
-            <div className="auth-clean-toptools">
-              <ThemeButton themeMode={themeMode} onToggle={toggleThemeMode} text={text} />
-              <LanguageSelect route={route} navigate={navigate} showLabel />
+          <div className="auth-clean-toptools">
+            <button
+              className={`auth-version-trigger ${isAdmin ? "active" : ""}`.trim()}
+              type="button"
+              aria-pressed={isAdmin}
+              onClick={() => switchLoginMode(isAdmin ? "client" : "admin")}
+            >
+              {t("loginVersion", "version 2.2")}
+            </button>
+            <LanguageSelect route={route} navigate={navigate} showLabel />
+            <ThemeButton themeMode={themeMode} onToggle={toggleThemeMode} text={text} />
+            <a
+              className="icon-button auth-help-trigger"
+              href={SUPPORT_EMAIL_HREF}
+              aria-label={t("supportButton", "Email support")}
+              title={t("supportButton", "Email support")}
+            >
+              <UiIcon type="help" />
+            </a>
+          </div>
+        </header>
+
+        <section className="auth-clean-hero">
+          <h1 className="auth-clean-title">ACCESS TO PRODUCTION FILES</h1>
+
+          <form className="auth-clean-form auth-clean-hero-form" onSubmit={handleLogin}>
+            {isAdmin ? (
+              <div className="auth-clean-panel auth-clean-admin-panel">
+                <label className="auth-clean-field">
+                  <span className="visually-hidden">{t("userId", "UserId")}</span>
+                  <input
+                    type="text"
+                    autoComplete="username"
+                    value={loginForm.username}
+                    placeholder={t("userIdPlaceholder", "Enter your UserId")}
+                    onChange={(event) =>
+                      setLoginForm((previous) => ({
+                        ...previous,
+                        username: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+                <label className="auth-clean-field">
+                  <span className="visually-hidden">{t("passwordLabel", "Password")}</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={loginForm.password}
+                    placeholder={t("passwordPlaceholder", "Enter your password")}
+                    onChange={(event) =>
+                      setLoginForm((previous) => ({
+                        ...previous,
+                        password: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {loginError ? <div className="form-error auth-clean-error">{loginError}</div> : null}
+
+            <button className="button button-primary auth-clean-cta" type="submit">
+              {isAdmin ? t("signIn", "Sign in") : t("loginCta", "Login")}
+            </button>
+
+            {isAdmin ? (
               <button
-                className={`auth-version-trigger ${isAdmin ? "active" : ""}`.trim()}
+                className="inline-button auth-clean-return"
                 type="button"
-                aria-pressed={isAdmin}
-                onClick={() => switchLoginMode(isAdmin ? "client" : "admin")}
+                onClick={() => switchLoginMode("client")}
               >
-                {t("loginVersion", "version 2.2")}
+                {t("backToClientLogin", "back to client login")}
               </button>
-            </div>
-          </header>
-
-          <div className="auth-clean-center">
-            <h1 className="auth-clean-title">ACCESS TO PRODUCTION FILES</h1>
-
-            <form className="auth-clean-form" onSubmit={handleLogin}>
-              {isAdmin ? (
-                <div className="auth-admin-fields">
-                  <label className="auth-clean-field">
-                    <span className="visually-hidden">{t("userId", "UserId")}</span>
-                    <input
-                      type="text"
-                      autoComplete="username"
-                      value={loginForm.username}
-                      placeholder={t("userIdPlaceholder", "Enter your UserId")}
-                      onChange={(event) =>
-                        setLoginForm((previous) => ({
-                          ...previous,
-                          username: event.target.value
-                        }))
-                      }
-                    />
-                  </label>
-                  <label className="auth-clean-field">
-                    <span className="visually-hidden">{t("passwordLabel", "Password")}</span>
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      value={loginForm.password}
-                      placeholder={t("passwordPlaceholder", "Enter your password")}
-                      onChange={(event) =>
-                        setLoginForm((previous) => ({
-                          ...previous,
-                          password: event.target.value
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-              ) : null}
-
-              {loginError ? <div className="form-error auth-clean-error">{loginError}</div> : null}
-
-              <button className="button button-primary auth-clean-cta" type="submit">
-                {isAdmin ? t("signIn", "Sign in") : t("loginCta", "Login")}
-              </button>
-            </form>
-          </div>
-
-          <div className="auth-clean-footer">
-            <span>{t("poweredManagedBy", "powered and maintained by")}</span>
-            <div className="auth-clean-footer-logo">
-              <img src={`${imageBase}/hcltechlogo.png`} alt="HCLTech" />
-            </div>
-          </div>
+            ) : null}
+          </form>
         </section>
+
+        <div className="auth-clean-footer">
+          <span className="auth-clean-footer-copy">{t("poweredManagedBy", "powered and maintained by")}</span>
+          <a
+            className="auth-clean-footer-logo"
+            href={HCLTECH_WEBSITE_HREF}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="Open HCLTech website"
+            title="Open HCLTech website"
+          >
+            <img src={`${imageBase}/hcltechlogo.png`} alt="HCLTech" />
+          </a>
+        </div>
       </main>
     </div>
   );
@@ -599,7 +671,6 @@ function PortalNav({
         <span className="portal-brand-mark">APF</span>
         <span className="portal-brand-copy">
           <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
-          <small>{t("quickAccess", "Quick access")}</small>
         </span>
       </button>
 
@@ -617,17 +688,23 @@ function PortalNav({
 
         <button
           type="button"
-          className={`portal-action-button ${route.page === "home" ? "active" : ""}`.trim()}
+          className={`portal-action-button portal-action-button-icon ${route.page === "home" ? "active" : ""}`.trim()}
+          aria-label={t("home", "Home")}
+          title={t("home", "Home")}
           onClick={() => navigate({ page: "home", lang: route.lang })}
         >
           <UiIcon type="home" />
-          <span>{t("home", "Home")}</span>
         </button>
         <ThemeButton themeMode={themeMode} onToggle={toggleThemeMode} text={text} />
         <LanguageSelect route={route} navigate={navigate} />
-        <button className="portal-action-button" type="button" onClick={logout}>
+        <button
+          className="portal-action-button portal-action-button-icon portal-action-button-logout"
+          type="button"
+          aria-label={t("logout", "Logout")}
+          title={t("logout", "Logout")}
+          onClick={logout}
+        >
           <UiIcon type="logout" />
-          <span>{t("logout", "Logout")}</span>
         </button>
       </div>
     </nav>
@@ -642,7 +719,6 @@ function HomeView({ text, entries, route, navigate }) {
     <main className="home-shell home-shell-modern">
       <div className="home-copy">
         <div className="home-copy-intro">
-          <span className="eyebrow">{t("productionFiles", "Production Files")}</span>
           <h1>{t("businessUnit", "Business unit")}</h1>
           <p>
             {t(
@@ -658,7 +734,7 @@ function HomeView({ text, entries, route, navigate }) {
               <button
                 key={bu.id}
                 className="country-card bu-card"
-                style={{ "--bu-color": BU_COLORS[bu.id] || "#3b82f6" }}
+                style={{ "--bu-color": BU_COLORS[bu.id] || "#f59e0b" }}
                 type="button"
                 onClick={() =>
                   navigate({
@@ -669,7 +745,9 @@ function HomeView({ text, entries, route, navigate }) {
                   })
                 }
               >
-                <span className="country-flag">{bu.id.toUpperCase()}</span>
+                <span className="country-flag" aria-hidden="true">
+                  {bu.flag || bu.label}
+                </span>
                 <div>
                   <h3>{bu.label}</h3>
                   <p>{bu.name}</p>
@@ -683,7 +761,6 @@ function HomeView({ text, entries, route, navigate }) {
       <section className="home-map-stage">
         <div className="home-map-stage-header">
           <div>
-            <span className="eyebrow">{t("quickAccess", "Quick access")}</span>
             <h2>{t("welcomeTitle", "Business Unit Overview")}</h2>
           </div>
           <p>{entries.length} links available</p>
@@ -743,87 +820,56 @@ function DirectoryView({
 
   return (
     <main className={`directory-shell directory-shell-modern ${activeEntry ? "directory-shell-preview" : ""}`.trim()}>
-      <aside className="directory-sidebar">
-        <div className="directory-sidebar-header">
-          <span className="eyebrow">{t("businessUnit", "Business unit")}</span>
-          <strong>{BU_OPTIONS.length}</strong>
-        </div>
-        <div className="directory-sidebar-list">
-          {BU_OPTIONS.map((bu) => {
-            const count = entries.filter(
-              (entry) => entry.bu === bu.id && entry.type === currentSection
-            ).length;
-            return (
-              <button
-                key={bu.id}
-                type="button"
-                className={`directory-sidebar-button ${currentBu === bu.id ? "active" : ""}`.trim()}
-                onClick={() =>
-                  navigate({
-                    page: "directory",
-                    bu: bu.id,
-                    lang: route.lang,
-                    section: currentSection
-                  })
-                }
-              >
-                <span>{bu.label}</span>
-                <small>{count}</small>
-              </button>
-            );
-          })}
-        </div>
-      </aside>
+      <BusinessUnitStrip
+        text={text}
+        entries={entries}
+        route={route}
+        navigate={navigate}
+        currentBu={currentBu}
+      />
 
       <section className="directory-content">
         <div className="directory-toolbar">
           <div className="directory-toolbar-meta">
-            <span className="eyebrow">{currentBuMeta?.label || currentBu.toUpperCase()}</span>
+            <span className="eyebrow">{t("businessUnit", "Business unit")}</span>
             <h1>{currentSectionLabel}</h1>
             <p>
               {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
               in this view.
             </p>
           </div>
-          <div className="directory-toolbar-actions">
-            <SectionTabs
-              text={text}
-              route={route}
-              navigate={navigate}
-              currentBu={currentBu}
-              currentSection={currentSection}
-              sectionCounts={sectionCounts}
-            />
-
-            {!activeEntry ? (
-              <form
-                className="directory-search"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (visibleEntries[0]) setActiveEntryId(visibleEntries[0].id);
-                }}
-              >
-                <input
-                  type="search"
-                  value={partnerSearchValue}
-                  placeholder={t("searchPartnerPlaceholder", "Search partner")}
-                  onChange={(event) => setPartnerSearchValue(event.target.value)}
-                />
-                <button className="button button-primary" type="submit">
-                  <UiIcon type="search" />
-                  <span>{t("searchAction", "Search")}</span>
-                </button>
-              </form>
-            ) : null}
-          </div>
+          {!activeEntry ? (
+            <div className="directory-search">
+              <input
+                type="search"
+                value={partnerSearchValue}
+                placeholder={t("searchPartnerPlaceholder", "Search partner")}
+                onChange={(event) => setPartnerSearchValue(event.target.value)}
+              />
+            </div>
+          ) : null}
         </div>
+
+        <div className="directory-current-bu">
+          <span className="eyebrow">{currentBuMeta?.name || currentBu.toUpperCase()}</span>
+        </div>
+
+        <SectionTabs
+          className="section-tabs directory-section-tabs-row"
+          text={text}
+          route={route}
+          navigate={navigate}
+          currentBu={currentBu}
+          currentSection={currentSection}
+          sectionCounts={sectionCounts}
+        />
 
         <div className="directory-body">
           {activeEntry ? (
             <PreviewPanel
               text={text}
               activeEntry={activeEntry}
-              currentBuLabel={currentBuMeta?.label || currentBu.toUpperCase()}
+              currentBuLabel={currentBuMeta?.name || currentBu.toUpperCase()}
               currentSectionLabel={currentSectionLabel}
               canManage={canManage}
               editEntry={editEntry}
@@ -843,10 +889,18 @@ function DirectoryView({
   );
 }
 
-function SectionTabs({ text, route, navigate, currentBu, currentSection, sectionCounts }) {
+function SectionTabs({
+  className = "section-tabs",
+  text,
+  route,
+  navigate,
+  currentBu,
+  currentSection,
+  sectionCounts
+}) {
   const t = (key, fallback) => text[key] || fallback;
   return (
-    <div className="section-tabs">
+    <div className={className}>
       {SECTION_ORDER.map((section) => (
         <button
           key={section}
@@ -1348,6 +1402,16 @@ function UiIcon({ type }) {
       <svg {...commonProps}>
         <path d="M14.6 6.2 8.8 12l5.8 5.8" />
         <path d="M9.6 12h8.2" />
+      </svg>
+    );
+  }
+
+  if (type === "help") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="8.2" />
+        <path d="M9.7 9.5a2.4 2.4 0 1 1 3.9 1.9c-.7.4-1.2.9-1.2 1.8v.6" />
+        <path d="M12 17v.2" />
       </svg>
     );
   }

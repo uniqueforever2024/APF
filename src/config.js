@@ -6,26 +6,31 @@ export const LANGUAGES = [
   { id: "pl", label: "PL", nativeLabel: "Polski", flag: "🇵🇱" }
 ];
 
+const makeFlagEmoji = (countryCode) =>
+  Array.from(countryCode.toUpperCase())
+    .map((character) => String.fromCodePoint(127397 + character.charCodeAt(0)))
+    .join("");
+
 export const BU_OPTIONS = [
-  { id: "fr", label: "BU FR", name: "France" },
-  { id: "it", label: "BU IT", name: "Italy" },
-  { id: "pl", label: "BU PL", name: "Poland" },
-  { id: "ua", label: "BU UA", name: "Ukraine" },
-  { id: "hr", label: "BU HR", name: "Croatia" },
-  { id: "si", label: "BU SI", name: "Slovenia" },
-  { id: "lt", label: "BU LT", name: "Lithuania" },
-  { id: "ib", label: "BU IB", name: "Spain" }
+  { id: "fr", label: "BU FR", name: "France", flag: makeFlagEmoji("FR") },
+  { id: "it", label: "BU IT", name: "Italy", flag: makeFlagEmoji("IT") },
+  { id: "pl", label: "BU PL", name: "Poland", flag: makeFlagEmoji("PL") },
+  { id: "ua", label: "BU UA", name: "Ukraine", flag: makeFlagEmoji("UA") },
+  { id: "hr", label: "BU HR", name: "Croatia", flag: makeFlagEmoji("HR") },
+  { id: "si", label: "BU SI", name: "Slovenia", flag: makeFlagEmoji("SI") },
+  { id: "lt", label: "BU LT", name: "Lithuania", flag: makeFlagEmoji("LT") },
+  { id: "ib", label: "BU IB", name: "Spain", flag: makeFlagEmoji("ES") }
 ];
 
 export const MAP_LINKS = [
-  { id: "fr", top: "61%", left: "35%", mapLabel: "FR" },
-  { id: "it", top: "70%", left: "45%", mapLabel: "IT" },
-  { id: "pl", top: "46%", left: "58%", mapLabel: "PL" },
-  { id: "ua", top: "53%", left: "72%", mapLabel: "UA" },
-  { id: "hr", top: "67%", left: "55%", mapLabel: "HR" },
-  { id: "si", top: "66%", left: "52%", mapLabel: "SI" },
-  { id: "lt", top: "37%", left: "63%", mapLabel: "LT" },
-  { id: "ib", top: "80%", left: "22%", mapLabel: "IB" }
+  { id: "fr", top: "60.5%", left: "34.5%", mapLabel: "FR" },
+  { id: "it", top: "71.5%", left: "43.8%", mapLabel: "IT" },
+  { id: "pl", top: "49.5%", left: "58.2%", mapLabel: "PL" },
+  { id: "ua", top: "54.5%", left: "72.3%", mapLabel: "UA" },
+  { id: "hr", top: "69%", left: "54.6%", mapLabel: "HR" },
+  { id: "si", top: "67.2%", left: "50.8%", mapLabel: "SI" },
+  { id: "lt", top: "38.2%", left: "64%", mapLabel: "LT" },
+  { id: "ib", top: "79%", left: "21.2%", mapLabel: "IB" }
 ];
 
 export const SECTION_ORDER = ["annonces", "extractions"];
