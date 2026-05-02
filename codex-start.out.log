@@ -1,0 +1,261 @@
+
+> apf_new@0.1.0 start C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF
+> node start-dev.js
+
+certificate app directory is not present in this workspace. The APF portal will still run.
+documentation app directory is not present in this workspace. The APF portal will still run.
+sftp app directory is not present in this workspace. The APF portal will still run.
+Directory data API listening on http://localhost:3001
+Directory target: http://frb2bcdu01.groupecat.com:8000
+Archive source: frb2bcdu01.groupecat.com:22 (/B2BP/UserData/archives)
+Directory proxy: http://forcepoint.groupecat.com:80
+Directory data source: json (json)
+Directory data note: Bundled local storage is active until database details are provided.
+Starting the development server...
+
+Compiled successfully!
+
+You can now view apf_new in the browser.
+
+  http://localhost:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Failed to compile.
+
+SyntaxError: C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src\App.js: Expected corresponding JSX closing tag for <section>. (1890:8)
+[0m [90m 1888 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1889 |[39m           )}
+[31m[1m>[22m[39m[90m 1890 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m      |[39m         [31m[1m^[22m[39m
+ [90m 1891 |[39m
+ [90m 1892 |[39m         [33m<[39m[33mdiv[39m className[33m=[39m[32m"archive-detail-panel"[39m[33m>[39m
+ [90m 1893 |[39m           {selectedFile [33m?[39m ([0m
+[1m[31mERROR[39m[22m in [1m./src/App.js[39m[22m
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src\App.js: Expected corresponding JSX closing tag for <section>. (1890:8)
+
+[0m [90m 1888 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1889 |[39m           )}
+[31m[1m>[22m[39m[90m 1890 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m      |[39m         [31m[1m^[22m[39m
+ [90m 1891 |[39m
+ [90m 1892 |[39m         [33m<[39m[33mdiv[39m className[33m=[39m[32m"archive-detail-panel"[39m[33m>[39m
+ [90m 1893 |[39m           {selectedFile [33m?[39m ([0m
+    at constructor (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:365:19)
+    at FlowParserMixin.raise (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:6599:19)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4727:16)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4698:32)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4698:32)
+    at FlowParserMixin.jsxParseElement (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4749:17)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4759:19)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11081:23)
+    at FlowParserMixin.parseUpdate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11066:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11046:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10899:61)
+    at FlowParserMixin.parseExprOps (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10904:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10881:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10831:21)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3498:39
+    at FlowParserMixin.tryParse (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:6907:20)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3498:18)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10800:39
+    at FlowParserMixin.allowInAnd (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12426:12)
+    at FlowParserMixin.parseMaybeAssignAllowIn (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10800:17)
+    at FlowParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12493:17)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11675:28)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3591:18)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11331:23)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4764:20)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11081:23)
+    at FlowParserMixin.parseUpdate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11066:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11046:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10899:61)
+    at FlowParserMixin.parseExprOps (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10904:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10881:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10831:21)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3549:18)
+    at FlowParserMixin.parseExpressionBase (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10784:23)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10780:39
+    at FlowParserMixin.allowInAnd (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12421:16)
+    at FlowParserMixin.parseExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10780:17)
+    at FlowParserMixin.parseReturnStatement (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13142:28)
+    at FlowParserMixin.parseStatementContent (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12798:21)
+    at FlowParserMixin.parseStatementLike (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2918:24)
+    at FlowParserMixin.parseStatementListItem (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13309:10)
+    at FlowParserMixin.parseBlock (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12100:24)
+    at FlowParserMixin.parseFunctionBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2895:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12086:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2903:18)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13445:12
+
+webpack compiled with [1m[31m1 error[39m[22m
+Compiling...
+Failed to compile.
+
+SyntaxError: C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src\App.js: Expected corresponding JSX closing tag for <section>. (1971:8)
+[0m [90m 1969 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1970 |[39m           )}
+[31m[1m>[22m[39m[90m 1971 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m      |[39m         [31m[1m^[22m[39m
+ [90m 1972 |[39m       [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1973 |[39m     [33m<[39m[33m/[39m[33msection[39m[33m>[39m
+ [90m 1974 |[39m   )[33m;[39m[0m
+[1m[31mERROR[39m[22m in [1m./src/App.js[39m[22m
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src\App.js: Expected corresponding JSX closing tag for <section>. (1971:8)
+
+[0m [90m 1969 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1970 |[39m           )}
+[31m[1m>[22m[39m[90m 1971 |[39m         [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m      |[39m         [31m[1m^[22m[39m
+ [90m 1972 |[39m       [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 1973 |[39m     [33m<[39m[33m/[39m[33msection[39m[33m>[39m
+ [90m 1974 |[39m   )[33m;[39m[0m
+    at constructor (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:365:19)
+    at FlowParserMixin.raise (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:6599:19)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4727:16)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4698:32)
+    at FlowParserMixin.jsxParseElementAt (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4698:32)
+    at FlowParserMixin.jsxParseElement (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4749:17)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4759:19)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11081:23)
+    at FlowParserMixin.parseUpdate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11066:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11046:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10899:61)
+    at FlowParserMixin.parseExprOps (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10904:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10881:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10831:21)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3498:39
+    at FlowParserMixin.tryParse (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:6907:20)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3498:18)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10800:39
+    at FlowParserMixin.allowInAnd (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12426:12)
+    at FlowParserMixin.parseMaybeAssignAllowIn (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10800:17)
+    at FlowParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12493:17)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11675:28)
+    at FlowParserMixin.parseParenAndDistinguishExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3591:18)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11331:23)
+    at FlowParserMixin.parseExprAtom (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:4764:20)
+    at FlowParserMixin.parseExprSubscripts (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11081:23)
+    at FlowParserMixin.parseUpdate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11066:21)
+    at FlowParserMixin.parseMaybeUnary (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:11046:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10899:61)
+    at FlowParserMixin.parseExprOps (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10904:23)
+    at FlowParserMixin.parseMaybeConditional (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10881:23)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10831:21)
+    at FlowParserMixin.parseMaybeAssign (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:3549:18)
+    at FlowParserMixin.parseExpressionBase (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10784:23)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10780:39
+    at FlowParserMixin.allowInAnd (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12421:16)
+    at FlowParserMixin.parseExpression (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:10780:17)
+    at FlowParserMixin.parseReturnStatement (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13142:28)
+    at FlowParserMixin.parseStatementContent (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12798:21)
+    at FlowParserMixin.parseStatementLike (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2918:24)
+    at FlowParserMixin.parseStatementListItem (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13309:10)
+    at FlowParserMixin.parseBlock (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12100:24)
+    at FlowParserMixin.parseFunctionBody (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2895:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:12086:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:2903:18)
+    at C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\node_modules\@babel\parser\lib\index.js:13445:12
+
+webpack compiled with [1m[31m1 error[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Failed to compile.
+
+Module not found: Error: Can't resolve './index.css' in 'C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src'
+[1m[31mERROR[39m[22m in [1m./src/index.js[39m[22m [1m[32m7:0-21[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve './index.css' in 'C:\Users\AkashSA\Documents\LC_PROJECT\PROD\APF2.0\APF\src'[39m[22m
+
+webpack compiled with [1m[31m1 error[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m
+Compiling...
+Compiled successfully!
+webpack compiled [1m[32msuccessfully[39m[22m

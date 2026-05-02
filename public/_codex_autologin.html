@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Codex Autologin</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var role = params.get("role") || "client";
+        var username = params.get("username") || role;
+        var hash = params.get("hash") || "#/home/en";
+        window.sessionStorage.setItem(
+          "apf_new_auth_session_v1",
+          JSON.stringify({ role: role, username: username })
+        );
+        window.location.replace("/" + hash);
+      })();
+    </script>
+  </body>
+</html>

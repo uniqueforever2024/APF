@@ -169,6 +169,14 @@ const adminAuth = {
   password: readStringEnv("APF_ADMIN_PASSWORD", "admin123")
 };
 
+const archiveServer = {
+  host: readStringEnv("ARCHIVE_SERVER_HOST", "frb2bcdu01.groupecat.com"),
+  port: parseNumber(process.env.ARCHIVE_SERVER_PORT, 22),
+  username: readStringEnv("ARCHIVE_SERVER_USERNAME"),
+  password: readStringEnv("ARCHIVE_SERVER_PASSWORD"),
+  rootPath: readStringEnv("ARCHIVE_SERVER_ROOT_PATH", "/B2BP/UserData/archives")
+};
+
 module.exports = {
   PORT,
   ROOT_DIR,
@@ -180,5 +188,6 @@ module.exports = {
   canUseDatabase,
   directoryTarget,
   directoryProxy,
-  adminAuth
+  adminAuth,
+  archiveServer
 };

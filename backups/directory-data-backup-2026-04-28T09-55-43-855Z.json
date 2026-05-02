@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-04-28T09:56:15.314Z",
+  "backupCreatedAt": "2026-04-28T09:55:43.855Z",
+  "source": "json",
   "entries": [
     {
       "id": "seed-fr-annonces-0",
@@ -4793,5 +4794,6 @@
       "url": "http://cou7.groupecat.com:8000/chaine/CMG_INREFTIER/",
       "backup": ""
     }
-  ]
+  ],
+  "generatedAt": "2026-04-28T09:55:43.847Z"
 }

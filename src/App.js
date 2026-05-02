@@ -1,94 +1,81 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
-  buildBulkTemplateCsv,
-  buildDirectoryPreviewUrl,
-  countEntriesBySection,
-  createHashRoute,
-  downloadFile,
-  getEntriesForSection,
-  mergeBusinessUnits,
-  mergeBulkEntries,
-  parseBulkImportCsv,
-  parseHashRoute
-} from "./utils";
-import {
-  BU_OPTIONS,
-  DEFAULT_SECTION,
-  LANGUAGES,
-  MAP_LINKS,
-  SECTION_META,
-  SECTION_ORDER
-} from "./config";
+  buildArchiveOpenUrl,
+  getArchiveStatus,
+  listArchive,
+  searchArchive
+} from "./archiveApi";
+import { BU_OPTIONS, LANGUAGES } from "./config";
 import { getText } from "./text";
 import useDirectoryData from "./useDirectoryData";
+import { mergeBusinessUnits } from "./utils";
+import LanguageDropdown from "./components/LanguageDropdown";
+import ThemeToggle from "./components/ThemeToggle";
 
-const AUTH_STORAGE_KEY = "apf_new_auth_session_v1";
-const THEME_STORAGE_KEY = "apf_new_theme_mode_v1";
-const DIRECTORY_API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
-const AUTH_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
-const SUPPORT_EMAIL_HREF = "mailto:HCL-EDI_TEAM@gmail.com?subject=EDI%20LC%20APF%20Support";
-const GROUPECAT_WEBSITE_HREF = "https://www.groupecat.com/";
-const HCLTECH_WEBSITE_HREF = "https://www.hcltech.com/";
-const LANGUAGE_FLAGS = {
-  de: "🇩🇪",
-  fr: "🇫🇷",
-  en: "🇬🇧",
-  it: "🇮🇹",
-  pl: "🇵🇱"
+const AUTH_STORAGE_KEY = "apf_v2_auth_session";
+const THEME_STORAGE_KEY = "apf_v2_theme_mode";
+const LANGUAGE_STORAGE_KEY = "apf_v2_language";
+const EMPTY_BROWSER_STATE = {
+  loading: false,
+  error: "",
+  currentPath: "",
+  relativePath: "",
+  parentRelativePath: "",
+  rootPath: "",
+  items: []
 };
-
-const DEFAULT_BU_PALETTE = {
-  base: "#f59e0b",
-  soft: "rgba(245, 158, 11, 0.16)",
-  glow: "rgba(251, 191, 36, 0.18)",
-  text: "#b45309"
+const DEFAULT_BU_VISUAL = {
+  accent: "#38bdf8",
+  soft: "rgba(56, 189, 248, 0.16)",
+  glow: "rgba(56, 189, 248, 0.26)"
 };
-const BUSINESS_UNIT_PALETTES = [
-  {
-    base: "#2563eb",
-    soft: "rgba(37, 99, 235, 0.16)",
-    glow: "rgba(96, 165, 250, 0.16)",
-    text: "#1d4ed8"
+const BU_VISUALS = {
+  fr: {
+    accent: "#3b82f6",
+    soft: "rgba(59, 130, 246, 0.18)",
+    glow: "rgba(59, 130, 246, 0.28)"
   },
-  {
-    base: "#16a34a",
-    soft: "rgba(22, 163, 74, 0.16)",
-    glow: "rgba(74, 222, 128, 0.14)",
-    text: "#15803d"
+  hr: {
+    accent: "#ef4444",
+    soft: "rgba(239, 68, 68, 0.18)",
+    glow: "rgba(239, 68, 68, 0.28)"
   },
-  {
-    base: "#dc2626",
-    soft: "rgba(220, 38, 38, 0.14)",
-    glow: "rgba(248, 113, 113, 0.16)",
-    text: "#b91c1c"
+  ib: {
+    accent: "#f97316",
+    soft: "rgba(249, 115, 22, 0.18)",
+    glow: "rgba(249, 115, 22, 0.28)"
   },
-  {
-    base: "#7c3aed",
-    soft: "rgba(124, 58, 237, 0.15)",
-    glow: "rgba(167, 139, 250, 0.16)",
-    text: "#6d28d9"
+  it: {
+    accent: "#22c55e",
+    soft: "rgba(34, 197, 94, 0.18)",
+    glow: "rgba(34, 197, 94, 0.28)"
   },
-  {
-    base: "#0f766e",
-    soft: "rgba(15, 118, 110, 0.16)",
-    glow: "rgba(45, 212, 191, 0.14)",
-    text: "#0f766e"
+  lt: {
+    accent: "#f59e0b",
+    soft: "rgba(245, 158, 11, 0.18)",
+    glow: "rgba(245, 158, 11, 0.28)"
   },
-  {
-    base: "#c2410c",
-    soft: "rgba(194, 65, 12, 0.16)",
-    glow: "rgba(251, 146, 60, 0.16)",
-    text: "#9a3412"
+  pl: {
+    accent: "#e11d48",
+    soft: "rgba(225, 29, 72, 0.18)",
+    glow: "rgba(225, 29, 72, 0.28)"
+  },
+  si: {
+    accent: "#2563eb",
+    soft: "rgba(37, 99, 235, 0.18)",
+    glow: "rgba(37, 99, 235, 0.28)"
+  },
+  ua: {
+    accent: "#2563eb",
+    soft: "rgba(37, 99, 235, 0.18)",
+    glow: "rgba(250, 204, 21, 0.22)"
   }
-];
+};
 
 function readStoredSession() {
   try {
     const rawValue = window.sessionStorage.getItem(AUTH_STORAGE_KEY);
-    if (!rawValue) return null;
-    const parsedValue = JSON.parse(rawValue);
-    return parsedValue?.role && parsedValue?.username ? parsedValue : null;
+    return rawValue ? JSON.parse(rawValue) : null;
   } catch (error) {
     return null;
   }
@@ -102,1625 +89,1116 @@ function readStoredTheme() {
   }
 }
 
-function getBusinessUnitStyle(bu) {
-  const palette = bu.palette || DEFAULT_BU_PALETTE;
+function readStoredLanguage() {
+  try {
+    return window.localStorage.getItem(LANGUAGE_STORAGE_KEY) || "en";
+  } catch (error) {
+    return "en";
+  }
+}
+
+function formatBytes(value) {
+  const size = Number(value) || 0;
+
+  if (!size) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const normalizedValue = size / 1024 ** index;
+
+  return `${normalizedValue >= 10 || index === 0 ? normalizedValue.toFixed(0) : normalizedValue.toFixed(1)} ${units[index]}`;
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "Not available";
+  }
+
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }).format(new Date(value));
+  } catch (error) {
+    return value;
+  }
+}
+
+function getSectionLabel(section, t) {
+  return section === "outbound"
+    ? t("extractions", "Outbound / EMIS")
+    : t("annonces", "Inbound / RECU");
+}
+
+function getBusinessUnitName(businessUnits, businessUnitId) {
+  return (
+    businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.name ||
+    String(businessUnitId || "").toUpperCase()
+  );
+}
+
+function getBusinessUnitFlag(businessUnits, businessUnitId) {
+  return businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.flag || "";
+}
+
+function getStatusTone(archiveStatus) {
+  if (archiveStatus.loading) {
+    return "neutral";
+  }
+
+  if (archiveStatus.error || !archiveStatus.configured) {
+    return "warning";
+  }
+
+  return "success";
+}
+
+function getBuVisualStyle(businessUnitId) {
+  const palette = BU_VISUALS[businessUnitId] || DEFAULT_BU_VISUAL;
 
   return {
-    "--bu-color": palette.base || DEFAULT_BU_PALETTE.base,
-    "--bu-color-soft": palette.soft || DEFAULT_BU_PALETTE.soft,
-    "--bu-color-glow": palette.glow || DEFAULT_BU_PALETTE.glow,
-    "--bu-color-text": palette.text || palette.base || DEFAULT_BU_PALETTE.text
+    "--bu-accent": palette.accent,
+    "--bu-soft": palette.soft,
+    "--bu-glow": palette.glow
   };
 }
 
-function buildBusinessUnitPalette(seedValue, offset = 0) {
-  const normalizedSeed = String(seedValue || "").trim().toLowerCase();
-  const hash = Array.from(normalizedSeed).reduce(
-    (total, character) => total + character.charCodeAt(0),
-    0
-  );
-  const index = (hash + offset) % BUSINESS_UNIT_PALETTES.length;
-  return BUSINESS_UNIT_PALETTES[index] || DEFAULT_BU_PALETTE;
+function getContactHref(value) {
+  const normalizedValue = String(value || "").trim();
+  return normalizedValue && normalizedValue.includes("@") ? `mailto:${normalizedValue}` : "";
+}
+
+function ContactValue({ value, fallback }) {
+  const normalizedValue = String(value || "").trim();
+  const contactHref = getContactHref(normalizedValue);
+
+  if (!normalizedValue) {
+    return <span className="muted-note">{fallback}</span>;
+  }
+
+  if (contactHref) {
+    return (
+      <a className="detail-link" href={contactHref}>
+        {normalizedValue}
+      </a>
+    );
+  }
+
+  return <span className="detail-link">{normalizedValue}</span>;
 }
 
 function App() {
-  const [route, setRoute] = useState(() => parseHashRoute(window.location.hash));
   const [session, setSession] = useState(() => readStoredSession());
   const [themeMode, setThemeMode] = useState(() => readStoredTheme());
-  const [loginMode, setLoginMode] = useState("client");
-  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [loginError, setLoginError] = useState("");
-  const [managerOpen, setManagerOpen] = useState(false);
-  const [managerError, setManagerError] = useState("");
-  const [managerNotice, setManagerNotice] = useState("");
-  const [managerSaving, setManagerSaving] = useState(false);
-  const [businessUnitFormState, setBusinessUnitFormState] = useState({
-    code: "",
-    name: "",
-    countryCode: ""
+  const [language, setLanguage] = useState(() => readStoredLanguage());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedBuId, setSelectedBuId] = useState("");
+  const [selectedPartnerId, setSelectedPartnerId] = useState("");
+  const [fileSearchValue, setFileSearchValue] = useState("");
+  const [browsePath, setBrowsePath] = useState("");
+  const [archiveStatus, setArchiveStatus] = useState({
+    loading: true,
+    configured: false,
+    host: "",
+    rootPath: "",
+    error: ""
   });
-  const [partnerSearchValue, setPartnerSearchValue] = useState("");
-  const [activeEntryId, setActiveEntryId] = useState("");
-  const [managerFilters, setManagerFilters] = useState({
-    bu: route.bu || "fr",
-    type: route.section || DEFAULT_SECTION
+  const [searchState, setSearchState] = useState({
+    loading: false,
+    error: "",
+    query: "",
+    results: []
   });
-  const [formState, setFormState] = useState({
-    id: "",
-    bu: route.bu || "fr",
-    type: route.section || DEFAULT_SECTION,
-    label: "",
-    url: "",
-    backup: ""
-  });
-
-  const { entries, businessUnits: savedBusinessUnits, loaded, actions } = useDirectoryData();
+  const [browserState, setBrowserState] = useState(EMPTY_BROWSER_STATE);
+  const menuRef = useRef(null);
+  const searchQuery = useDeferredValue(fileSearchValue);
+  const { entries, businessUnits: savedBusinessUnits, dataMeta, loaded } = useDirectoryData();
   const businessUnits = useMemo(
     () => mergeBusinessUnits(BU_OPTIONS, savedBusinessUnits),
     [savedBusinessUnits]
   );
-  const text = getText(route.lang);
+  const text = getText(language);
   const t = (key, fallback) => text[key] || fallback;
-  const canManage = session?.role === "admin";
-  const currentBu = useMemo(() => {
-    const requestedBu = String(route.bu || "").trim().toLowerCase();
+  const currentBusinessUnit = useMemo(
+    () => businessUnits.find((businessUnit) => businessUnit.id === selectedBuId) || null,
+    [businessUnits, selectedBuId]
+  );
+  const currentBuEntries = useMemo(
+    () => (selectedBuId ? entries.filter((entry) => entry.bu === selectedBuId) : []),
+    [entries, selectedBuId]
+  );
+  const selectedPartner = useMemo(
+    () => currentBuEntries.find((entry) => entry.id === selectedPartnerId) || null,
+    [currentBuEntries, selectedPartnerId]
+  );
+  const currentBuCounts = useMemo(
+    () =>
+      currentBuEntries.reduce(
+        (accumulator, entry) => {
+          accumulator.total += 1;
+          accumulator[entry.type] = (accumulator[entry.type] || 0) + 1;
 
-    if (requestedBu && businessUnits.some((businessUnit) => businessUnit.id === requestedBu)) {
-      return requestedBu;
-    }
+          if (entry.backup) {
+            accumulator.withContact += 1;
+          }
 
-    return businessUnits[0]?.id || "fr";
-  }, [businessUnits, route.bu]);
-  const currentSection = SECTION_ORDER.includes(route.section)
-    ? route.section
-    : DEFAULT_SECTION;
-
-  useEffect(() => {
-    const handleHashChange = () => setRoute(parseHashRoute(window.location.hash));
-    if (!window.location.hash) window.location.hash = "#/home/en";
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+          return accumulator;
+        },
+        {
+          total: 0,
+          inbound: 0,
+          outbound: 0,
+          withContact: 0
+        }
+      ),
+    [currentBuEntries]
+  );
+  const showHomeView = !selectedBuId && !selectedPartner;
 
   useEffect(() => {
     document.body.dataset.theme = themeMode;
+
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
     } catch (error) {
-      // Keep the theme in memory if storage is unavailable.
+      // Keep theme in memory if storage is unavailable.
     }
+
     return () => {
       delete document.body.dataset.theme;
     };
   }, [themeMode]);
 
   useEffect(() => {
-    setManagerFilters((previous) => ({
-      ...previous,
-      bu: currentBu || previous.bu,
-      type: currentSection || previous.type
-    }));
-    setFormState((previous) => ({
-      ...previous,
-      bu: currentBu || previous.bu,
-      type: currentSection || previous.type
-    }));
-  }, [currentBu, currentSection]);
-
-  useEffect(() => {
-    if (!formState.id) {
-      setFormState((previous) => ({
-        ...previous,
-        bu: managerFilters.bu,
-        type: managerFilters.type
-      }));
+    try {
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    } catch (error) {
+      // Keep language in memory if storage is unavailable.
     }
-  }, [formState.id, managerFilters.bu, managerFilters.type]);
+  }, [language]);
 
   useEffect(() => {
-    if (!canManage && managerOpen) setManagerOpen(false);
-  }, [canManage, managerOpen]);
-
-  const sectionCounts = useMemo(
-    () => countEntriesBySection(entries, currentBu),
-    [entries, currentBu]
-  );
-
-  const currentEntries = useMemo(
-    () => getEntriesForSection(entries, currentBu, currentSection),
-    [currentBu, currentSection, entries]
-  );
-
-  const visibleEntries = useMemo(() => {
-    const term = partnerSearchValue.trim().toLowerCase();
-    if (!term) return currentEntries;
-    return currentEntries.filter(
-      (entry) =>
-        entry.label.toLowerCase().includes(term) ||
-        (entry.backup || "").toLowerCase().includes(term)
-    );
-  }, [currentEntries, partnerSearchValue]);
-
-  const activeEntry = useMemo(
-    () => currentEntries.find((entry) => entry.id === activeEntryId) || null,
-    [activeEntryId, currentEntries]
-  );
-
-  useEffect(() => {
-    if (route.page !== "directory") {
-      setPartnerSearchValue("");
-      setActiveEntryId("");
-      return;
+    try {
+      if (session) {
+        window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+      } else {
+        window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+    } catch (error) {
+      // Keep session in memory if storage is unavailable.
     }
-    setActiveEntryId((previousId) =>
-      currentEntries.some((entry) => entry.id === previousId) ? previousId : ""
-    );
-  }, [currentEntries, route.page]);
+  }, [session]);
 
   useEffect(() => {
-    const normalizedRouteBu = String(route.bu || "").trim().toLowerCase();
-
-    if (
-      route.page !== "directory" ||
-      (route.section === currentSection && normalizedRouteBu === currentBu)
-    ) {
-      return;
-    }
-
-    navigate({
-      page: "directory",
-      bu: currentBu,
-      lang: route.lang || "en",
-      section: currentSection
-    });
-  }, [currentBu, currentSection, route.bu, route.lang, route.page, route.section]);
-
-  const navigate = (nextRoute) => {
-    window.location.hash = createHashRoute(nextRoute);
-  };
-
-  const toggleThemeMode = () => {
-    const switchThemeMode = () => {
-      setThemeMode((previous) => (previous === "dark" ? "light" : "dark"));
+    const handlePointerDown = (event) => {
+      if (!menuRef.current?.contains(event.target)) {
+        setMenuOpen(false);
+      }
     };
 
-    if (typeof document.startViewTransition === "function") {
-      document.startViewTransition(() => {
-        flushSync(() => {
-          switchThemeMode();
-        });
-      });
-      return;
-    }
-
-    switchThemeMode();
-  };
-
-  const clearSessionState = () => {
-    window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
-    setSession(null);
-    setManagerOpen(false);
-    setPartnerSearchValue("");
-    setActiveEntryId("");
-    setLoginMode("client");
-    setLoginForm({ username: "", password: "" });
-    setLoginError("");
-    setManagerError("");
-    setManagerNotice("");
-  };
-
-  const switchLoginMode = (nextMode) => {
-    setLoginMode(nextMode);
-    setLoginError("");
-    setLoginForm({ username: "", password: "" });
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-
-    if (loginMode === "client") {
-      const nextSession = { role: "client", username: "client" };
-      window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
-      setSession(nextSession);
-      setLoginError("");
-      setLoginForm({ username: "", password: "" });
-      return;
-    }
-
-    try {
-      const response = await fetch(AUTH_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginForm.username,
-          password: loginForm.password
-        })
-      });
-
-      if (!response.ok) {
-        setLoginError(text.loginErrorAdmin || "Admin access details are not correct.");
-        return;
-      }
-
-      const payload = await response.json();
-      const normalizedUsername = String(payload.username || loginForm.username)
-        .trim()
-        .toLowerCase();
-      const nextSession = { role: loginMode, username: normalizedUsername };
-      window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
-      setSession(nextSession);
-      setLoginError("");
-      setLoginForm({ username: "", password: "" });
-    } catch (error) {
-      setLoginError(text.loginErrorAdmin || "Admin access details are not correct.");
-    }
-  };
-
-  const logout = () => {
-    clearSessionState();
-    navigate({ page: "home", lang: route.lang || "en" });
-  };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
 
   useEffect(() => {
-    if (route.page !== "logout") return;
-    clearSessionState();
-    navigate({ page: "home", lang: route.lang || "en" });
-  }, [route.page, route.lang]);
+    let cancelled = false;
 
-  const openManagerForCurrentContext = () => {
-    if (!canManage) return;
-    setManagerFilters({ bu: currentBu || businessUnits[0]?.id || "fr", type: currentSection });
-    setBusinessUnitFormState({
-      code: "",
-      name: "",
-      countryCode: ""
-    });
-    setFormState({
-      id: "",
-      bu: currentBu || businessUnits[0]?.id || "fr",
-      type: currentSection,
-      label: "",
-      url: "",
-      backup: ""
-    });
-    setManagerError("");
-    setManagerNotice("");
-    setManagerOpen(true);
-  };
+    setArchiveStatus((previous) => ({ ...previous, loading: true, error: "" }));
 
-  const createBusinessUnit = async (event) => {
-    event.preventDefault();
-    if (!canManage) return;
+    getArchiveStatus()
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
 
-    const code = String(businessUnitFormState.code || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]/g, "");
-    const name = String(businessUnitFormState.name || "").trim();
-    const countryCode = String(businessUnitFormState.countryCode || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z]/g, "")
-      .slice(0, 2);
-
-    if (!code || !name) {
-      setManagerError(
-        t("businessUnitCreateError", "Enter a BU code and business unit name first.")
-      );
-      setManagerNotice("");
-      return;
-    }
-
-    if (businessUnits.some((businessUnit) => businessUnit.id === code)) {
-      setManagerError(
-        t("businessUnitExistsError", "This business unit code already exists.")
-      );
-      setManagerNotice("");
-      return;
-    }
-
-    setManagerSaving(true);
-    setManagerError("");
-    setManagerNotice("");
-
-    try {
-      const nextBusinessUnit = {
-        id: code,
-        label: `BU ${code.toUpperCase()}`,
-        name,
-        flagId: countryCode || code,
-        palette: buildBusinessUnitPalette(code, businessUnits.length)
-      };
-
-      await actions.addBusinessUnit(nextBusinessUnit);
-      setBusinessUnitFormState({
-        code: "",
-        name: "",
-        countryCode: ""
-      });
-      setManagerFilters({ bu: nextBusinessUnit.id, type: currentSection });
-      setFormState({
-        id: "",
-        bu: nextBusinessUnit.id,
-        type: currentSection,
-        label: "",
-        url: "",
-        backup: ""
-      });
-      setManagerNotice(
-        t(
-          "businessUnitCreateSuccess",
-          "Business unit created. You can now add inbound and outbound partners for it."
-        )
-      );
-      navigate({
-        page: "directory",
-        bu: nextBusinessUnit.id,
-        lang: route.lang || "en",
-        section: currentSection
-      });
-    } catch (error) {
-      setManagerError(
-        t(
-          "businessUnitCreateSaveError",
-          "Unable to create the business unit right now. Please make sure the directory data service is running."
-        )
-      );
-    } finally {
-      setManagerSaving(false);
-    }
-  };
-
-  const deleteBusinessUnit = async (businessUnitId) => {
-    const normalizedId = String(businessUnitId || "").trim().toLowerCase();
-    const targetBusinessUnit = businessUnits.find((businessUnit) => businessUnit.id === normalizedId);
-
-    if (!canManage || !targetBusinessUnit) {
-      return;
-    }
-
-    const remainingBusinessUnits = businessUnits.filter(
-      (businessUnit) => businessUnit.id !== normalizedId
-    );
-
-    if (remainingBusinessUnits.length === 0) {
-      setManagerError(
-        t("businessUnitDeleteLastError", "At least one business unit must remain available.")
-      );
-      setManagerNotice("");
-      return;
-    }
-
-    const linkedEntries = entries.filter((entry) => entry.bu === normalizedId);
-    const confirmMessage = linkedEntries.length
-      ? `Delete ${targetBusinessUnit.label} and remove ${linkedEntries.length} linked partner entries?`
-      : `Delete ${targetBusinessUnit.label}?`;
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    setManagerSaving(true);
-    setManagerError("");
-    setManagerNotice("");
-
-    try {
-      await actions.removeBusinessUnit(normalizedId, BU_OPTIONS);
-      const nextBusinessUnit = remainingBusinessUnits[0] || null;
-
-      setFormState({
-        id: "",
-        bu: nextBusinessUnit?.id || "",
-        type: currentSection,
-        label: "",
-        url: "",
-        backup: ""
-      });
-      setManagerFilters({
-        bu: nextBusinessUnit?.id || "",
-        type: currentSection
-      });
-      setManagerNotice(
-        t(
-          "businessUnitDeleteSuccess",
-          "Business unit removed. Its inbound and outbound partners were removed as well."
-        )
-      );
-
-      if (route.page === "directory") {
-        navigate({
-          page: "directory",
-          bu: nextBusinessUnit?.id || "",
-          lang: route.lang || "en",
-          section: currentSection
+        setArchiveStatus({
+          loading: false,
+          configured: Boolean(payload?.configured),
+          host: String(payload?.host || ""),
+          rootPath: String(payload?.rootPath || ""),
+          error: ""
         });
-      }
-    } catch (error) {
-      setManagerError(
-        t(
-          "businessUnitDeleteSaveError",
-          "Unable to delete the business unit right now. Please make sure the directory data service is running."
-        )
-      );
-    } finally {
-      setManagerSaving(false);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setArchiveStatus({
+          loading: false,
+          configured: false,
+          host: "",
+          rootPath: "",
+          error: error.message || "Unable to reach the archive service."
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedBuId && !businessUnits.some((businessUnit) => businessUnit.id === selectedBuId)) {
+      setSelectedBuId("");
+      setSelectedPartnerId("");
+      setBrowsePath("");
     }
-  };
+  }, [businessUnits, selectedBuId]);
 
-  const submitEntry = async (event) => {
-    event.preventDefault();
-    if (!canManage || !formState.label.trim() || !formState.url.trim()) return;
-
-    setManagerSaving(true);
-    setManagerError("");
-    setManagerNotice("");
-
-    try {
-      if (formState.id) {
-        await actions.updateEntry(formState.id, formState);
-      } else {
-        await actions.addEntry(formState);
-      }
-
-      setFormState((previous) => ({
-        ...previous,
-        id: "",
-        label: "",
-        url: "",
-        backup: ""
-      }));
-      setManagerOpen(false);
-    } catch (error) {
-      setManagerError(
-        text.savePartnerError ||
-          "Unable to save the partner right now. Please make sure the local save service is running."
-      );
-    } finally {
-      setManagerSaving(false);
+  useEffect(() => {
+    if (selectedPartnerId && !currentBuEntries.some((entry) => entry.id === selectedPartnerId)) {
+      setSelectedPartnerId("");
+      setBrowsePath("");
     }
-  };
+  }, [currentBuEntries, selectedPartnerId]);
 
-  const removeEntryAndClose = async (id) => {
-    if (!canManage) return;
-    setManagerSaving(true);
-    setManagerError("");
-    setManagerNotice("");
+  useEffect(() => {
+    const normalizedQuery = searchQuery.trim();
 
-    try {
-      await actions.removeEntry(id);
-      setManagerOpen(false);
-    } catch (error) {
-      setManagerError(
-        text.removePartnerError ||
-          "Unable to remove the partner right now. Please make sure the local save service is running."
-      );
-    } finally {
-      setManagerSaving(false);
+    if (normalizedQuery.length < 2) {
+      setSearchState({
+        loading: false,
+        error: "",
+        query: normalizedQuery,
+        results: []
+      });
+      return undefined;
     }
-  };
 
-  const editEntry = (entry) => {
-    if (!canManage) return;
-    setManagerFilters({ bu: entry.bu, type: entry.type });
-    setBusinessUnitFormState({
-      code: "",
-      name: "",
-      countryCode: ""
+    let cancelled = false;
+
+    setSearchState((previous) => ({
+      ...previous,
+      loading: true,
+      error: "",
+      query: normalizedQuery
+    }));
+
+    searchArchive(normalizedQuery)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSearchState({
+          loading: false,
+          error: "",
+          query: normalizedQuery,
+          results: Array.isArray(payload?.results) ? payload.results : []
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSearchState({
+          loading: false,
+          error: error.message || "Unable to search the archive.",
+          query: normalizedQuery,
+          results: []
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (!selectedPartner) {
+      setBrowserState(EMPTY_BROWSER_STATE);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    setBrowserState((previous) => ({
+      ...previous,
+      loading: true,
+      error: ""
+    }));
+
+    listArchive(selectedPartner.id, browsePath)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+
+        setBrowserState({
+          loading: false,
+          error: "",
+          currentPath: String(payload?.currentPath || ""),
+          relativePath: String(payload?.relativePath || ""),
+          parentRelativePath: String(payload?.parentRelativePath || ""),
+          rootPath: String(payload?.rootPath || ""),
+          items: Array.isArray(payload?.items) ? payload.items : []
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setBrowserState({
+          loading: false,
+          error: error.message || "Unable to load this partner directory.",
+          currentPath: "",
+          relativePath: "",
+          parentRelativePath: "",
+          rootPath: "",
+          items: []
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [browsePath, selectedPartner]);
+
+  function clearSearchState() {
+    setFileSearchValue("");
+    setSearchState({
+      loading: false,
+      error: "",
+      query: "",
+      results: []
     });
-    setFormState(entry);
-    setManagerError("");
-    setManagerNotice("");
-    setManagerOpen(true);
-  };
+  }
 
-  const downloadBulkTemplate = () => {
-    const csvContent = buildBulkTemplateCsv({
-      bu: formState.bu || route.bu || "fr",
-      type: formState.type || currentSection
+  function handleLogin() {
+    setSession({
+      role: "client",
+      username: "portal-user"
     });
-    downloadFile(
-      `partner-bulk-template-${formState.bu || "fr"}-${formState.type || currentSection}.csv`,
-      csvContent,
-      "text/csv;charset=utf-8"
+  }
+
+  function handleLogout() {
+    setSession(null);
+    setSelectedBuId("");
+    setSelectedPartnerId("");
+    setBrowsePath("");
+    clearSearchState();
+    setMenuOpen(false);
+  }
+
+  function handleReturnHome() {
+    setSelectedBuId("");
+    setSelectedPartnerId("");
+    setBrowsePath("");
+    clearSearchState();
+    setMenuOpen(false);
+  }
+
+  function handleSelectBusinessUnit(businessUnitId) {
+    setSelectedBuId(businessUnitId);
+    setSelectedPartnerId("");
+    setBrowsePath("");
+    clearSearchState();
+  }
+
+  function handleSelectPartner(entry) {
+    setSelectedBuId(entry.bu);
+    setSelectedPartnerId(entry.id);
+    setBrowsePath("");
+    clearSearchState();
+  }
+
+  function handleOpenSearchResult(result) {
+    window.open(
+      buildArchiveOpenUrl(result.entryId, result.relativePath, themeMode),
+      "_blank",
+      "noopener,noreferrer"
     );
-    setManagerError("");
-    setManagerNotice(text.bulkTemplateReady || "Bulk template downloaded.");
-  };
+  }
 
-  const importBulkFile = async (file) => {
-    if (!canManage || !file) return;
-    setManagerSaving(true);
-    setManagerError("");
-    setManagerNotice("");
+  function handleBrowseSearchResult(result) {
+    setSelectedBuId(result.bu);
+    setSelectedPartnerId(result.entryId);
+    setBrowsePath(result.directory || "");
+    clearSearchState();
+  }
 
-    try {
-      const fileText = await file.text();
-      const importedEntries = parseBulkImportCsv(fileText);
-      const mergedResult = mergeBulkEntries(entries, importedEntries);
-
-      if (mergedResult.added === 0 && mergedResult.updated === 0) {
-        setManagerError(
-          text.bulkImportEmpty ||
-            "No valid bulk rows were found. Please use the downloaded template."
-        );
-        return;
-      }
-
-      await actions.importEntries(mergedResult.entries);
-      const successTemplate =
-        text.bulkImportSuccess ||
-        "Bulk import completed: {added} added, {updated} updated.";
-      setManagerNotice(
-        successTemplate
-          .replace("{added}", String(mergedResult.added))
-          .replace("{updated}", String(mergedResult.updated))
-      );
-    } catch (error) {
-      setManagerError(
-        text.bulkImportError ||
-          "Unable to import the bulk file right now. Please check the template and try again."
-      );
-    } finally {
-      setManagerSaving(false);
+  function handleOpenFile(item) {
+    if (!selectedPartner) {
+      return;
     }
-  };
 
-  if (!loaded) {
-    return <div className="loading-screen">{text.loadingDirectories || "Loading directories..."}</div>;
+    window.open(
+      buildArchiveOpenUrl(selectedPartner.id, item.relativePath, themeMode),
+      "_blank",
+      "noopener,noreferrer"
+    );
   }
 
   if (!session) {
     return (
-      <AuthView
-        loginMode={loginMode}
-        switchLoginMode={switchLoginMode}
-        loginForm={loginForm}
-        setLoginForm={setLoginForm}
-        loginError={loginError}
-        handleLogin={handleLogin}
-        text={text}
-        route={route}
-        navigate={navigate}
+      <LoginScreen
+        language={language}
+        onLogin={handleLogin}
+        onToggleTheme={() =>
+          setThemeMode((previousThemeMode) =>
+            previousThemeMode === "dark" ? "light" : "dark"
+          )
+        }
+        onSelectLanguage={setLanguage}
         themeMode={themeMode}
-        toggleThemeMode={toggleThemeMode}
+        t={t}
       />
     );
   }
 
   return (
-    <div className="site-shell portal-shell portal-shell-modern">
-      <PortalNav
-        route={route}
-        text={text}
-        canManage={canManage}
-        navigate={navigate}
-        themeMode={themeMode}
-        toggleThemeMode={toggleThemeMode}
-        logout={logout}
-        openManagerForCurrentContext={openManagerForCurrentContext}
-      />
-
-      <div className="portal-content">
-        {route.page === "home" ? (
-          <HomeView
-            businessUnits={businessUnits}
-            text={text}
-            entries={entries}
-            route={route}
-            navigate={navigate}
-          />
-        ) : (
-          <DirectoryView
-            businessUnits={businessUnits}
-            text={text}
-            route={route}
-            navigate={navigate}
-            canManage={canManage}
-            currentBu={currentBu}
-            currentSection={currentSection}
-            sectionCounts={sectionCounts}
-            entries={entries}
-            currentEntries={currentEntries}
-            visibleEntries={visibleEntries}
-            activeEntry={activeEntry}
-            partnerSearchValue={partnerSearchValue}
-            setPartnerSearchValue={setPartnerSearchValue}
-            setActiveEntryId={setActiveEntryId}
-            editEntry={editEntry}
-          />
-        )}
-      </div>
-
-      {managerOpen && canManage ? (
-        <ManagerModal
-          businessUnits={businessUnits}
-          entries={entries}
-          businessUnitFormState={businessUnitFormState}
-          setBusinessUnitFormState={setBusinessUnitFormState}
-          createBusinessUnit={createBusinessUnit}
-          deleteBusinessUnit={deleteBusinessUnit}
-          text={text}
-          formState={formState}
-          setFormState={setFormState}
-          submitEntry={submitEntry}
-          downloadBulkTemplate={downloadBulkTemplate}
-          importBulkFile={importBulkFile}
-          removeEntry={removeEntryAndClose}
-          managerError={managerError}
-          managerNotice={managerNotice}
-          managerSaving={managerSaving}
-          setManagerOpen={setManagerOpen}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function BusinessUnitStrip({ businessUnits, text, entries, route, navigate, currentBu }) {
-  const t = (key, fallback) => text[key] || fallback;
-  return (
-    <section className="portal-bu-strip" aria-label={t("businessUnit", "Business unit")}>
-      <div className="portal-bu-row">
-        {businessUnits.map((bu) => {
-          const total = entries.filter((entry) => entry.bu === bu.id).length;
-          return (
-            <button
-              key={bu.id}
-              className={`country-card bu-card portal-bu-card ${currentBu === bu.id ? "active" : ""}`.trim()}
-              style={getBusinessUnitStyle(bu)}
-              type="button"
-              onClick={() =>
-                navigate({
-                  page: "directory",
-                  bu: bu.id,
-                  lang: route.lang,
-                  section: SECTION_ORDER[0]
-                })
-              }
-            >
-              <span className="country-flag" aria-hidden="true">
-                <FlagIcon id={bu.flagId || bu.id} />
-              </span>
-              <div>
-                <h3>{bu.label}</h3>
-                <p>{bu.name}</p>
-              </div>
-              <span>{total}</span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function AuthView({
-  loginMode,
-  switchLoginMode,
-  loginForm,
-  setLoginForm,
-  loginError,
-  handleLogin,
-  text,
-  route,
-  navigate,
-  themeMode,
-  toggleThemeMode
-}) {
-  const isAdmin = loginMode === "admin";
-  const imageBase = process.env.PUBLIC_URL || "";
-  const t = (key, fallback) => text[key] || fallback;
-
-  return (
-    <div className="site-shell auth-shell auth-shell-modern">
-      <main className={`auth-clean-stage ${isAdmin ? "admin-mode" : "client-mode"}`.trim()}>
-        <header className="auth-clean-topbar">
-          <a
-            className="auth-clean-logo"
-            href={GROUPECAT_WEBSITE_HREF}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Open Groupe CAT website"
-            title="Open Groupe CAT website"
-          >
-            <img src={`${imageBase}/groupecatlogo.png`} alt="Groupe CAT" />
-          </a>
-
-          <div className="auth-clean-toptools">
-            <button
-              className={`auth-version-trigger ${isAdmin ? "active" : ""}`.trim()}
-              type="button"
-              aria-pressed={isAdmin}
-              onClick={() => switchLoginMode(isAdmin ? "client" : "admin")}
-            >
-              {t("loginVersion", "version 2.2")}
-            </button>
-            <LanguageSelect route={route} navigate={navigate} showLabel />
-            <ThemeButton themeMode={themeMode} onToggle={toggleThemeMode} text={text} />
-            <a
-              className="icon-button auth-help-trigger"
-              href={SUPPORT_EMAIL_HREF}
-              aria-label={t("supportButton", "Email support")}
-              title={t("supportButton", "Email support")}
-            >
-              <UiIcon type="help" />
-            </a>
+    <div className="app-root">
+      <header className="topbar">
+        <div className="topbar-title">
+          <span className="version-chip">Version 2.0</span>
+          <div className="topbar-heading-copy">
+            <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
+            <small>Universal search on home. BU partner lists after selection.</small>
           </div>
-        </header>
+        </div>
 
-        <section className="auth-clean-hero">
-          <h1 className="auth-clean-title">ACCESS TO PRODUCTION FILES</h1>
-
-          <form className="auth-clean-form auth-clean-hero-form" onSubmit={handleLogin}>
-            {isAdmin ? (
-              <div className="auth-clean-panel auth-clean-admin-panel">
-                <label className="auth-clean-field">
-                  <span className="visually-hidden">{t("userId", "UserId")}</span>
-                  <input
-                    type="text"
-                    autoComplete="username"
-                    value={loginForm.username}
-                    placeholder={t("userIdPlaceholder", "Enter your UserId")}
-                    onChange={(event) =>
-                      setLoginForm((previous) => ({
-                        ...previous,
-                        username: event.target.value
-                      }))
-                    }
-                  />
-                </label>
-                <label className="auth-clean-field">
-                  <span className="visually-hidden">{t("passwordLabel", "Password")}</span>
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    value={loginForm.password}
-                    placeholder={t("passwordPlaceholder", "Enter your password")}
-                    onChange={(event) =>
-                      setLoginForm((previous) => ({
-                        ...previous,
-                        password: event.target.value
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-            ) : null}
-
-            {loginError ? <div className="form-error auth-clean-error">{loginError}</div> : null}
-
-            <button className="button button-primary auth-clean-cta" type="submit">
-              {isAdmin ? t("signIn", "Sign in") : t("loginCta", "Login")}
+        <div className="topbar-actions">
+          <LanguageDropdown
+            currentLanguageId={language}
+            languages={LANGUAGES}
+            onSelect={setLanguage}
+          />
+          <ThemeToggle
+            themeMode={themeMode}
+            onToggle={() =>
+              setThemeMode((previousThemeMode) =>
+                previousThemeMode === "dark" ? "light" : "dark"
+              )
+            }
+            label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
+          />
+          <button
+            className="icon-action-button"
+            type="button"
+            aria-label={t("home", "Home")}
+            title={t("home", "Home")}
+            onClick={handleReturnHome}
+          >
+            <AppIcon type="home" />
+          </button>
+          <div className="menu-shell" ref={menuRef}>
+            <button
+              className={`icon-action-button ${menuOpen ? "active" : ""}`.trim()}
+              type="button"
+              aria-label="Open menu"
+              title="Open menu"
+              onClick={() => setMenuOpen((previousMenuOpen) => !previousMenuOpen)}
+            >
+              <AppIcon type="menu" />
             </button>
 
-            {isAdmin ? (
-              <button
-                className="inline-button auth-clean-return"
-                type="button"
-                onClick={() => switchLoginMode("client")}
-              >
-                {t("backToClientLogin", "back to client login")}
-              </button>
+            {menuOpen ? (
+              <div className="menu-popover">
+                <button className="menu-item" type="button" onClick={handleLogout}>
+                  <AppIcon type="logout" />
+                  <span>{t("logout", "Logout")}</span>
+                </button>
+              </div>
             ) : null}
-          </form>
-        </section>
-
-        <div className="auth-clean-footer">
-          <span className="auth-clean-footer-copy">{t("poweredManagedBy", "powered and maintained by")}</span>
-          <a
-            className="auth-clean-footer-logo"
-            href={HCLTECH_WEBSITE_HREF}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Open HCLTech website"
-            title="Open HCLTech website"
-          >
-            <img src={`${imageBase}/hcltechlogo.png`} alt="HCLTech" />
-          </a>
+          </div>
         </div>
+      </header>
+
+      <main className="shell-body">
+        {showHomeView ? (
+          <>
+            <SearchPanel
+              archiveStatus={archiveStatus}
+              query={fileSearchValue}
+              scopeLabel={archiveStatus.rootPath || "All business units"}
+              setQuery={setFileSearchValue}
+              t={t}
+            />
+
+            {searchState.query ? (
+              <SearchResults
+                businessUnits={businessUnits}
+                error={searchState.error}
+                loading={searchState.loading}
+                onBrowse={handleBrowseSearchResult}
+                onOpen={handleOpenSearchResult}
+                query={searchState.query}
+                results={searchState.results}
+                t={t}
+              />
+            ) : null}
+
+            <section className="bu-strip">
+              <div className="panel-header">
+                <div>
+                  <span>{t("businessUnit", "Business unit")}</span>
+                  <strong>Select a partner directory by BU</strong>
+                </div>
+                <small>{businessUnits.length} business units</small>
+              </div>
+
+              <div className="bu-strip-grid">
+                {businessUnits.map((businessUnit) => (
+                  <button
+                    key={businessUnit.id}
+                    type="button"
+                    className="bu-tile"
+                    style={getBuVisualStyle(businessUnit.id)}
+                    onClick={() => handleSelectBusinessUnit(businessUnit.id)}
+                  >
+                    <span className="bu-flag">{businessUnit.flag || businessUnit.label}</span>
+                    <strong>{businessUnit.label}</strong>
+                    <small>{businessUnit.name}</small>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {!searchState.query ? (
+              <section className="overview-grid">
+                <MetricCard label={t("businessUnit", "Business unit")} value={String(businessUnits.length)} />
+                <MetricCard label={t("partnerColumn", "Partner")} value={String(entries.length)} />
+                <MetricCard
+                  label="Archive root"
+                  value={archiveStatus.rootPath || "Not configured"}
+                  wide
+                />
+                <MetricCard
+                  label="Data source"
+                  value={loaded ? dataMeta?.source || "local-api" : "loading"}
+                  wide
+                />
+              </section>
+            ) : null}
+          </>
+        ) : null}
+
+        {selectedBuId && !selectedPartner ? (
+          <BusinessUnitDirectory
+            businessUnit={currentBusinessUnit}
+            counts={currentBuCounts}
+            entries={currentBuEntries}
+            onBrowsePartner={handleSelectPartner}
+            onReturnHome={handleReturnHome}
+            t={t}
+            themeMode={themeMode}
+          />
+        ) : null}
+
+        {selectedPartner ? (
+          <section className="partner-focus" style={getBuVisualStyle(selectedPartner.bu)}>
+            <div className="focused-header">
+              <div>
+                <div className="partner-focus-meta">
+                  <span className="bu-pill">
+                    <span>{currentBusinessUnit?.flag || ""}</span>
+                    <span>{currentBusinessUnit?.label || selectedPartner.bu.toUpperCase()}</span>
+                  </span>
+                  <StatusBadge
+                    label={getSectionLabel(selectedPartner.type, t)}
+                    tone={selectedPartner.type === "outbound" ? "warning" : "success"}
+                  />
+                </div>
+                <strong>{selectedPartner.label}</strong>
+                <small>{selectedPartner.url}</small>
+                <ContactValue
+                  value={selectedPartner.backup}
+                  fallback={t("contactUnavailable", "Contact not available")}
+                />
+              </div>
+
+              <div className="focused-actions">
+                <button className="secondary-button" type="button" onClick={() => setSelectedPartnerId("")}>
+                  <AppIcon type="back" />
+                  <span>{t("backToList", "Back to list")}</span>
+                </button>
+                <a
+                  className="primary-button"
+                  href={buildArchiveOpenUrl(selectedPartner.id, "", themeMode)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open archive
+                </a>
+              </div>
+            </div>
+
+            <DirectoryBrowser
+              browserState={browserState}
+              onBrowse={setBrowsePath}
+              onOpenFile={handleOpenFile}
+              selectedPartner={selectedPartner}
+              t={t}
+              themeMode={themeMode}
+            />
+          </section>
+        ) : null}
       </main>
     </div>
   );
 }
 
-function PortalNav({
-  route,
-  text,
-  canManage,
-  navigate,
-  themeMode,
-  toggleThemeMode,
-  logout,
-  openManagerForCurrentContext
-}) {
-  const t = (key, fallback) => text[key] || fallback;
-  return (
-    <nav className="portal-header">
-      <button
-        type="button"
-        className="portal-brand"
-        onClick={() => navigate({ page: "home", lang: route.lang })}
-      >
-        <span className="portal-brand-mark">APF</span>
-        <span className="portal-brand-copy">
-          <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
-        </span>
-      </button>
-
-      <div className="portal-header-tools">
-        {canManage ? (
-          <button
-            type="button"
-            className="portal-action-button portal-action-button-primary"
-            onClick={openManagerForCurrentContext}
-          >
-            <UiIcon type="plus" />
-            <span>{t("addNew", "Add New")}</span>
-          </button>
-        ) : null}
-
-        <button
-          type="button"
-          className={`portal-action-button portal-action-button-icon ${route.page === "home" ? "active" : ""}`.trim()}
-          aria-label={t("home", "Home")}
-          title={t("home", "Home")}
-          onClick={() => navigate({ page: "home", lang: route.lang })}
-        >
-          <UiIcon type="home" />
-        </button>
-        <ThemeButton themeMode={themeMode} onToggle={toggleThemeMode} text={text} />
-        <LanguageSelect route={route} navigate={navigate} />
-        <button
-          className="portal-action-button portal-action-button-icon portal-action-button-logout"
-          type="button"
-          aria-label={t("logout", "Logout")}
-          title={t("logout", "Logout")}
-          onClick={logout}
-        >
-          <UiIcon type="logout" />
-        </button>
-      </div>
-    </nav>
-  );
-}
-
-function HomeView({ businessUnits, text, entries, route, navigate }) {
-  const t = (key, fallback) => text[key] || fallback;
-  const imageBase = process.env.PUBLIC_URL || "";
-  const visibleBusinessUnitIds = new Set(businessUnits.map((businessUnit) => businessUnit.id));
-
-  return (
-    <main className="home-shell home-shell-modern">
-      <div className="home-copy">
-        <div className="home-copy-intro">
-          <h1>{t("businessUnit", "Business unit")}</h1>
-          <p>
-            {t(
-              "homeMapHint",
-              "Choose a business unit from the buttons above or directly on the map."
-            )}
-          </p>
-        </div>
-        <div className="home-bu-grid">
-          {businessUnits.map((bu) => {
-            const total = entries.filter((entry) => entry.bu === bu.id).length;
-            return (
-              <button
-                key={bu.id}
-                className="country-card bu-card"
-                style={getBusinessUnitStyle(bu)}
-                type="button"
-                onClick={() =>
-                  navigate({
-                    page: "directory",
-                    bu: bu.id,
-                    lang: route.lang,
-                    section: SECTION_ORDER[0]
-                  })
-                }
-              >
-                <span className="country-flag" aria-hidden="true">
-                  <FlagIcon id={bu.flagId || bu.id} />
-                </span>
-                <div>
-                  <h3>{bu.label}</h3>
-                  <p>{bu.name}</p>
-                </div>
-                <span>{total}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <section className="home-map-stage">
-        <div className="home-map-stage-header">
-          <div>
-            <h2>{t("welcomeTitle", "Business Unit Overview")}</h2>
-          </div>
-          <p>{entries.length} links available</p>
-        </div>
-        <div className="map-panel map-panel-modern">
-          <img src={`${imageBase}/Europe2.png`} alt="Europe map" />
-          {MAP_LINKS.filter((point) => visibleBusinessUnitIds.has(point.id)).map((point) => {
-            const bu = businessUnits.find((item) => item.id === point.id);
-            return (
-              <button
-                key={point.id}
-                type="button"
-                className="map-point"
-                style={{ top: point.top, left: point.left }}
-                onClick={() =>
-                  navigate({
-                    page: "directory",
-                    bu: point.id,
-                    lang: route.lang,
-                    section: SECTION_ORDER[0]
-                  })
-                }
-              >
-                {point.mapLabel || bu?.label || point.id.toUpperCase()}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function DirectoryView({
-  businessUnits,
-  text,
-  route,
-  navigate,
-  canManage,
-  currentBu,
-  currentSection,
-  sectionCounts,
+function BusinessUnitDirectory({
+  businessUnit,
+  counts,
   entries,
-  currentEntries,
-  visibleEntries,
-  activeEntry,
-  partnerSearchValue,
-  setPartnerSearchValue,
-  setActiveEntryId,
-  editEntry
+  onBrowsePartner,
+  onReturnHome,
+  t,
+  themeMode
 }) {
-  const t = (key, fallback) => text[key] || fallback;
-  const currentBuMeta = businessUnits.find((bu) => bu.id === currentBu);
-  const isPreviewingEntry = Boolean(activeEntry);
-  const currentSectionLabel = t(
-    SECTION_META[currentSection].labelKey,
-    SECTION_META[currentSection].labelKey
-  );
-
   return (
-    <main className={`directory-shell directory-shell-modern ${isPreviewingEntry ? "directory-shell-preview" : ""}`.trim()}>
-      {!isPreviewingEntry ? (
-        <BusinessUnitStrip
-          businessUnits={businessUnits}
-          text={text}
-          entries={entries}
-          route={route}
-          navigate={navigate}
-          currentBu={currentBu}
-        />
-      ) : null}
-
-      <section className={`directory-content ${isPreviewingEntry ? "directory-content-preview" : ""}`.trim()}>
-        {!isPreviewingEntry ? (
-          <>
-            <div className="directory-toolbar">
-              <div className="directory-toolbar-meta">
-                <span className="eyebrow">{t("country", "Country")}</span>
-                <h1>{currentSectionLabel}</h1>
-                <p>
-                  {visibleEntries.length} {visibleEntries.length === 1 ? "partner" : "partners"} loaded
-                  in this view.
-                </p>
-              </div>
-              <div className="directory-search">
-                <input
-                  type="search"
-                  value={partnerSearchValue}
-                  placeholder={t("searchPartnerPlaceholder", "Search partner")}
-                  onChange={(event) => setPartnerSearchValue(event.target.value)}
-                />
-              </div>
-            </div>
-          </>
-        ) : null}
-
-        {!isPreviewingEntry ? (
-          <SectionTabs
-            className="section-tabs directory-section-tabs-row"
-            text={text}
-            route={route}
-            navigate={navigate}
-            currentBu={currentBu}
-            currentSection={currentSection}
-            sectionCounts={sectionCounts}
-          />
-        ) : null}
-
-        <div className={`directory-body ${isPreviewingEntry ? "directory-body-preview" : ""}`.trim()}>
-          {activeEntry ? (
-            <PreviewPanel
-              text={text}
-              activeEntry={activeEntry}
-              currentBuLabel={currentBuMeta?.name || currentBu.toUpperCase()}
-              currentSectionLabel={currentSectionLabel}
-              canManage={canManage}
-              editEntry={editEntry}
-              clearSelectedEntry={() => setActiveEntryId("")}
-            />
-          ) : (
-            <PartnerList
-              text={text}
-              visibleEntries={visibleEntries}
-              canManage={canManage}
-              setActiveEntryId={setActiveEntryId}
-            />
-          )}
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function SectionTabs({
-  className = "section-tabs",
-  text,
-  route,
-  navigate,
-  currentBu,
-  currentSection,
-  sectionCounts
-}) {
-  const t = (key, fallback) => text[key] || fallback;
-  return (
-    <div className={className}>
-      {SECTION_ORDER.map((section) => (
-        <button
-          key={section}
-          type="button"
-          className={currentSection === section ? "active" : ""}
-          onClick={() =>
-            navigate({
-              page: "directory",
-              bu: currentBu,
-              lang: route.lang,
-              section
-            })
-          }
-        >
-          <span>{t(SECTION_META[section].labelKey, SECTION_META[section].labelKey)}</span>
-          <small>{sectionCounts[section] || 0}</small>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function PartnerList({ text, visibleEntries, setActiveEntryId }) {
-  const t = (key, fallback) => text[key] || fallback;
-
-  if (visibleEntries.length === 0) {
-    return (
-      <div className="directory-empty-state">
-        <h3>{t("noEntries", "No entries are available in this section yet.")}</h3>
-        <p>{t("noLinkAvailable", "No link is available here yet.")}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="directory-list-grid">
-      {visibleEntries.map((entry) => (
-        <button
-          type="button"
-          className="partner-card"
-          key={entry.id}
-          onClick={() => setActiveEntryId(entry.id)}
-        >
-          <div className="partner-card-body">
-            <strong>{entry.label}</strong>
-            <span>{entry.backup || t("contactUnavailable", "Not available")}</span>
-          </div>
-          <span className="partner-card-trail" aria-hidden="true">
-            <UiIcon type="arrow-right" />
+    <section className="bu-directory" style={getBuVisualStyle(businessUnit?.id)}>
+      <div className="bu-directory-hero">
+        <div className="bu-directory-copy">
+          <span className="bu-pill bu-pill-large">
+            <span>{businessUnit?.flag || ""}</span>
+            <span>{businessUnit?.label || "BU"}</span>
           </span>
+          <strong>{businessUnit?.name || "Business unit"}</strong>
+          <p>Only partners from this business unit are shown here. Select a partner to open its archive.</p>
+        </div>
+
+        <button className="secondary-button" type="button" onClick={onReturnHome}>
+          <AppIcon type="home" />
+          <span>{t("home", "Home")}</span>
         </button>
-      ))}
-    </div>
-  );
-}
-
-function PreviewPanel({
-  text,
-  activeEntry,
-  currentBuLabel,
-  currentSectionLabel,
-  canManage,
-  editEntry,
-  clearSelectedEntry
-}) {
-  const [fileSearchValue, setFileSearchValue] = useState("");
-  const [fileHighlightValue, setFileHighlightValue] = useState("");
-  const [fileSearchReloadKey, setFileSearchReloadKey] = useState(0);
-  const [previewTargetUrl, setPreviewTargetUrl] = useState(activeEntry.url);
-  const inputRef = useRef(null);
-  const t = (key, fallback) => text[key] || fallback;
-
-  useEffect(() => {
-    setFileSearchValue("");
-    setFileHighlightValue("");
-    setFileSearchReloadKey(0);
-    setPreviewTargetUrl(activeEntry.url);
-  }, [activeEntry]);
-
-  useEffect(() => {
-    const handlePreviewNavigation = (event) => {
-      if (event.data?.type !== "apf-directory-location") return;
-      if (event.data.context && event.data.context !== activeEntry.id) return;
-      if (typeof event.data.remoteUrl === "string" && event.data.remoteUrl.trim()) {
-        setPreviewTargetUrl(event.data.remoteUrl.trim());
-      }
-    };
-
-    window.addEventListener("message", handlePreviewNavigation);
-    return () => window.removeEventListener("message", handlePreviewNavigation);
-  }, [activeEntry]);
-
-  const previewFrameUrl = buildDirectoryPreviewUrl(previewTargetUrl || activeEntry.url, {
-    highlight: fileHighlightValue,
-    reloadKey: fileSearchReloadKey,
-    context: activeEntry.id
-  });
-
-  const handleFileSearch = (event) => {
-    event.preventDefault();
-    const term = fileSearchValue.trim();
-    if (!term) {
-      setFileHighlightValue("");
-      inputRef.current?.focus();
-      return;
-    }
-    setFileHighlightValue(term);
-    setFileSearchReloadKey(Date.now());
-  };
-
-  return (
-    <div className="preview-surface">
-      <div className="preview-toolbar">
-        <div className="preview-toolbar-meta">
-          <span className="eyebrow">{currentBuLabel} / {currentSectionLabel}</span>
-          <h2>{activeEntry.label}</h2>
-        </div>
-        <div className="preview-toolbar-actions">
-          <form className="directory-search preview-search" onSubmit={handleFileSearch}>
-            <input
-              ref={inputRef}
-              type="search"
-              value={fileSearchValue}
-              placeholder={t("searchFilePlaceholder", "Search file")}
-              onChange={(event) => setFileSearchValue(event.target.value)}
-            />
-            <button className="button button-primary" type="submit">
-              <UiIcon type="search" />
-              <span>{t("searchFile", "Search File")}</span>
-            </button>
-          </form>
-          {canManage ? (
-            <button className="button button-secondary" type="button" onClick={() => editEntry(activeEntry)}>
-              <UiIcon type="edit" />
-              <span>{t("editEntry", "Edit")}</span>
-            </button>
-          ) : null}
-          <button className="button button-secondary" type="button" onClick={clearSelectedEntry}>
-            <UiIcon type="back" />
-            <span>{t("backToList", "Back to list")}</span>
-          </button>
-        </div>
       </div>
-      <div className="preview-frame-shell">
-        <iframe
-          key={`${activeEntry.id}-${fileHighlightValue}-${fileSearchReloadKey}`}
-          className="preview-frame"
-          src={previewFrameUrl}
-          title={`${activeEntry.label} preview`}
-          loading="lazy"
-        />
+
+      <div className="bu-directory-summary">
+        <MetricCard label={t("partnerColumn", "Partner")} value={String(counts.total)} />
+        <MetricCard label={t("annonces", "Inbound / RECU")} value={String(counts.inbound)} />
+        <MetricCard label={t("extractions", "Outbound / EMIS")} value={String(counts.outbound)} />
+        <MetricCard label="Contacts ready" value={`${counts.withContact}/${counts.total || 0}`} />
       </div>
-    </div>
-  );
-}
 
-function ManagerModal({
-  businessUnits,
-  entries,
-  businessUnitFormState,
-  setBusinessUnitFormState,
-  createBusinessUnit,
-  deleteBusinessUnit,
-  text,
-  formState,
-  setFormState,
-  submitEntry,
-  downloadBulkTemplate,
-  importBulkFile,
-  removeEntry,
-  managerError,
-  managerNotice,
-  managerSaving,
-  setManagerOpen
-}) {
-  const t = (key, fallback) => text[key] || fallback;
-  const canDeleteBusinessUnit = businessUnits.length > 1;
-
-  return (
-    <div className="manager-overlay" onClick={() => setManagerOpen(false)}>
-      <section className="manager-modal section-frame" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-heading">
+      <section className="partners-panel">
+        <div className="panel-header">
           <div>
-            <span className="eyebrow">{t("openManager", "Add New Partner")}</span>
-            <h2>{t("addPartnerTitle", "Add New Partner")}</h2>
+            <span>Partner directory</span>
+            <strong>{businessUnit?.name || "Business unit"}</strong>
           </div>
-          <button type="button" onClick={() => setManagerOpen(false)} aria-label={t("closeManager", "Close form")}>
-            x
-          </button>
+          <small>{entries.length} partners</small>
         </div>
-        <p>{t("managerCopy", "Changes are saved through the directory data service.")}</p>
 
-        <div className="manager-subsection">
-          <div className="manager-subsection-head">
-            <div>
-              <span className="eyebrow">{t("businessUnitSetup", "Business unit setup")}</span>
-              <h3>{t("createBusinessUnitTitle", "Create business unit")}</h3>
-            </div>
-            <p>
-              {t(
-                "createBusinessUnitCopy",
-                "New business units appear immediately and use the same inbound and outbound sections as the existing ones."
-              )}
-            </p>
-          </div>
-          <form className="manager-bu-form" onSubmit={createBusinessUnit}>
-            <label>
-              {t("businessUnitCode", "BU code")}
-              <input
-                type="text"
-                value={businessUnitFormState.code}
-                placeholder={t("businessUnitCodePlaceholder", "fr")}
-                onChange={(event) =>
-                  setBusinessUnitFormState((previous) => ({
-                    ...previous,
-                    code: event.target.value
-                  }))
-                }
-              />
-            </label>
-            <label>
-              {t("businessUnitCountryCode", "Flag country code")}
-              <input
-                type="text"
-                value={businessUnitFormState.countryCode}
-                placeholder={t("businessUnitCountryCodePlaceholder", "fr")}
-                onChange={(event) =>
-                  setBusinessUnitFormState((previous) => ({
-                    ...previous,
-                    countryCode: event.target.value
-                  }))
-                }
-              />
-            </label>
-            <label className="manager-bu-form-name">
-              {t("businessUnitName", "Business unit name")}
-              <input
-                type="text"
-                value={businessUnitFormState.name}
-                placeholder={t("businessUnitNamePlaceholder", "France")}
-                onChange={(event) =>
-                  setBusinessUnitFormState((previous) => ({
-                    ...previous,
-                    name: event.target.value
-                  }))
-                }
-              />
-            </label>
-            <div className="manager-bu-form-actions">
-              <button className="button button-primary" type="submit" disabled={managerSaving}>
-                {t("createBusinessUnitAction", "Add business unit")}
-              </button>
-            </div>
-          </form>
-
-          <div className="manager-bu-list">
-            {businessUnits.map((businessUnit) => {
-              const linkedEntries = entries.filter((entry) => entry.bu === businessUnit.id).length;
-
-              return (
-                <div className="manager-bu-list-item" key={businessUnit.id}>
-                  <div className="manager-bu-list-copy">
-                    <strong>{businessUnit.label}</strong>
-                    <span>
-                      {businessUnit.name} • {linkedEntries}{" "}
-                      {linkedEntries === 1 ? "partner" : "partners"}
-                    </span>
+        {entries.length ? (
+          <div className="partner-list">
+            {entries.map((entry) => (
+              <article className="partner-list-row" key={entry.id} style={getBuVisualStyle(entry.bu)}>
+                <div className="partner-list-main">
+                  <div className="partner-list-heading">
+                    <div className="partner-list-identity">
+                      <span className="bu-flag partner-list-flag">{businessUnit?.flag || businessUnit?.label || "BU"}</span>
+                      <div>
+                        <strong>{entry.label}</strong>
+                        <div className="partner-list-meta">
+                          <span>{businessUnit?.label || entry.bu.toUpperCase()}</span>
+                          <StatusBadge
+                            label={getSectionLabel(entry.type, t)}
+                            tone={entry.type === "outbound" ? "warning" : "success"}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <button
-                    className="button button-secondary danger"
-                    type="button"
-                    disabled={managerSaving || !canDeleteBusinessUnit}
-                    onClick={() => deleteBusinessUnit(businessUnit.id)}
+
+                  <div className="partner-list-detail">
+                    <span>Archive path</span>
+                    <a
+                      className="detail-link"
+                      href={buildArchiveOpenUrl(entry.id, "", themeMode)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {entry.url}
+                    </a>
+                  </div>
+
+                  <div className="partner-list-detail">
+                    <span>Contact</span>
+                    <ContactValue
+                      value={entry.backup}
+                      fallback={t("contactUnavailable", "Not available")}
+                    />
+                  </div>
+                </div>
+
+                <div className="partner-list-actions">
+                  <a
+                    className="secondary-button compact-button"
+                    href={buildArchiveOpenUrl(entry.id, "", themeMode)}
+                    target="_blank"
+                    rel="noreferrer"
                   >
-                    {t("deleteBusinessUnitAction", "Delete BU")}
+                    Open archive
+                  </a>
+                  <button
+                    className="primary-button compact-button"
+                    type="button"
+                    onClick={() => onBrowsePartner(entry)}
+                  >
+                    Browse folder
                   </button>
                 </div>
-              );
-            })}
+              </article>
+            ))}
           </div>
-        </div>
-
-        <div className="bulk-actions">
-          <button className="button button-secondary" type="button" disabled={managerSaving} onClick={downloadBulkTemplate}>
-            {t("downloadTemplate", "Download template")}
-          </button>
-          <label className="button button-secondary import-label">
-            {t("importBulk", "Import bulk")}
-            <input
-              type="file"
-              accept=".csv,text/csv"
-              disabled={managerSaving}
-              onChange={(event) => {
-                const [file] = Array.from(event.target.files || []);
-                if (file) importBulkFile(file);
-                event.target.value = "";
-              }}
-            />
-          </label>
-        </div>
-
-        <form className="manager-form" onSubmit={submitEntry}>
-          <label>
-            {t("businessUnit", "Business unit")}
-            <select
-              value={formState.bu}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, bu: event.target.value }))
-              }
-            >
-              {businessUnits.map((bu) => (
-                <option key={bu.id} value={bu.id}>{bu.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            {t("section", "Section")}
-            <select
-              value={formState.type}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, type: event.target.value }))
-              }
-            >
-              {SECTION_ORDER.map((section) => (
-                <option key={section} value={section}>
-                  {t(SECTION_META[section].labelKey, SECTION_META[section].labelKey)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            {t("label", "Label")}
-            <input
-              type="text"
-              value={formState.label}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, label: event.target.value }))
-              }
-            />
-          </label>
-          <label>
-            {t("url", "Path or full URL")}
-            <input
-              type="text"
-              value={formState.url}
-              placeholder={t("urlPlaceholder", "/B2BI_archives/... or full URL")}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, url: event.target.value }))
-              }
-            />
-          </label>
-          <label>
-            {t("contact", "Backup email or note")}
-            <input
-              type="text"
-              value={formState.backup}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, backup: event.target.value }))
-              }
-            />
-          </label>
-
-          <div className="form-actions">
-            <button className="button button-primary" type="submit" disabled={managerSaving}>
-              {formState.id ? t("updateEntry", "Save changes") : t("addEntry", "Add link")}
-            </button>
-            <button
-              className="button button-secondary"
-              type="button"
-              disabled={managerSaving}
-              onClick={() =>
-                setFormState((previous) => ({
-                  ...previous,
-                  id: "",
-                  label: "",
-                  url: "",
-                  backup: ""
-                }))
-              }
-            >
-              {t("clear", "Clear")}
-            </button>
-            {formState.id ? (
-              <button
-                className="button button-secondary danger"
-                type="button"
-                disabled={managerSaving}
-                onClick={() => removeEntry(formState.id)}
-              >
-                {t("deleteEntry", "Remove")}
-              </button>
-            ) : null}
-          </div>
-          {managerNotice ? <div className="form-notice">{managerNotice}</div> : null}
-          {managerError ? <div className="form-error">{managerError}</div> : null}
-        </form>
+        ) : (
+          <EmptyState
+            title={t("noEntries", "No entries are available in this section yet.")}
+            detail={t("noLinkAvailable", "No link is available here yet.")}
+          />
+        )}
       </section>
+    </section>
+  );
+}
+
+function LoginScreen({
+  language,
+  onLogin,
+  onSelectLanguage,
+  onToggleTheme,
+  themeMode,
+  t
+}) {
+  const assetBase = process.env.PUBLIC_URL || "";
+
+  return (
+    <div className="login-page">
+      <a
+        className="login-brand login-brand-left"
+        href="https://www.groupecat.com/"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open Groupecat website"
+      >
+        <img src={`${assetBase}/groupecatlogo.png`} alt="Groupecat logo" />
+      </a>
+
+      <div className="login-controls">
+        <LanguageDropdown
+          currentLanguageId={language}
+          languages={LANGUAGES}
+          onSelect={onSelectLanguage}
+        />
+        <ThemeToggle
+          themeMode={themeMode}
+          onToggle={onToggleTheme}
+          label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
+        />
+      </div>
+
+      <div className="login-layout">
+        <section className="login-hero">
+          <span className="version-chip">Version 2.0</span>
+          <span className="login-kicker">Unix archive portal</span>
+          <h1>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</h1>
+          <p>
+            Browse configured partner folders from the central archive, switch by business unit,
+            and keep file access focused on the right partner directory.
+          </p>
+
+          <div className="login-pill-row">
+            <span className="login-pill">Universal search on home</span>
+            <span className="login-pill">BU-specific partner directories</span>
+            <span className="login-pill">Direct archive access</span>
+          </div>
+        </section>
+
+        <section className="login-panel">
+          <span className="login-kicker">Session</span>
+          <strong>Client access</strong>
+          <p>Enter the portal to browse business-unit partner archives.</p>
+          <button className="primary-button login-button" type="button" onClick={onLogin}>
+            Login
+          </button>
+        </section>
+      </div>
+
+      <a
+        className="login-brand login-brand-right"
+        href="https://www.hcltech.com/"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open HCL website"
+      >
+        <div className="hcl-mark">
+          <span>Powered and maintained by</span>
+          <img src={`${assetBase}/hcltechlogo.png`} alt="HCL logo" />
+        </div>
+      </a>
     </div>
   );
 }
 
-function ThemeButton({ themeMode, onToggle, text }) {
-  const label = themeMode === "dark" ? text.lightMode || "Light" : text.darkMode || "Dark";
-
+function SearchPanel({ archiveStatus, query, scopeLabel, setQuery, t }) {
   return (
-    <button className="icon-button" type="button" onClick={onToggle} aria-label={label} title={label}>
-      <UiIcon type={themeMode === "dark" ? "sun" : "moon"} />
-    </button>
+    <section className="search-panel">
+      <div className="search-panel-orbit search-panel-orbit-one" aria-hidden="true" />
+      <div className="search-panel-orbit search-panel-orbit-two" aria-hidden="true" />
+      <div className="search-panel-orbit search-panel-orbit-three" aria-hidden="true" />
+      <div className="search-panel-ribbon search-panel-ribbon-left" aria-hidden="true" />
+      <div className="search-panel-ribbon search-panel-ribbon-right" aria-hidden="true" />
+      <div className="search-panel-spark search-panel-spark-one" aria-hidden="true" />
+      <div className="search-panel-spark search-panel-spark-two" aria-hidden="true" />
+
+      <div className="panel-header search-panel-header">
+        <div>
+          <span>Universal archive search</span>
+          <strong>{scopeLabel}</strong>
+        </div>
+        <StatusBadge
+          label={
+            archiveStatus.loading
+              ? "Connecting"
+              : archiveStatus.configured
+                ? "Archive online"
+                : "Archive offline"
+          }
+          tone={getStatusTone(archiveStatus)}
+        />
+      </div>
+
+      <form className="search-form" onSubmit={(event) => event.preventDefault()}>
+        <div className="search-input-shell">
+          <AppIcon type="search" />
+          <input
+            type="search"
+            value={query}
+            placeholder={t("searchFilePlaceholder", "Search all production files")}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+      </form>
+
+      <div className="search-meta">
+        <small>{archiveStatus.rootPath || archiveStatus.error || "Archive root not configured."}</small>
+      </div>
+    </section>
   );
 }
 
-function LanguageSelect({ route, navigate, showLabel = false }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-  const currentLanguage =
-    LANGUAGES.find((language) => language.id === (route.lang || "en")) || LANGUAGES[0];
-
-  useEffect(() => {
-    if (!open) {
-      return undefined;
-    }
-
-    const handlePointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
+function SearchResults({
+  businessUnits,
+  error,
+  loading,
+  onBrowse,
+  onOpen,
+  query,
+  results,
+  t
+}) {
   return (
-    <div className={`language-control ${open ? "open" : ""}`} ref={rootRef}>
-      <button
-        className={`language-trigger ${showLabel ? "with-label" : ""}`.trim()}
-        type="button"
-        aria-label="Language"
-        title="Language"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((previous) => !previous)}
-      >
-        {showLabel ? <FlagIcon id={currentLanguage.id} /> : <UiIcon type="language" />}
-        {showLabel ? <span>{currentLanguage.label}</span> : null}
-      </button>
-      {open ? (
-        <div className="language-menu" role="menu">
-          {LANGUAGES.map((language) => (
-            <button
-              key={language.id}
-              type="button"
-              role="menuitem"
-              className={currentLanguage.id === language.id ? "active" : ""}
-              onClick={() => {
-                navigate({
-                  page: route.page,
-                  bu: route.bu,
-                  lang: language.id,
-                  section: route.section
-                });
-                setOpen(false);
-              }}
-            >
-              <FlagIcon id={language.id} />
-              <span>{language.label}</span>
-            </button>
+    <section className="results-panel">
+      <div className="panel-header">
+        <div>
+          <span>Archive results</span>
+          <strong>
+            {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"}`}
+          </strong>
+        </div>
+      </div>
+
+      {loading ? (
+        <EmptyState title="Search in progress" detail={`Scanning files for "${query}".`} />
+      ) : error ? (
+        <EmptyState title="Search unavailable" detail={error} tone="warning" />
+      ) : results.length ? (
+        <div className="search-result-list">
+          {results.map((result) => (
+            <article className="search-result-row" key={result.id} style={getBuVisualStyle(result.bu)}>
+              <div className="search-result-primary">
+                <div className="search-result-title">
+                  <span className="bu-pill">
+                    <span>{getBusinessUnitFlag(businessUnits, result.bu) || "BU"}</span>
+                    <span>{getBusinessUnitName(businessUnits, result.bu)}</span>
+                  </span>
+                  <StatusBadge
+                    label={getSectionLabel(result.type, t)}
+                    tone={result.type === "outbound" ? "warning" : "success"}
+                  />
+                </div>
+                <strong>{result.fileName}</strong>
+                <p>{result.entryLabel}</p>
+              </div>
+
+              <div className="search-result-details">
+                <div className="partner-list-detail">
+                  <span>Folder</span>
+                  <small>{result.directory || "/"}</small>
+                </div>
+                <div className="partner-list-detail">
+                  <span>Size</span>
+                  <small>{formatBytes(result.size)}</small>
+                </div>
+                <div className="partner-list-detail">
+                  <span>Modified</span>
+                  <small>{formatDateTime(result.modifiedAt)}</small>
+                </div>
+              </div>
+
+              <div className="result-card-actions">
+                <button className="primary-button compact-button" type="button" onClick={() => onOpen(result)}>
+                  Open file
+                </button>
+                <button
+                  className="secondary-button compact-button"
+                  type="button"
+                  onClick={() => onBrowse(result)}
+                >
+                  Open folder
+                </button>
+              </div>
+            </article>
           ))}
         </div>
-      ) : null}
+      ) : (
+        <EmptyState
+          title="No files found"
+          detail={`No file matched "${query}".`}
+        />
+      )}
+    </section>
+  );
+}
+
+function DirectoryBrowser({
+  browserState,
+  onBrowse,
+  onOpenFile,
+  selectedPartner,
+  t,
+  themeMode
+}) {
+  if (browserState.loading) {
+    return <EmptyState title={t("loadingDirectories", "Loading directories...")} detail={selectedPartner.url} />;
+  }
+
+  if (browserState.error) {
+    return <EmptyState title="Directory unavailable" detail={browserState.error} tone="warning" />;
+  }
+
+  return (
+    <section className="directory-browser">
+      <div className="browser-bar">
+        <div>
+          <span>Current path</span>
+          <strong>{browserState.relativePath || "/"}</strong>
+        </div>
+        <small>{browserState.currentPath || selectedPartner.url}</small>
+      </div>
+
+      <div className="browser-actions">
+        {browserState.relativePath ? (
+          <button
+            className="secondary-button compact-button"
+            type="button"
+            onClick={() => onBrowse(browserState.parentRelativePath)}
+          >
+            <AppIcon type="back" />
+            <span>Up one level</span>
+          </button>
+        ) : null}
+      </div>
+
+      {browserState.items.length ? (
+        <div className="browser-table">
+          {browserState.items.map((item) =>
+            item.kind === "directory" ? (
+              <button
+                key={item.relativePath || item.name}
+                type="button"
+                className="browser-row"
+                onClick={() => onBrowse(item.relativePath)}
+              >
+                <div className="browser-row-main">
+                  <span className="browser-row-icon">
+                    <AppIcon type="folder" />
+                  </span>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.relativePath || "/"}</small>
+                  </div>
+                </div>
+                <div className="browser-row-meta">
+                  <span>Folder</span>
+                  <span>{formatDateTime(item.modifiedAt)}</span>
+                </div>
+              </button>
+            ) : (
+              <div className="browser-row browser-row-file" key={item.relativePath || item.name}>
+                <div className="browser-row-main">
+                  <span className="browser-row-icon">
+                    <AppIcon type="file" />
+                  </span>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.relativePath}</small>
+                  </div>
+                </div>
+                <div className="browser-row-meta">
+                  <span>{formatBytes(item.size)}</span>
+                  <span>{formatDateTime(item.modifiedAt)}</span>
+                </div>
+                <div className="browser-row-actions">
+                  <a
+                    className="secondary-button compact-button"
+                    href={buildArchiveOpenUrl(selectedPartner.id, item.relativePath, themeMode)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </a>
+                  <button
+                    className="primary-button compact-button"
+                    type="button"
+                    onClick={() => onOpenFile(item)}
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      ) : (
+        <EmptyState title="No files in this folder" detail={browserState.currentPath || selectedPartner.url} />
+      )}
+    </section>
+  );
+}
+
+function MetricCard({ label, value, wide = false }) {
+  return (
+    <article className={`metric-card ${wide ? "metric-card-wide" : ""}`.trim()}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  );
+}
+
+function EmptyState({ title, detail, tone = "neutral" }) {
+  return (
+    <div className={`empty-state ${tone}`.trim()}>
+      <strong>{title}</strong>
+      <span>{detail}</span>
     </div>
   );
 }
 
-function FlagIcon({ id }) {
-  if (id === "en") {
-    return (
-      <svg className="flag-svg" viewBox="0 0 32 22" aria-hidden="true">
-        <rect width="32" height="22" rx="4" fill="#012169" />
-        <path d="M0 0 32 22M32 0 0 22" stroke="#fff" strokeWidth="5" />
-        <path d="M0 0 32 22M32 0 0 22" stroke="#c8102e" strokeWidth="2.5" />
-        <path d="M16 0v22M0 11h32" stroke="#fff" strokeWidth="7" />
-        <path d="M16 0v22M0 11h32" stroke="#c8102e" strokeWidth="4" />
-      </svg>
-    );
-  }
-
-  const flags = {
-    de: { type: "horizontal", colors: ["#000000", "#dd0000", "#ffce00"] },
-    fr: { type: "vertical", colors: ["#0055a4", "#ffffff", "#ef4135"] },
-    it: { type: "vertical", colors: ["#009246", "#ffffff", "#ce2b37"] },
-    pl: { type: "horizontal", colors: ["#ffffff", "#dc143c"] },
-    ua: { type: "horizontal", colors: ["#0057b7", "#ffd700"] },
-    hr: { type: "horizontal", colors: ["#ff0000", "#ffffff", "#171796"] },
-    si: { type: "horizontal", colors: ["#ffffff", "#0b66c3", "#dc2626"] },
-    lt: { type: "horizontal", colors: ["#fdb913", "#006a44", "#c1272d"] },
-    es: {
-      type: "horizontal",
-      colors: ["#aa151b", "#f1bf00", "#aa151b"],
-      ratios: [1, 2, 1]
-    }
-  };
-  const flag = flags[id] || { type: "vertical", colors: ["#4aa3ff", "#ffffff", "#0b66c3"] };
-  const horizontal = flag.type === "horizontal";
-  const segments = flag.ratios || flag.colors.map(() => 1);
-  const totalUnits = segments.reduce((sum, value) => sum + value, 0);
-  let offset = 0;
-
-  return (
-    <svg className="flag-svg" viewBox="0 0 32 22" aria-hidden="true">
-      {flag.colors.map((color, index) => {
-        const size = segments[index] || 1;
-        const start = offset;
-        offset += size;
-
-        return (
-          <rect
-            key={`${id}-${color}`}
-            x={horizontal ? 0 : (32 / totalUnits) * start}
-            y={horizontal ? (22 / totalUnits) * start : 0}
-            width={horizontal ? 32 : (32 / totalUnits) * size}
-            height={horizontal ? (22 / totalUnits) * size : 22}
-            fill={color}
-          />
-        );
-      })}
-      <rect width="32" height="22" rx="4" fill="none" stroke="rgba(0,0,0,0.22)" />
-    </svg>
-  );
+function StatusBadge({ label, tone = "neutral" }) {
+  return <span className={`status-badge ${tone}`.trim()}>{label}</span>;
 }
 
-function UiIcon({ type }) {
+function AppIcon({ type }) {
   const commonProps = {
     viewBox: "0 0 24 24",
     "aria-hidden": "true",
@@ -1730,9 +1208,18 @@ function UiIcon({ type }) {
   if (type === "home") {
     return (
       <svg {...commonProps}>
-        <path d="M4 10.6 12 4l8 6.6" />
-        <path d="M6.2 9.7v9.1h11.6V9.7" />
-        <path d="M10 18.8v-5h4v5" />
+        <path d="M4 10.5 12 4l8 6.5" />
+        <path d="M6.5 9.5v10h11v-10" />
+      </svg>
+    );
+  }
+
+  if (type === "menu") {
+    return (
+      <svg {...commonProps}>
+        <path d="M4.5 7.5h15" />
+        <path d="M4.5 12h15" />
+        <path d="M4.5 16.5h15" />
       </svg>
     );
   }
@@ -1740,35 +1227,9 @@ function UiIcon({ type }) {
   if (type === "logout") {
     return (
       <svg {...commonProps}>
-        <path d="M10 5.5H7.2c-.8 0-1.4.6-1.4 1.4v10.2c0 .8.6 1.4 1.4 1.4H10" />
-        <path d="M14 8.2 18.2 12 14 15.8" />
-        <path d="M9.2 12h8.6" />
-      </svg>
-    );
-  }
-
-  if (type === "plus") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 5.2v13.6" />
-        <path d="M5.2 12h13.6" />
-      </svg>
-    );
-  }
-
-  if (type === "sun") {
-    return (
-      <svg {...commonProps}>
-        <circle cx="12" cy="12" r="4.2" />
-        <path d="M12 2.8v2.1M12 19.1v2.1M21.2 12h-2.1M4.9 12H2.8M18.5 5.5 17 7M7 17l-1.5 1.5M18.5 18.5 17 17M7 7 5.5 5.5" />
-      </svg>
-    );
-  }
-
-  if (type === "moon") {
-    return (
-      <svg {...commonProps}>
-        <path d="M15.4 3.8A8.5 8.5 0 1 0 20.2 18a7.1 7.1 0 0 1-4.8-14.2Z" />
+        <path d="M10 5.5H7.5A1.5 1.5 0 0 0 6 7v10a1.5 1.5 0 0 0 1.5 1.5H10" />
+        <path d="M14 8.5 18 12l-4 3.5" />
+        <path d="M9.5 12H18" />
       </svg>
     );
   }
@@ -1776,17 +1237,8 @@ function UiIcon({ type }) {
   if (type === "search") {
     return (
       <svg {...commonProps}>
-        <circle cx="10.5" cy="10.5" r="4.8" />
-        <path d="M14.2 14.2 18.4 18.4" />
-      </svg>
-    );
-  }
-
-  if (type === "edit") {
-    return (
-      <svg {...commonProps}>
-        <path d="m5.6 16.9-.6 3.5 3.5-.6L18 10.3l-2.9-2.9Z" />
-        <path d="m14.8 4.6 2.9 2.9" />
+        <circle cx="10.5" cy="10.5" r="5.2" />
+        <path d="M15 15 19 19" />
       </svg>
     );
   }
@@ -1794,37 +1246,30 @@ function UiIcon({ type }) {
   if (type === "back") {
     return (
       <svg {...commonProps}>
-        <path d="M14.6 6.2 8.8 12l5.8 5.8" />
-        <path d="M9.6 12h8.2" />
+        <path d="M14.5 6.5 8.5 12l6 5.5" />
+        <path d="M9 12h8" />
       </svg>
     );
   }
 
-  if (type === "help") {
+  if (type === "folder") {
     return (
       <svg {...commonProps}>
-        <circle cx="12" cy="12" r="8.2" />
-        <path d="M9.7 9.5a2.4 2.4 0 1 1 3.9 1.9c-.7.4-1.2.9-1.2 1.8v.6" />
-        <path d="M12 17v.2" />
+        <path d="M3.5 7.5h6l1.5 2H20a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5a1 1 0 0 1 1-1Z" />
       </svg>
     );
   }
 
-  if (type === "arrow-right") {
+  if (type === "file") {
     return (
       <svg {...commonProps}>
-        <path d="M8 5.6 14.4 12 8 18.4" />
+        <path d="M7 3.5h7l4 4v13H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" />
+        <path d="M14 3.5v4h4" />
       </svg>
     );
   }
 
-  return (
-    <svg {...commonProps}>
-      <circle cx="12" cy="12" r="8.2" />
-      <path d="M3.8 12h16.4" />
-      <path d="M12 3.8c2.1 2.2 3.2 4.9 3.2 8.2s-1.1 6-3.2 8.2c-2.1-2.2-3.2-4.9-3.2-8.2s1.1-6 3.2-8.2Z" />
-    </svg>
-  );
+  return null;
 }
 
 export default App;
