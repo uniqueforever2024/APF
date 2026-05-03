@@ -1,7 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   buildArchiveOpenUrl,
-  getArchiveStatus,
   listArchive,
   searchArchive
 } from "./archiveApi";
@@ -126,12 +125,6 @@ function formatDateTime(value) {
   }
 }
 
-function getSectionLabel(section, t) {
-  return section === "outbound"
-    ? t("extractions", "Outbound / EMIS")
-    : t("annonces", "Inbound / RECU");
-}
-
 function getBusinessUnitName(businessUnits, businessUnitId) {
   return (
     businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.name ||
@@ -141,18 +134,6 @@ function getBusinessUnitName(businessUnits, businessUnitId) {
 
 function getBusinessUnitFlag(businessUnits, businessUnitId) {
   return businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.flag || "";
-}
-
-function getStatusTone(archiveStatus) {
-  if (archiveStatus.loading) {
-    return "neutral";
-  }
-
-  if (archiveStatus.error || !archiveStatus.configured) {
-    return "warning";
-  }
-
-  return "success";
 }
 
 function getBuVisualStyle(businessUnitId) {
@@ -168,6 +149,28 @@ function getBuVisualStyle(businessUnitId) {
 function getContactHref(value) {
   const normalizedValue = String(value || "").trim();
   return normalizedValue && normalizedValue.includes("@") ? `mailto:${normalizedValue}` : "";
+}
+
+function getMapGroup(entry) {
+  return /\/amap(?:[/_-]|$)/i.test(String(entry?.url || "")) ? "amap" : "bmap";
+}
+
+function getPartnerGroupKey(entry) {
+  return [
+    String(entry?.bu || "").trim().toLowerCase(),
+    String(entry?.type || "").trim().toLowerCase(),
+    String(entry?.label || "").trim().toLowerCase()
+  ].join("|");
+}
+
+function getPreferredPartnerEntry(entries, preferredMapGroup = "bmap") {
+  return (
+    entries.find((entry) => getMapGroup(entry) === preferredMapGroup) ||
+    entries.find((entry) => getMapGroup(entry) === "bmap") ||
+    entries.find((entry) => getMapGroup(entry) === "amap") ||
+    entries[0] ||
+    null
+  );
 }
 
 function ContactValue({ value, fallback }) {
@@ -190,6 +193,7 @@ function ContactValue({ value, fallback }) {
 }
 
 function App() {
+  const assetBase = process.env.PUBLIC_URL || "";
   const [session, setSession] = useState(() => readStoredSession());
   const [themeMode, setThemeMode] = useState(() => readStoredTheme());
   const [language, setLanguage] = useState(() => readStoredLanguage());
@@ -197,14 +201,10 @@ function App() {
   const [selectedBuId, setSelectedBuId] = useState("");
   const [selectedPartnerId, setSelectedPartnerId] = useState("");
   const [fileSearchValue, setFileSearchValue] = useState("");
+  const [partnerSearchValue, setPartnerSearchValue] = useState("");
+  const [activeDirection, setActiveDirection] = useState("inbound");
+  const [activeMapGroup, setActiveMapGroup] = useState("bmap");
   const [browsePath, setBrowsePath] = useState("");
-  const [archiveStatus, setArchiveStatus] = useState({
-    loading: true,
-    configured: false,
-    host: "",
-    rootPath: "",
-    error: ""
-  });
   const [searchState, setSearchState] = useState({
     loading: false,
     error: "",
@@ -214,7 +214,7 @@ function App() {
   const [browserState, setBrowserState] = useState(EMPTY_BROWSER_STATE);
   const menuRef = useRef(null);
   const searchQuery = useDeferredValue(fileSearchValue);
-  const { entries, businessUnits: savedBusinessUnits, dataMeta, loaded } = useDirectoryData();
+  const { entries, businessUnits: savedBusinessUnits } = useDirectoryData();
   const businessUnits = useMemo(
     () => mergeBusinessUnits(BU_OPTIONS, savedBusinessUnits),
     [savedBusinessUnits]
@@ -229,31 +229,47 @@ function App() {
     () => (selectedBuId ? entries.filter((entry) => entry.bu === selectedBuId) : []),
     [entries, selectedBuId]
   );
+  const filteredBuEntries = useMemo(() => {
+    const normalizedPartnerSearch = partnerSearchValue.trim().toLowerCase();
+    const groupedEntries = new Map();
+
+    currentBuEntries
+      .filter((entry) => entry.type === activeDirection)
+      .filter((entry) =>
+        normalizedPartnerSearch
+          ? entry.label.toLowerCase().includes(normalizedPartnerSearch)
+          : true
+      )
+      .forEach((entry) => {
+        const groupKey = getPartnerGroupKey(entry);
+        groupedEntries.set(groupKey, [...(groupedEntries.get(groupKey) || []), entry]);
+      });
+
+    return [...groupedEntries.values()]
+      .map((groupEntries) => getPreferredPartnerEntry(groupEntries, activeMapGroup))
+      .filter(Boolean)
+      .sort((leftEntry, rightEntry) =>
+        leftEntry.label.localeCompare(rightEntry.label, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        })
+      );
+  }, [activeDirection, activeMapGroup, currentBuEntries, partnerSearchValue]);
   const selectedPartner = useMemo(
     () => currentBuEntries.find((entry) => entry.id === selectedPartnerId) || null,
     [currentBuEntries, selectedPartnerId]
   );
-  const currentBuCounts = useMemo(
-    () =>
-      currentBuEntries.reduce(
-        (accumulator, entry) => {
-          accumulator.total += 1;
-          accumulator[entry.type] = (accumulator[entry.type] || 0) + 1;
+  const selectedPartnerMapEntries = useMemo(() => {
+    if (!selectedPartner) {
+      return [];
+    }
 
-          if (entry.backup) {
-            accumulator.withContact += 1;
-          }
-
-          return accumulator;
-        },
-        {
-          total: 0,
-          inbound: 0,
-          outbound: 0,
-          withContact: 0
-        }
-      ),
-    [currentBuEntries]
+    const selectedGroupKey = getPartnerGroupKey(selectedPartner);
+    return currentBuEntries.filter((entry) => getPartnerGroupKey(entry) === selectedGroupKey);
+  }, [currentBuEntries, selectedPartner]);
+  const selectedPartnerMapGroups = useMemo(
+    () => new Set(selectedPartnerMapEntries.map(getMapGroup)),
+    [selectedPartnerMapEntries]
   );
   const showHomeView = !selectedBuId && !selectedPartner;
 
@@ -305,44 +321,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    setArchiveStatus((previous) => ({ ...previous, loading: true, error: "" }));
-
-    getArchiveStatus()
-      .then((payload) => {
-        if (cancelled) {
-          return;
-        }
-
-        setArchiveStatus({
-          loading: false,
-          configured: Boolean(payload?.configured),
-          host: String(payload?.host || ""),
-          rootPath: String(payload?.rootPath || ""),
-          error: ""
-        });
-      })
-      .catch((error) => {
-        if (cancelled) {
-          return;
-        }
-
-        setArchiveStatus({
-          loading: false,
-          configured: false,
-          host: "",
-          rootPath: "",
-          error: error.message || "Unable to reach the archive service."
-        });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     if (selectedBuId && !businessUnits.some((businessUnit) => businessUnit.id === selectedBuId)) {
       setSelectedBuId("");
       setSelectedPartnerId("");
@@ -379,7 +357,7 @@ function App() {
       query: normalizedQuery
     }));
 
-    searchArchive(normalizedQuery)
+    searchArchive(normalizedQuery, selectedPartner ? { entryId: selectedPartner.id } : {})
       .then((payload) => {
         if (cancelled) {
           return;
@@ -399,7 +377,7 @@ function App() {
 
         setSearchState({
           loading: false,
-          error: error.message || "Unable to search the archive.",
+          error: error.message || "Unable to search files.",
           query: normalizedQuery,
           results: []
         });
@@ -408,7 +386,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [searchQuery]);
+  }, [searchQuery, selectedPartner]);
 
   useEffect(() => {
     if (!selectedPartner) {
@@ -447,7 +425,7 @@ function App() {
 
         setBrowserState({
           loading: false,
-          error: error.message || "Unable to load this partner directory.",
+          error: error.message || "Unable to load this partner.",
           currentPath: "",
           relativePath: "",
           parentRelativePath: "",
@@ -503,10 +481,32 @@ function App() {
   }
 
   function handleSelectPartner(entry) {
-    setSelectedBuId(entry.bu);
-    setSelectedPartnerId(entry.id);
+    const groupKey = getPartnerGroupKey(entry);
+    const matchingEntries = entries.filter((candidate) => getPartnerGroupKey(candidate) === groupKey);
+    const preferredEntry = getPreferredPartnerEntry(matchingEntries, activeMapGroup) || entry;
+
+    setSelectedBuId(preferredEntry.bu);
+    setSelectedPartnerId(preferredEntry.id);
     setBrowsePath("");
     clearSearchState();
+  }
+
+  function handleSelectPartnerMapGroup(mapGroup) {
+    if (!selectedPartner) {
+      return;
+    }
+
+    const nextPartner = selectedPartnerMapEntries.find(
+      (entry) => getMapGroup(entry) === mapGroup
+    );
+
+    setActiveMapGroup(mapGroup);
+
+    if (nextPartner && nextPartner.id !== selectedPartner.id) {
+      setSelectedPartnerId(nextPartner.id);
+      setBrowsePath("");
+      clearSearchState();
+    }
   }
 
   function handleOpenSearchResult(result) {
@@ -557,10 +557,9 @@ function App() {
     <div className="app-root">
       <header className="topbar">
         <div className="topbar-title">
-          <span className="version-chip">Version 2.0</span>
+          <img className="topbar-logo" src={`${assetBase}/groupecatlogo.png`} alt="Groupecat" />
           <div className="topbar-heading-copy">
             <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
-            <small>Universal search on home. BU partner lists after selection.</small>
           </div>
         </div>
 
@@ -601,6 +600,10 @@ function App() {
 
             {menuOpen ? (
               <div className="menu-popover">
+                <button className="menu-item" type="button">
+                  <AppIcon type="help" />
+                  <span>Help</span>
+                </button>
                 <button className="menu-item" type="button" onClick={handleLogout}>
                   <AppIcon type="logout" />
                   <span>{t("logout", "Logout")}</span>
@@ -615,9 +618,7 @@ function App() {
         {showHomeView ? (
           <>
             <SearchPanel
-              archiveStatus={archiveStatus}
               query={fileSearchValue}
-              scopeLabel={archiveStatus.rootPath || "All business units"}
               setQuery={setFileSearchValue}
               t={t}
             />
@@ -638,8 +639,7 @@ function App() {
             <section className="bu-strip">
               <div className="panel-header">
                 <div>
-                  <span>{t("businessUnit", "Business unit")}</span>
-                  <strong>Select a partner directory by BU</strong>
+                  <strong>Select partner by BU</strong>
                 </div>
                 <small>{businessUnits.length} business units</small>
               </div>
@@ -660,35 +660,20 @@ function App() {
                 ))}
               </div>
             </section>
-
-            {!searchState.query ? (
-              <section className="overview-grid">
-                <MetricCard label={t("businessUnit", "Business unit")} value={String(businessUnits.length)} />
-                <MetricCard label={t("partnerColumn", "Partner")} value={String(entries.length)} />
-                <MetricCard
-                  label="Archive root"
-                  value={archiveStatus.rootPath || "Not configured"}
-                  wide
-                />
-                <MetricCard
-                  label="Data source"
-                  value={loaded ? dataMeta?.source || "local-api" : "loading"}
-                  wide
-                />
-              </section>
-            ) : null}
           </>
         ) : null}
 
         {selectedBuId && !selectedPartner ? (
           <BusinessUnitDirectory
             businessUnit={currentBusinessUnit}
-            counts={currentBuCounts}
-            entries={currentBuEntries}
+            entries={filteredBuEntries}
+            partnerSearchValue={partnerSearchValue}
+            setPartnerSearchValue={setPartnerSearchValue}
+            activeDirection={activeDirection}
+            setActiveDirection={setActiveDirection}
             onBrowsePartner={handleSelectPartner}
             onReturnHome={handleReturnHome}
             t={t}
-            themeMode={themeMode}
           />
         ) : null}
 
@@ -696,18 +681,7 @@ function App() {
           <section className="partner-focus" style={getBuVisualStyle(selectedPartner.bu)}>
             <div className="focused-header">
               <div>
-                <div className="partner-focus-meta">
-                  <span className="bu-pill">
-                    <span>{currentBusinessUnit?.flag || ""}</span>
-                    <span>{currentBusinessUnit?.label || selectedPartner.bu.toUpperCase()}</span>
-                  </span>
-                  <StatusBadge
-                    label={getSectionLabel(selectedPartner.type, t)}
-                    tone={selectedPartner.type === "outbound" ? "warning" : "success"}
-                  />
-                </div>
                 <strong>{selectedPartner.label}</strong>
-                <small>{selectedPartner.url}</small>
                 <ContactValue
                   value={selectedPartner.backup}
                   fallback={t("contactUnavailable", "Contact not available")}
@@ -725,10 +699,32 @@ function App() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Open archive
+                  Open
                 </a>
               </div>
             </div>
+
+            <PartnerFileControls
+              activeMapGroup={getMapGroup(selectedPartner)}
+              fileSearchValue={fileSearchValue}
+              mapGroups={selectedPartnerMapGroups}
+              onSelectMapGroup={handleSelectPartnerMapGroup}
+              setFileSearchValue={setFileSearchValue}
+              t={t}
+            />
+
+            {searchState.query ? (
+              <SearchResults
+                businessUnits={businessUnits}
+                error={searchState.error}
+                loading={searchState.loading}
+                onBrowse={handleBrowseSearchResult}
+                onOpen={handleOpenSearchResult}
+                query={searchState.query}
+                results={searchState.results}
+                t={t}
+              />
+            ) : null}
 
             <DirectoryBrowser
               browserState={browserState}
@@ -747,12 +743,14 @@ function App() {
 
 function BusinessUnitDirectory({
   businessUnit,
-  counts,
   entries,
+  partnerSearchValue,
+  setPartnerSearchValue,
+  activeDirection,
+  setActiveDirection,
   onBrowsePartner,
   onReturnHome,
-  t,
-  themeMode
+  t
 }) {
   return (
     <section className="bu-directory" style={getBuVisualStyle(businessUnit?.id)}>
@@ -763,7 +761,6 @@ function BusinessUnitDirectory({
             <span>{businessUnit?.label || "BU"}</span>
           </span>
           <strong>{businessUnit?.name || "Business unit"}</strong>
-          <p>Only partners from this business unit are shown here. Select a partner to open its archive.</p>
         </div>
 
         <button className="secondary-button" type="button" onClick={onReturnHome}>
@@ -772,88 +769,62 @@ function BusinessUnitDirectory({
         </button>
       </div>
 
-      <div className="bu-directory-summary">
-        <MetricCard label={t("partnerColumn", "Partner")} value={String(counts.total)} />
-        <MetricCard label={t("annonces", "Inbound / RECU")} value={String(counts.inbound)} />
-        <MetricCard label={t("extractions", "Outbound / EMIS")} value={String(counts.outbound)} />
-        <MetricCard label="Contacts ready" value={`${counts.withContact}/${counts.total || 0}`} />
-      </div>
-
       <section className="partners-panel">
         <div className="panel-header">
           <div>
-            <span>Partner directory</span>
             <strong>{businessUnit?.name || "Business unit"}</strong>
           </div>
           <small>{entries.length} partners</small>
         </div>
 
+        <div className="directory-controls">
+          <div className="search-input-shell partner-search-shell">
+            <AppIcon type="search" />
+            <input
+              type="search"
+              value={partnerSearchValue}
+              placeholder={t("searchPartnerPlaceholder", "Search partner")}
+              onChange={(event) => setPartnerSearchValue(event.target.value)}
+            />
+          </div>
+
+          <div className="segmented-controls" aria-label="Direction">
+            <button
+              className={activeDirection === "inbound" ? "active" : ""}
+              type="button"
+              onClick={() => setActiveDirection("inbound")}
+            >
+              Inbound
+            </button>
+            <button
+              className={activeDirection === "outbound" ? "active" : ""}
+              type="button"
+              onClick={() => setActiveDirection("outbound")}
+            >
+              Outbound
+            </button>
+          </div>
+
+        </div>
+
         {entries.length ? (
-          <div className="partner-list">
+          <div className="partner-grid">
             {entries.map((entry) => (
-              <article className="partner-list-row" key={entry.id} style={getBuVisualStyle(entry.bu)}>
-                <div className="partner-list-main">
-                  <div className="partner-list-heading">
-                    <div className="partner-list-identity">
-                      <span className="bu-flag partner-list-flag">{businessUnit?.flag || businessUnit?.label || "BU"}</span>
-                      <div>
-                        <strong>{entry.label}</strong>
-                        <div className="partner-list-meta">
-                          <span>{businessUnit?.label || entry.bu.toUpperCase()}</span>
-                          <StatusBadge
-                            label={getSectionLabel(entry.type, t)}
-                            tone={entry.type === "outbound" ? "warning" : "success"}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="partner-list-detail">
-                    <span>Archive path</span>
-                    <a
-                      className="detail-link"
-                      href={buildArchiveOpenUrl(entry.id, "", themeMode)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {entry.url}
-                    </a>
-                  </div>
-
-                  <div className="partner-list-detail">
-                    <span>Contact</span>
-                    <ContactValue
-                      value={entry.backup}
-                      fallback={t("contactUnavailable", "Not available")}
-                    />
-                  </div>
-                </div>
-
-                <div className="partner-list-actions">
-                  <a
-                    className="secondary-button compact-button"
-                    href={buildArchiveOpenUrl(entry.id, "", themeMode)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open archive
-                  </a>
-                  <button
-                    className="primary-button compact-button"
-                    type="button"
-                    onClick={() => onBrowsePartner(entry)}
-                  >
-                    Browse folder
-                  </button>
-                </div>
-              </article>
+              <button
+                className="partner-grid-card"
+                key={entry.id}
+                type="button"
+                style={getBuVisualStyle(entry.bu)}
+                onClick={() => onBrowsePartner(entry)}
+              >
+                <strong>{entry.label}</strong>
+              </button>
             ))}
           </div>
         ) : (
           <EmptyState
-            title={t("noEntries", "No entries are available in this section yet.")}
-            detail={t("noLinkAvailable", "No link is available here yet.")}
+            title={t("noEntries", "No partners found.")}
+            detail="Try another filter."
           />
         )}
       </section>
@@ -899,24 +870,12 @@ function LoginScreen({
       <div className="login-layout">
         <section className="login-hero">
           <span className="version-chip">Version 2.0</span>
-          <span className="login-kicker">Unix archive portal</span>
           <h1>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</h1>
-          <p>
-            Browse configured partner folders from the central archive, switch by business unit,
-            and keep file access focused on the right partner directory.
-          </p>
-
-          <div className="login-pill-row">
-            <span className="login-pill">Universal search on home</span>
-            <span className="login-pill">BU-specific partner directories</span>
-            <span className="login-pill">Direct archive access</span>
-          </div>
         </section>
 
         <section className="login-panel">
           <span className="login-kicker">Session</span>
           <strong>Client access</strong>
-          <p>Enter the portal to browse business-unit partner archives.</p>
           <button className="primary-button login-button" type="button" onClick={onLogin}>
             Login
           </button>
@@ -939,7 +898,7 @@ function LoginScreen({
   );
 }
 
-function SearchPanel({ archiveStatus, query, scopeLabel, setQuery, t }) {
+function SearchPanel({ query, setQuery, t }) {
   return (
     <section className="search-panel">
       <div className="search-panel-orbit search-panel-orbit-one" aria-hidden="true" />
@@ -952,19 +911,8 @@ function SearchPanel({ archiveStatus, query, scopeLabel, setQuery, t }) {
 
       <div className="panel-header search-panel-header">
         <div>
-          <span>Universal archive search</span>
-          <strong>{scopeLabel}</strong>
+          <strong>Search file</strong>
         </div>
-        <StatusBadge
-          label={
-            archiveStatus.loading
-              ? "Connecting"
-              : archiveStatus.configured
-                ? "Archive online"
-                : "Archive offline"
-          }
-          tone={getStatusTone(archiveStatus)}
-        />
       </div>
 
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
@@ -978,11 +926,44 @@ function SearchPanel({ archiveStatus, query, scopeLabel, setQuery, t }) {
           />
         </div>
       </form>
-
-      <div className="search-meta">
-        <small>{archiveStatus.rootPath || archiveStatus.error || "Archive root not configured."}</small>
-      </div>
     </section>
+  );
+}
+
+function PartnerFileControls({
+  activeMapGroup,
+  fileSearchValue,
+  mapGroups,
+  onSelectMapGroup,
+  setFileSearchValue,
+  t
+}) {
+  return (
+    <div className="partner-file-controls">
+      <div className="search-input-shell partner-search-shell">
+        <AppIcon type="search" />
+        <input
+          type="search"
+          value={fileSearchValue}
+          placeholder={t("searchFilePlaceholder", "Search file")}
+          onChange={(event) => setFileSearchValue(event.target.value)}
+        />
+      </div>
+
+      <div className="segmented-controls" aria-label="Map">
+        {["amap", "bmap"].map((mapGroup) => (
+          <button
+            className={activeMapGroup === mapGroup ? "active" : ""}
+            disabled={!mapGroups.has(mapGroup)}
+            key={mapGroup}
+            type="button"
+            onClick={() => onSelectMapGroup(mapGroup)}
+          >
+            {mapGroup.toUpperCase()}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1000,7 +981,6 @@ function SearchResults({
     <section className="results-panel">
       <div className="panel-header">
         <div>
-          <span>Archive results</span>
           <strong>
             {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"}`}
           </strong>
@@ -1021,20 +1001,12 @@ function SearchResults({
                     <span>{getBusinessUnitFlag(businessUnits, result.bu) || "BU"}</span>
                     <span>{getBusinessUnitName(businessUnits, result.bu)}</span>
                   </span>
-                  <StatusBadge
-                    label={getSectionLabel(result.type, t)}
-                    tone={result.type === "outbound" ? "warning" : "success"}
-                  />
                 </div>
                 <strong>{result.fileName}</strong>
                 <p>{result.entryLabel}</p>
               </div>
 
               <div className="search-result-details">
-                <div className="partner-list-detail">
-                  <span>Folder</span>
-                  <small>{result.directory || "/"}</small>
-                </div>
                 <div className="partner-list-detail">
                   <span>Size</span>
                   <small>{formatBytes(result.size)}</small>
@@ -1054,7 +1026,7 @@ function SearchResults({
                   type="button"
                   onClick={() => onBrowse(result)}
                 >
-                  Open folder
+                  Browse
                 </button>
               </div>
             </article>
@@ -1079,7 +1051,7 @@ function DirectoryBrowser({
   themeMode
 }) {
   if (browserState.loading) {
-    return <EmptyState title={t("loadingDirectories", "Loading directories...")} detail={selectedPartner.url} />;
+    return <EmptyState title={t("loadingDirectories", "Loading...")} detail={selectedPartner.label} />;
   }
 
   if (browserState.error) {
@@ -1090,10 +1062,8 @@ function DirectoryBrowser({
     <section className="directory-browser">
       <div className="browser-bar">
         <div>
-          <span>Current path</span>
-          <strong>{browserState.relativePath || "/"}</strong>
+          <strong>{selectedPartner.label}</strong>
         </div>
-        <small>{browserState.currentPath || selectedPartner.url}</small>
       </div>
 
       <div className="browser-actions">
@@ -1125,11 +1095,9 @@ function DirectoryBrowser({
                   </span>
                   <div>
                     <strong>{item.name}</strong>
-                    <small>{item.relativePath || "/"}</small>
                   </div>
                 </div>
                 <div className="browser-row-meta">
-                  <span>Folder</span>
                   <span>{formatDateTime(item.modifiedAt)}</span>
                 </div>
               </button>
@@ -1141,7 +1109,6 @@ function DirectoryBrowser({
                   </span>
                   <div>
                     <strong>{item.name}</strong>
-                    <small>{item.relativePath}</small>
                   </div>
                 </div>
                 <div className="browser-row-meta">
@@ -1170,18 +1137,9 @@ function DirectoryBrowser({
           )}
         </div>
       ) : (
-        <EmptyState title="No files in this folder" detail={browserState.currentPath || selectedPartner.url} />
+        <EmptyState title="No files" detail={selectedPartner.label} />
       )}
     </section>
-  );
-}
-
-function MetricCard({ label, value, wide = false }) {
-  return (
-    <article className={`metric-card ${wide ? "metric-card-wide" : ""}`.trim()}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
   );
 }
 
@@ -1192,10 +1150,6 @@ function EmptyState({ title, detail, tone = "neutral" }) {
       <span>{detail}</span>
     </div>
   );
-}
-
-function StatusBadge({ label, tone = "neutral" }) {
-  return <span className={`status-badge ${tone}`.trim()}>{label}</span>;
 }
 
 function AppIcon({ type }) {
@@ -1265,6 +1219,16 @@ function AppIcon({ type }) {
       <svg {...commonProps}>
         <path d="M7 3.5h7l4 4v13H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" />
         <path d="M14 3.5v4h4" />
+      </svg>
+    );
+  }
+
+  if (type === "help") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M9.8 9.6a2.4 2.4 0 0 1 4.4 1.35c0 1.8-2.2 2-2.2 3.4" />
+        <path d="M12 17.2h.01" />
       </svg>
     );
   }

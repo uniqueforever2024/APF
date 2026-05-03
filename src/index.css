@@ -176,6 +176,12 @@ body[data-theme="light"] .topbar {
   min-width: 0;
 }
 
+.topbar-logo {
+  width: 112px;
+  height: auto;
+  display: block;
+}
+
 .topbar-heading-copy {
   display: grid;
   gap: 0.15rem;
@@ -209,6 +215,16 @@ body[data-theme="light"] .topbar {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.version-button {
+  border: 0;
+  cursor: pointer;
+}
+
+.version-button.active {
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .topbar-actions {
@@ -554,6 +570,106 @@ body[data-theme="light"] .bu-flag {
   border-radius: var(--radius-xl);
 }
 
+.partners-panel {
+  padding: 1.35rem;
+}
+
+.directory-controls {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.partner-file-controls {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.partner-search-shell {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+}
+
+.segmented-controls {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.2rem;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.segmented-controls button {
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border-radius: 11px;
+  color: var(--text-faint);
+  font-weight: 800;
+}
+
+.segmented-controls button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.segmented-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.partner-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.partner-grid-card {
+  min-height: 84px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    var(--bu-soft, rgba(110, 231, 255, 0.1));
+  box-shadow: inset 0 -3px 0 var(--bu-accent, var(--accent));
+  color: var(--text);
+  text-align: left;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.partner-grid-card strong {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+body[data-theme="light"] .partner-grid-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88)),
+    var(--bu-soft, rgba(110, 231, 255, 0.1));
+}
+
+.partner-grid-card:hover {
+  transform: translateY(-1px);
+}
+
 .search-result-list,
 .partner-list {
   display: grid;
@@ -861,6 +977,17 @@ body[data-theme="light"] .browser-row {
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
+.icon-action-button,
+.theme-toggle-button {
+  border: 0;
+  background: transparent;
+}
+
+body[data-theme="light"] .icon-action-button,
+body[data-theme="light"] .theme-toggle-button {
+  background: transparent;
+}
+
 .primary-button,
 .secondary-button,
 .menu-item {
@@ -912,7 +1039,6 @@ body[data-theme="light"] .menu-item {
 
 .theme-toggle-button.active,
 .icon-action-button.active {
-  border-color: rgba(110, 231, 255, 0.34);
   background: var(--accent-soft);
 }
 
@@ -1266,6 +1392,22 @@ body[data-theme="light"] .login-pill {
   .partner-list-actions,
   .focused-actions {
     justify-content: flex-start;
+  }
+
+  .directory-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-file-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-controls {
+    width: 100%;
+  }
+
+  .segmented-controls button {
+    flex: 1;
   }
 }
 
