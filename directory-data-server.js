@@ -2511,7 +2511,97 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const previewPayload = await archiveService.readPreview(entry.url, relativePath);
+      const filePayload = await archiveService.readFile(entry.url, relativePath, {
+        maxBytes: MAX_ARCHIVE_OPEN_BYTES
+      });
+
+      if (filePayload.tooLarge) {
+        sendJson(response, 200, {
+          ok: true,
+          entry: {
+            id: entry.id,
+            bu: entry.bu,
+            type: entry.type,
+            label: entry.label,
+            rootPath: entry.url
+          },
+          relativePath,
+          fileName: filePayload.fileName,
+          size: filePayload.size,
+          modifiedAt: filePayload.modifiedAt,
+          contentType: filePayload.contentType,
+          previewable: false,
+          content: "",
+          truncated: false,
+          notice: `This file is larger than ${formatBytes(MAX_ARCHIVE_OPEN_BYTES)} and is available for download only.`
+        });
+        return;
+      }
+
+      let fileName = filePayload.fileName;
+      let contentType = filePayload.contentType;
+      let fileBuffer = filePayload.buffer;
+      let notice = "";
+
+      if (/\.(?:gz|gzip)$/i.test(fileName)) {
+        fileBuffer = zlib.gunzipSync(fileBuffer);
+        fileName = stripCompressionExtension(fileName);
+        contentType = getArchiveOpenContentType(fileName);
+        notice = "GZip content expanded before preview.";
+      } else if (/\.zip$/i.test(fileName)) {
+        sendJson(response, 200, {
+          ok: true,
+          entry: {
+            id: entry.id,
+            bu: entry.bu,
+            type: entry.type,
+            label: entry.label,
+            rootPath: entry.url
+          },
+          relativePath,
+          fileName,
+          size: filePayload.size,
+          modifiedAt: filePayload.modifiedAt,
+          contentType,
+          previewable: false,
+          content: "",
+          truncated: false,
+          notice: "ZIP containers are not rendered inline here. Use Download to inspect the archive."
+        });
+        return;
+      }
+
+      if (
+        String(contentType || "").toLowerCase().startsWith("text/") ||
+        String(contentType || "").toLowerCase().includes("json") ||
+        String(contentType || "").toLowerCase().includes("xml") ||
+        String(contentType || "").toLowerCase().includes("markdown") ||
+        !isProbablyBinaryBuffer(fileBuffer)
+      ) {
+        const previewTargetUrl = `http://archive.local/${encodeURI(fileName)}`;
+
+        sendJson(response, 200, {
+          ok: true,
+          entry: {
+            id: entry.id,
+            bu: entry.bu,
+            type: entry.type,
+            label: entry.label,
+            rootPath: entry.url
+          },
+          relativePath,
+          fileName,
+          size: fileBuffer.length,
+          modifiedAt: filePayload.modifiedAt,
+          contentType,
+          previewable: true,
+          content: formatTextForPreview(previewTargetUrl, fileBuffer.toString("utf8")),
+          truncated: false,
+          notice
+        });
+        return;
+      }
+
       sendJson(response, 200, {
         ok: true,
         entry: {
@@ -2522,7 +2612,16 @@ const server = http.createServer(async (request, response) => {
           rootPath: entry.url
         },
         relativePath,
-        ...previewPayload
+        fileName,
+        size: filePayload.size,
+        modifiedAt: filePayload.modifiedAt,
+        contentType,
+        previewable: false,
+        content: "",
+        truncated: false,
+        notice: isInlineBrowserType(contentType)
+          ? "This file type is not displayed inline in the app. Use Download to access it."
+          : "This file type is not displayed inline. Use Download to access it."
       });
     } catch (error) {
       console.error("GET /api/archive/file-preview failed", error);

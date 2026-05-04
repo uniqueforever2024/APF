@@ -75,6 +75,12 @@ export function normalizeArchivePath(value, type) {
     );
   }
 
+  if (/^\/?arch\/(RECU|EMIS)\/?/i.test(nextValue)) {
+    return normalizePosixPath(
+      `${DEFAULT_ARCHIVE_ROOT_PATH}/${nextValue.replace(/^\/?arch\/?/i, "")}`
+    );
+  }
+
   if (/^\/?(RECU|EMIS)(?:\/|$)/i.test(nextValue)) {
     return normalizePosixPath(`${DEFAULT_ARCHIVE_ROOT_PATH}/${nextValue.replace(/^\/+/, "")}`);
   }

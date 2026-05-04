@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
-  buildArchiveOpenUrl,
+  buildArchiveDownloadUrl,
+  getArchiveFilePreview,
   listArchive,
   searchArchive
 } from "./archiveApi";
@@ -14,6 +15,9 @@ import ThemeToggle from "./components/ThemeToggle";
 const AUTH_STORAGE_KEY = "apf_v2_auth_session";
 const THEME_STORAGE_KEY = "apf_v2_theme_mode";
 const LANGUAGE_STORAGE_KEY = "apf_v2_language";
+const DIRECTORY_API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
+const DIRECTORY_DATA_API_URL = `${DIRECTORY_API_BASE}/api/directory-data`;
+const ADMIN_LOGIN_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
 const EMPTY_BROWSER_STATE = {
   loading: false,
   error: "",
@@ -22,6 +26,21 @@ const EMPTY_BROWSER_STATE = {
   parentRelativePath: "",
   rootPath: "",
   items: []
+};
+const EMPTY_FILE_PREVIEW_STATE = {
+  loading: false,
+  error: "",
+  source: "",
+  entryId: "",
+  relativePath: "",
+  fileName: "",
+  size: 0,
+  modifiedAt: "",
+  contentType: "",
+  content: "",
+  notice: "",
+  previewable: false,
+  open: false
 };
 const DEFAULT_BU_VISUAL = {
   accent: "#38bdf8",
@@ -70,6 +89,22 @@ const BU_VISUALS = {
     glow: "rgba(250, 204, 21, 0.22)"
   }
 };
+
+function createEntryId() {
+  return `entry-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createManagerDraft(defaults = {}) {
+  return {
+    id: "",
+    bu: "",
+    type: "inbound",
+    label: "",
+    url: "",
+    backup: "",
+    ...defaults
+  };
+}
 
 function readStoredSession() {
   try {
@@ -212,15 +247,27 @@ function App() {
     results: []
   });
   const [browserState, setBrowserState] = useState(EMPTY_BROWSER_STATE);
+  const [filePreviewState, setFilePreviewState] = useState(EMPTY_FILE_PREVIEW_STATE);
+  const [entries, setEntries] = useState([]);
+  const [savedBusinessUnits, setSavedBusinessUnits] = useState([]);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [managerMode, setManagerMode] = useState("create");
+  const [managerForm, setManagerForm] = useState(() => createManagerDraft());
+  const [managerSaving, setManagerSaving] = useState(false);
+  const [managerError, setManagerError] = useState("");
   const menuRef = useRef(null);
   const searchQuery = useDeferredValue(fileSearchValue);
-  const { entries, businessUnits: savedBusinessUnits } = useDirectoryData();
+  const {
+    entries: initialEntries,
+    businessUnits: initialBusinessUnits
+  } = useDirectoryData();
   const businessUnits = useMemo(
     () => mergeBusinessUnits(BU_OPTIONS, savedBusinessUnits),
     [savedBusinessUnits]
   );
   const text = getText(language);
   const t = (key, fallback) => text[key] || fallback;
+  const isAdmin = session?.role === "admin";
   const currentBusinessUnit = useMemo(
     () => businessUnits.find((businessUnit) => businessUnit.id === selectedBuId) || null,
     [businessUnits, selectedBuId]
@@ -296,6 +343,14 @@ function App() {
   }, [language]);
 
   useEffect(() => {
+    setEntries(initialEntries);
+  }, [initialEntries]);
+
+  useEffect(() => {
+    setSavedBusinessUnits(initialBusinessUnits);
+  }, [initialBusinessUnits]);
+
+  useEffect(() => {
     try {
       if (session) {
         window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
@@ -306,6 +361,16 @@ function App() {
       // Keep session in memory if storage is unavailable.
     }
   }, [session]);
+
+  useEffect(() => {
+    if (session?.role !== "admin" && managerOpen) {
+      setManagerOpen(false);
+      setManagerMode("create");
+      setManagerForm(createManagerDraft());
+      setManagerError("");
+      setManagerSaving(false);
+    }
+  }, [managerOpen, session]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -391,10 +456,12 @@ function App() {
   useEffect(() => {
     if (!selectedPartner) {
       setBrowserState(EMPTY_BROWSER_STATE);
+      setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
       return undefined;
     }
 
     let cancelled = false;
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
 
     setBrowserState((previous) => ({
       ...previous,
@@ -441,6 +508,7 @@ function App() {
 
   function clearSearchState() {
     setFileSearchValue("");
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     setSearchState({
       loading: false,
       error: "",
@@ -449,11 +517,187 @@ function App() {
     });
   }
 
-  function handleLogin() {
+  async function saveDirectoryData(nextEntries, nextBusinessUnits = savedBusinessUnits) {
+    const response = await fetch(DIRECTORY_DATA_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        entries: nextEntries,
+        businessUnits: nextBusinessUnits
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload?.error || "Unable to save directory data.");
+    }
+
+    setEntries(Array.isArray(payload?.entries) ? payload.entries : []);
+    setSavedBusinessUnits(
+      Array.isArray(payload?.businessUnits) ? payload.businessUnits : nextBusinessUnits
+    );
+
+    return payload;
+  }
+
+  function handleClientLogin() {
     setSession({
       role: "client",
       username: "portal-user"
     });
+  }
+
+  async function handleAdminLogin(credentials) {
+    const response = await fetch(ADMIN_LOGIN_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(credentials)
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || payload?.ok !== true) {
+      throw new Error(payload?.error || t("loginErrorAdmin", "Admin access details are not correct."));
+    }
+
+    setSession({
+      role: "admin",
+      username: payload.username || String(credentials?.username || "").trim().toLowerCase() || "admin"
+    });
+  }
+
+  function handleOpenCreateManager() {
+    if (!isAdmin) {
+      return;
+    }
+
+    setManagerMode("create");
+    setManagerForm(
+      createManagerDraft({
+        bu: selectedBuId || businessUnits[0]?.id || "",
+        type: activeDirection || "inbound"
+      })
+    );
+    setManagerError("");
+    setManagerOpen(true);
+    setMenuOpen(false);
+  }
+
+  function handleOpenEditManager(entry = selectedPartner) {
+    if (!isAdmin || !entry) {
+      return;
+    }
+
+    setManagerMode("edit");
+    setManagerForm(
+      createManagerDraft({
+        id: entry.id,
+        bu: entry.bu,
+        type: entry.type,
+        label: entry.label,
+        url: entry.url,
+        backup: entry.backup
+      })
+    );
+    setManagerError("");
+    setManagerOpen(true);
+    setMenuOpen(false);
+  }
+
+  function handleCloseManager() {
+    setManagerOpen(false);
+    setManagerMode("create");
+    setManagerForm(createManagerDraft());
+    setManagerError("");
+    setManagerSaving(false);
+  }
+
+  function handleManagerFieldChange(field, value) {
+    setManagerForm((previousManagerForm) => ({
+      ...previousManagerForm,
+      [field]: value
+    }));
+  }
+
+  async function handleManagerSubmit(event) {
+    event.preventDefault();
+
+    const normalizedDraft = {
+      id: managerForm.id || createEntryId(),
+      bu: String(managerForm.bu || "").trim().toLowerCase(),
+      type: String(managerForm.type || "inbound").trim().toLowerCase(),
+      label: String(managerForm.label || "").trim(),
+      url: String(managerForm.url || "").trim(),
+      backup: String(managerForm.backup || "").trim()
+    };
+
+    if (!normalizedDraft.bu || !normalizedDraft.type || !normalizedDraft.label || !normalizedDraft.url) {
+      setManagerError("Business unit, section, partner label, and path are required.");
+      return;
+    }
+
+    setManagerSaving(true);
+    setManagerError("");
+
+    const nextEntries =
+      managerMode === "edit"
+        ? entries.map((entry) => (entry.id === managerForm.id ? normalizedDraft : entry))
+        : [...entries, normalizedDraft];
+
+    try {
+      const payload = await saveDirectoryData(nextEntries);
+      const savedEntries = Array.isArray(payload?.entries) ? payload.entries : [];
+      const savedEntry =
+        savedEntries.find((entry) => entry.id === normalizedDraft.id) ||
+        savedEntries.find(
+          (entry) =>
+            entry.bu === normalizedDraft.bu &&
+            entry.type === normalizedDraft.type &&
+            entry.label === normalizedDraft.label &&
+            entry.url === normalizedDraft.url
+        ) ||
+        null;
+
+      if (savedEntry) {
+        setSelectedBuId(savedEntry.bu);
+        setSelectedPartnerId(savedEntry.id);
+        setActiveDirection(savedEntry.type);
+        setBrowsePath("");
+      }
+
+      clearSearchState();
+      handleCloseManager();
+    } catch (error) {
+      setManagerError(error.message || t("savePartnerError", "Unable to save the partner right now."));
+      setManagerSaving(false);
+    }
+  }
+
+  async function handleManagerDelete() {
+    if (managerMode !== "edit" || !managerForm.id) {
+      return;
+    }
+
+    setManagerSaving(true);
+    setManagerError("");
+
+    try {
+      await saveDirectoryData(entries.filter((entry) => entry.id !== managerForm.id));
+
+      if (selectedPartnerId === managerForm.id) {
+        setSelectedPartnerId("");
+        setBrowsePath("");
+      }
+
+      clearSearchState();
+      handleCloseManager();
+    } catch (error) {
+      setManagerError(error.message || t("removePartnerError", "Unable to remove the partner right now."));
+      setManagerSaving(false);
+    }
   }
 
   function handleLogout() {
@@ -463,6 +707,7 @@ function App() {
     setBrowsePath("");
     clearSearchState();
     setMenuOpen(false);
+    handleCloseManager();
   }
 
   function handleReturnHome() {
@@ -509,18 +754,75 @@ function App() {
     }
   }
 
+  async function openFilePreview({
+    entryId,
+    fileName,
+    modifiedAt,
+    relativePath,
+    size,
+    source
+  }) {
+    setFilePreviewState({
+      ...EMPTY_FILE_PREVIEW_STATE,
+      loading: true,
+      open: true,
+      source,
+      entryId,
+      relativePath,
+      fileName,
+      size,
+      modifiedAt
+    });
+
+    try {
+      const payload = await getArchiveFilePreview(entryId, relativePath);
+      setFilePreviewState({
+        loading: false,
+        error: "",
+        source,
+        entryId,
+        relativePath,
+        fileName: payload?.fileName || fileName,
+        size: Number(payload?.size) || Number(size) || 0,
+        modifiedAt: payload?.modifiedAt || modifiedAt || "",
+        contentType: payload?.contentType || "",
+        content: String(payload?.content || ""),
+        notice: String(payload?.notice || ""),
+        previewable: payload?.previewable === true,
+        open: true
+      });
+    } catch (error) {
+      setFilePreviewState({
+        ...EMPTY_FILE_PREVIEW_STATE,
+        loading: false,
+        error: error.message || "Unable to preview this file.",
+        source,
+        entryId,
+        relativePath,
+        fileName,
+        size,
+        modifiedAt,
+        open: true
+      });
+    }
+  }
+
   function handleOpenSearchResult(result) {
-    window.open(
-      buildArchiveOpenUrl(result.entryId, result.relativePath, themeMode),
-      "_blank",
-      "noopener,noreferrer"
-    );
+    openFilePreview({
+      entryId: result.entryId,
+      relativePath: result.relativePath,
+      source: "search",
+      fileName: result.fileName,
+      size: result.size,
+      modifiedAt: result.modifiedAt
+    });
   }
 
   function handleBrowseSearchResult(result) {
     setSelectedBuId(result.bu);
     setSelectedPartnerId(result.entryId);
     setBrowsePath(result.directory || "");
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     clearSearchState();
   }
 
@@ -529,18 +831,26 @@ function App() {
       return;
     }
 
-    window.open(
-      buildArchiveOpenUrl(selectedPartner.id, item.relativePath, themeMode),
-      "_blank",
-      "noopener,noreferrer"
-    );
+    openFilePreview({
+      entryId: selectedPartner.id,
+      relativePath: item.relativePath,
+      source: "directory",
+      fileName: item.name,
+      size: item.size,
+      modifiedAt: item.modifiedAt
+    });
+  }
+
+  function handleCloseFilePreview() {
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
   }
 
   if (!session) {
     return (
       <LoginScreen
         language={language}
-        onLogin={handleLogin}
+        onAdminLogin={handleAdminLogin}
+        onLogin={handleClientLogin}
         onToggleTheme={() =>
           setThemeMode((previousThemeMode) =>
             previousThemeMode === "dark" ? "light" : "dark"
@@ -564,6 +874,7 @@ function App() {
         </div>
 
         <div className="topbar-actions">
+          {isAdmin ? <span className="status-badge warning">{t("adminMode", "Admin mode")}</span> : null}
           <LanguageDropdown
             currentLanguageId={language}
             languages={LANGUAGES}
@@ -578,6 +889,11 @@ function App() {
             }
             label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
           />
+          {isAdmin ? (
+            <button className="secondary-button" type="button" onClick={handleOpenCreateManager}>
+              <span>{t("openManager", "Add New Partner")}</span>
+            </button>
+          ) : null}
           <button
             className="icon-action-button"
             type="button"
@@ -600,6 +916,12 @@ function App() {
 
             {menuOpen ? (
               <div className="menu-popover">
+                {isAdmin ? (
+                  <button className="menu-item" type="button" onClick={handleOpenCreateManager}>
+                    <AppIcon type="plus" />
+                    <span>{t("openManager", "Add New Partner")}</span>
+                  </button>
+                ) : null}
                 <button className="menu-item" type="button">
                   <AppIcon type="help" />
                   <span>Help</span>
@@ -617,25 +939,6 @@ function App() {
       <main className="shell-body">
         {showHomeView ? (
           <>
-            <SearchPanel
-              query={fileSearchValue}
-              setQuery={setFileSearchValue}
-              t={t}
-            />
-
-            {searchState.query ? (
-              <SearchResults
-                businessUnits={businessUnits}
-                error={searchState.error}
-                loading={searchState.loading}
-                onBrowse={handleBrowseSearchResult}
-                onOpen={handleOpenSearchResult}
-                query={searchState.query}
-                results={searchState.results}
-                t={t}
-              />
-            ) : null}
-
             <section className="bu-strip">
               <div className="panel-header">
                 <div>
@@ -660,6 +963,27 @@ function App() {
                 ))}
               </div>
             </section>
+
+            <SearchPanel
+              query={fileSearchValue}
+              setQuery={setFileSearchValue}
+              t={t}
+            />
+
+            {searchState.query ? (
+              <SearchResults
+                businessUnits={businessUnits}
+                error={searchState.error}
+                filePreviewState={filePreviewState}
+                loading={searchState.loading}
+                onClosePreview={handleCloseFilePreview}
+                onBrowse={handleBrowseSearchResult}
+                onOpen={handleOpenSearchResult}
+                query={searchState.query}
+                results={searchState.results}
+                t={t}
+              />
+            ) : null}
           </>
         ) : null}
 
@@ -672,7 +996,6 @@ function App() {
             activeDirection={activeDirection}
             setActiveDirection={setActiveDirection}
             onBrowsePartner={handleSelectPartner}
-            onReturnHome={handleReturnHome}
             t={t}
           />
         ) : null}
@@ -689,18 +1012,19 @@ function App() {
               </div>
 
               <div className="focused-actions">
+                {isAdmin ? (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => handleOpenEditManager(selectedPartner)}
+                  >
+                    <span>{t("editEntry", "Edit")}</span>
+                  </button>
+                ) : null}
                 <button className="secondary-button" type="button" onClick={() => setSelectedPartnerId("")}>
                   <AppIcon type="back" />
                   <span>{t("backToList", "Back to list")}</span>
                 </button>
-                <a
-                  className="primary-button"
-                  href={buildArchiveOpenUrl(selectedPartner.id, "", themeMode)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Open
-                </a>
               </div>
             </div>
 
@@ -717,7 +1041,9 @@ function App() {
               <SearchResults
                 businessUnits={businessUnits}
                 error={searchState.error}
+                filePreviewState={filePreviewState}
                 loading={searchState.loading}
+                onClosePreview={handleCloseFilePreview}
                 onBrowse={handleBrowseSearchResult}
                 onOpen={handleOpenSearchResult}
                 query={searchState.query}
@@ -728,15 +1054,32 @@ function App() {
 
             <DirectoryBrowser
               browserState={browserState}
+              filePreviewState={filePreviewState}
               onBrowse={setBrowsePath}
+              onClosePreview={handleCloseFilePreview}
               onOpenFile={handleOpenFile}
               selectedPartner={selectedPartner}
               t={t}
-              themeMode={themeMode}
             />
           </section>
         ) : null}
       </main>
+
+      {isAdmin ? (
+        <DirectoryManager
+          businessUnits={businessUnits}
+          error={managerError}
+          mode={managerMode}
+          onChange={handleManagerFieldChange}
+          onClose={handleCloseManager}
+          onDelete={handleManagerDelete}
+          onSubmit={handleManagerSubmit}
+          open={managerOpen}
+          saving={managerSaving}
+          t={t}
+          values={managerForm}
+        />
+      ) : null}
     </div>
   );
 }
@@ -749,30 +1092,27 @@ function BusinessUnitDirectory({
   activeDirection,
   setActiveDirection,
   onBrowsePartner,
-  onReturnHome,
   t
 }) {
+  const businessUnitTitle = [businessUnit?.label || "BU", businessUnit?.name || "Business unit"]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <section className="bu-directory" style={getBuVisualStyle(businessUnit?.id)}>
       <div className="bu-directory-hero">
         <div className="bu-directory-copy">
           <span className="bu-pill bu-pill-large">
-            <span>{businessUnit?.flag || ""}</span>
-            <span>{businessUnit?.label || "BU"}</span>
+            <span>{businessUnit?.flag || businessUnit?.label || "BU"}</span>
           </span>
-          <strong>{businessUnit?.name || "Business unit"}</strong>
+          <strong>{businessUnitTitle}</strong>
         </div>
-
-        <button className="secondary-button" type="button" onClick={onReturnHome}>
-          <AppIcon type="home" />
-          <span>{t("home", "Home")}</span>
-        </button>
       </div>
 
       <section className="partners-panel">
         <div className="panel-header">
           <div>
-            <strong>{businessUnit?.name || "Business unit"}</strong>
+            <strong>Partners</strong>
           </div>
           <small>{entries.length} partners</small>
         </div>
@@ -834,6 +1174,7 @@ function BusinessUnitDirectory({
 
 function LoginScreen({
   language,
+  onAdminLogin,
   onLogin,
   onSelectLanguage,
   onToggleTheme,
@@ -841,59 +1182,265 @@ function LoginScreen({
   t
 }) {
   const assetBase = process.env.PUBLIC_URL || "";
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminError, setAdminError] = useState("");
+
+  async function handleAdminSubmit(event) {
+    event.preventDefault();
+    setAdminBusy(true);
+    setAdminError("");
+
+    try {
+      await onAdminLogin({
+        username: adminUsername,
+        password: adminPassword
+      });
+    } catch (error) {
+      setAdminError(error.message || t("loginErrorAdmin", "Admin access details are not correct."));
+      setAdminBusy(false);
+    }
+  }
 
   return (
     <div className="login-page">
-      <a
-        className="login-brand login-brand-left"
-        href="https://www.groupecat.com/"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Open Groupecat website"
-      >
-        <img src={`${assetBase}/groupecatlogo.png`} alt="Groupecat logo" />
-      </a>
+      <header className="login-header">
+        <a
+          className="login-brand login-brand-left"
+          href="https://www.groupecat.com/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open Groupecat website"
+        >
+          <img src={`${assetBase}/groupecatlogo.png`} alt="Groupecat logo" />
+        </a>
 
-      <div className="login-controls">
-        <LanguageDropdown
-          currentLanguageId={language}
-          languages={LANGUAGES}
-          onSelect={onSelectLanguage}
-        />
-        <ThemeToggle
-          themeMode={themeMode}
-          onToggle={onToggleTheme}
-          label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
-        />
-      </div>
+        <div className="login-controls">
+          <LanguageDropdown
+            className="login-language-dropdown"
+            currentLanguageId={language}
+            languages={LANGUAGES}
+            onSelect={onSelectLanguage}
+          />
+          <ThemeToggle
+            className="login-theme-toggle"
+            themeMode={themeMode}
+            onToggle={onToggleTheme}
+            label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
+          />
+          <button
+            className={`login-version-button ${adminOpen ? "active" : ""}`.trim()}
+            type="button"
+            aria-pressed={adminOpen}
+            onClick={() => {
+              setAdminOpen((previousAdminOpen) => !previousAdminOpen);
+              setAdminError("");
+            }}
+          >
+            <span className="login-version-label">{t("loginVersion", "Version 2.0")}</span>
+          </button>
+        </div>
+      </header>
 
-      <div className="login-layout">
+      <main className="login-stage">
         <section className="login-hero">
-          <span className="version-chip">Version 2.0</span>
           <h1>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</h1>
-        </section>
-
-        <section className="login-panel">
-          <span className="login-kicker">Session</span>
-          <strong>Client access</strong>
           <button className="primary-button login-button" type="button" onClick={onLogin}>
             Login
           </button>
         </section>
-      </div>
+      </main>
 
-      <a
-        className="login-brand login-brand-right"
-        href="https://www.hcltech.com/"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Open HCL website"
-      >
-        <div className="hcl-mark">
-          <span>Powered and maintained by</span>
-          <img src={`${assetBase}/hcltechlogo.png`} alt="HCL logo" />
+      {adminOpen ? (
+        <div className="admin-login-overlay" role="presentation" onClick={() => setAdminOpen(false)}>
+          <section
+            className="admin-login-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-login-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-login-copy">
+              <span className="version-chip">{t("adminMode", "Admin mode")}</span>
+              <strong id="admin-login-title">{t("adminAccessTitle", "Admin access")}</strong>
+              <p>{t("adminWelcomeCopy", "Use your admin credentials to manage links and access the portal tools.")}</p>
+            </div>
+
+            <form className="admin-login-form" onSubmit={handleAdminSubmit}>
+              <label>
+                <span>{t("userId", "UserId")}</span>
+                <input
+                  autoComplete="username"
+                  type="text"
+                  value={adminUsername}
+                  placeholder={t("userIdPlaceholder", "Enter your UserId")}
+                  onChange={(event) => setAdminUsername(event.target.value)}
+                />
+              </label>
+
+              <label>
+                <span>{t("passwordLabel", "Password")}</span>
+                <input
+                  autoComplete="current-password"
+                  type="password"
+                  value={adminPassword}
+                  placeholder={t("passwordPlaceholder", "Enter your password")}
+                  onChange={(event) => setAdminPassword(event.target.value)}
+                />
+              </label>
+
+              {adminError ? <div className="form-error">{adminError}</div> : null}
+
+              <div className="admin-login-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setAdminOpen(false);
+                    setAdminError("");
+                  }}
+                >
+                  {t("backToClientLogin", "Back to client login")}
+                </button>
+                <button className="primary-button" type="submit" disabled={adminBusy}>
+                  {adminBusy ? "Signing in..." : t("signIn", "Sign in")}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
-      </a>
+      ) : null}
+
+      <footer className="login-footer">
+        <a
+          className="login-brand login-brand-right"
+          href="https://www.hcltech.com/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open HCL website"
+        >
+          <div className="hcl-mark">
+            <span>{t("poweredManagedBy", "Powered and maintained by")}</span>
+            <img src={`${assetBase}/hcltechlogo.png`} alt="HCL logo" />
+          </div>
+        </a>
+      </footer>
+    </div>
+  );
+}
+
+function DirectoryManager({
+  businessUnits,
+  error,
+  mode,
+  onChange,
+  onClose,
+  onDelete,
+  onSubmit,
+  open,
+  saving,
+  t,
+  values
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="manager-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="manager-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="manager-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="panel-header manager-header">
+          <div className="manager-header-copy">
+            <span className="version-chip">
+              {mode === "edit" ? t("editEntry", "Edit") : t("openManager", "Add New Partner")}
+            </span>
+            <strong id="manager-title">{t("managerTitle", "Add New Partner")}</strong>
+            <p>{t("managerCopy", "Changes are saved through the directory data service and are available to the portal immediately.")}</p>
+          </div>
+
+          <button className="secondary-button compact-button" type="button" onClick={onClose}>
+            {t("cancel", "Cancel")}
+          </button>
+        </div>
+
+        <form className="manager-form" onSubmit={onSubmit}>
+          <label>
+            <span>{t("businessUnit", "Business unit")}</span>
+            <select value={values.bu} onChange={(event) => onChange("bu", event.target.value)}>
+              <option value="">Select BU</option>
+              {businessUnits.map((businessUnit) => (
+                <option key={businessUnit.id} value={businessUnit.id}>
+                  {businessUnit.label} - {businessUnit.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span>{t("section", "Section")}</span>
+            <select value={values.type} onChange={(event) => onChange("type", event.target.value)}>
+              <option value="inbound">Inbound</option>
+              <option value="outbound">Outbound</option>
+            </select>
+          </label>
+
+          <label className="manager-field-full">
+            <span>{t("label", "Label")}</span>
+            <input
+              type="text"
+              value={values.label}
+              onChange={(event) => onChange("label", event.target.value)}
+            />
+          </label>
+
+          <label className="manager-field-full">
+            <span>{t("url", "Path or full URL")}</span>
+            <input
+              type="text"
+              value={values.url}
+              placeholder={t("urlPlaceholder", "/B2BI_archives/... or full URL")}
+              onChange={(event) => onChange("url", event.target.value)}
+            />
+          </label>
+
+          <label className="manager-field-full">
+            <span>{t("contact", "Backup email or note")}</span>
+            <input
+              type="text"
+              value={values.backup}
+              onChange={(event) => onChange("backup", event.target.value)}
+            />
+          </label>
+
+          {error ? <div className="form-error">{error}</div> : null}
+
+          <div className="form-actions">
+            {mode === "edit" ? (
+              <button className="secondary-button compact-button danger" type="button" onClick={onDelete} disabled={saving}>
+                {t("deleteEntry", "Remove")}
+              </button>
+            ) : null}
+            <button className="secondary-button compact-button" type="button" onClick={onClose} disabled={saving}>
+              {t("cancel", "Cancel")}
+            </button>
+            <button className="primary-button compact-button" type="submit" disabled={saving}>
+              {saving
+                ? "Saving..."
+                : mode === "edit"
+                  ? t("updateEntry", "Save changes")
+                  : t("addEntry", "Add link")}
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }
@@ -901,6 +1448,10 @@ function LoginScreen({
 function SearchPanel({ query, setQuery, t }) {
   return (
     <section className="search-panel">
+      <div className="search-panel-cosmic-core" aria-hidden="true" />
+      <div className="search-panel-planet search-panel-planet-one" aria-hidden="true" />
+      <div className="search-panel-planet search-panel-planet-two" aria-hidden="true" />
+      <div className="search-panel-planet search-panel-planet-three" aria-hidden="true" />
       <div className="search-panel-orbit search-panel-orbit-one" aria-hidden="true" />
       <div className="search-panel-orbit search-panel-orbit-two" aria-hidden="true" />
       <div className="search-panel-orbit search-panel-orbit-three" aria-hidden="true" />
@@ -970,7 +1521,9 @@ function PartnerFileControls({
 function SearchResults({
   businessUnits,
   error,
+  filePreviewState,
   loading,
+  onClosePreview,
   onBrowse,
   onOpen,
   query,
@@ -1019,7 +1572,7 @@ function SearchResults({
 
               <div className="result-card-actions">
                 <button className="primary-button compact-button" type="button" onClick={() => onOpen(result)}>
-                  Open file
+                  View
                 </button>
                 <button
                   className="secondary-button compact-button"
@@ -1038,17 +1591,22 @@ function SearchResults({
           detail={`No file matched "${query}".`}
         />
       )}
+
+      {filePreviewState.open && filePreviewState.source === "search" ? (
+        <FilePreviewPanel filePreviewState={filePreviewState} onClosePreview={onClosePreview} />
+      ) : null}
     </section>
   );
 }
 
 function DirectoryBrowser({
   browserState,
+  filePreviewState,
   onBrowse,
+  onClosePreview,
   onOpenFile,
   selectedPartner,
-  t,
-  themeMode
+  t
 }) {
   if (browserState.loading) {
     return <EmptyState title={t("loadingDirectories", "Loading...")} detail={selectedPartner.label} />;
@@ -1118,11 +1676,11 @@ function DirectoryBrowser({
                 <div className="browser-row-actions">
                   <a
                     className="secondary-button compact-button"
-                    href={buildArchiveOpenUrl(selectedPartner.id, item.relativePath, themeMode)}
+                    href={buildArchiveDownloadUrl(selectedPartner.id, item.relativePath)}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open
+                    Download
                   </a>
                   <button
                     className="primary-button compact-button"
@@ -1138,6 +1696,45 @@ function DirectoryBrowser({
         </div>
       ) : (
         <EmptyState title="No files" detail={selectedPartner.label} />
+      )}
+
+      {filePreviewState.open && filePreviewState.source === "directory" ? (
+        <FilePreviewPanel filePreviewState={filePreviewState} onClosePreview={onClosePreview} />
+      ) : null}
+    </section>
+  );
+}
+
+function FilePreviewPanel({ filePreviewState, onClosePreview }) {
+  return (
+    <section className="file-preview-panel">
+      <div className="file-preview-header">
+        <div className="file-preview-meta-row">
+          <strong className="file-preview-file-name">{filePreviewState.fileName || "File preview"}</strong>
+          <span>{formatBytes(filePreviewState.size)}</span>
+          <span>{formatDateTime(filePreviewState.modifiedAt)}</span>
+        </div>
+
+        <button className="secondary-button compact-button" type="button" onClick={onClosePreview}>
+          Close
+        </button>
+      </div>
+
+      {filePreviewState.loading ? (
+        <EmptyState title="Loading preview..." detail={filePreviewState.fileName || "Selected file"} />
+      ) : filePreviewState.error ? (
+        <EmptyState title="Preview unavailable" detail={filePreviewState.error} tone="warning" />
+      ) : filePreviewState.previewable ? (
+        <div className="file-preview-content">
+          {filePreviewState.notice ? <div className="file-preview-notice">{filePreviewState.notice}</div> : null}
+          <pre>{filePreviewState.content}</pre>
+        </div>
+      ) : (
+        <div className="file-preview-content">
+          <div className="file-preview-notice">
+            {filePreviewState.notice || "This file cannot be displayed inline. Use Download to access it."}
+          </div>
+        </div>
       )}
     </section>
   );
@@ -1229,6 +1826,15 @@ function AppIcon({ type }) {
         <circle cx="12" cy="12" r="8" />
         <path d="M9.8 9.6a2.4 2.4 0 0 1 4.4 1.35c0 1.8-2.2 2-2.2 3.4" />
         <path d="M12 17.2h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "plus") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
       </svg>
     );
   }

@@ -53,12 +53,28 @@ export function searchArchive(query, options = {}) {
   });
 }
 
+export function getArchiveFilePreview(entryId, relativePath = "") {
+  return fetchJson("/api/archive/file-preview", {
+    entryId,
+    path: relativePath
+  });
+}
+
 export function buildArchiveOpenUrl(entryId, relativePath, theme = "dark") {
   const requestUrl = new URL(`${API_BASE}/api/archive/open`);
 
   requestUrl.searchParams.set("entryId", String(entryId));
   requestUrl.searchParams.set("path", String(relativePath || ""));
   requestUrl.searchParams.set("theme", String(theme || "dark"));
+
+  return requestUrl.toString();
+}
+
+export function buildArchiveDownloadUrl(entryId, relativePath) {
+  const requestUrl = new URL(`${API_BASE}/api/archive/download`);
+
+  requestUrl.searchParams.set("entryId", String(entryId));
+  requestUrl.searchParams.set("path", String(relativePath || ""));
 
   return requestUrl.toString();
 }

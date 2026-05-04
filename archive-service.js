@@ -117,7 +117,8 @@ function normalizeArchivePath(rawValue, type, config) {
 
   const prefixedMappings = [
     [/^\/?B2BI_archives\/?/i, `${rootPath}/`],
-    [/^\/?archives\/?/i, `${rootPath}/`]
+    [/^\/?archives\/?/i, `${rootPath}/`],
+    [/^\/?arch\/(RECU|EMIS)\/?/i, `${rootPath}/$1/`]
   ];
 
   for (const [pattern, replacement] of prefixedMappings) {
