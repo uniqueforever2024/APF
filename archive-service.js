@@ -138,8 +138,11 @@ function normalizeArchivePath(rawValue, type, config) {
   return normalizeUnixPath(posixPath.join(sectionRoot, value.replace(/^\.?\/*/, "")));
 }
 
-function resolveArchivePath(rootPath, relativePath = "") {
+function resolveArchivePath(rootPath, relativePath = "", options = {}) {
   const normalizedRootPath = normalizeUnixPath(rootPath);
+  const normalizedAllowedRootPath = normalizeUnixPath(
+    options.allowedRootPath || normalizedRootPath
+  );
   const normalizedRelativePath = String(relativePath || "")
     .trim()
     .replace(/\\/g, "/")
@@ -151,14 +154,15 @@ function resolveArchivePath(rootPath, relativePath = "") {
   );
 
   if (
-    targetPath !== normalizedRootPath &&
-    !targetPath.startsWith(`${normalizedRootPath}/`)
+    targetPath !== normalizedAllowedRootPath &&
+    !targetPath.startsWith(`${normalizedAllowedRootPath}/`)
   ) {
     throw new Error("Requested path is outside the configured archive root.");
   }
 
   return {
     rootPath: normalizedRootPath,
+    allowedRootPath: normalizedAllowedRootPath,
     targetPath,
     relativePath:
       targetPath === normalizedRootPath
@@ -448,8 +452,8 @@ function createArchiveService(config) {
     getSectionRoot(type) {
       return getSectionRoot(config, type);
     },
-    async list(rootPath, relativePath = "") {
-      const resolvedPath = resolveArchivePath(rootPath, relativePath);
+    async list(rootPath, relativePath = "", options = {}) {
+      const resolvedPath = resolveArchivePath(rootPath, relativePath, options);
 
       return withConnection(config, async (client) => {
         const sftp = await getSftp(client);
@@ -473,8 +477,10 @@ function createArchiveService(config) {
 
         return {
           rootPath: resolvedPath.rootPath,
+          allowedRootPath: resolvedPath.allowedRootPath,
           currentPath: resolvedPath.targetPath,
           relativePath: resolvedPath.relativePath,
+          canGoUp: resolvedPath.targetPath !== resolvedPath.allowedRootPath,
           parentRelativePath: resolvedPath.relativePath
             ? posixPath.dirname(resolvedPath.relativePath) === "."
               ? ""
@@ -569,8 +575,8 @@ function createArchiveService(config) {
         };
       });
     },
-    async readPreview(rootPath, relativePath) {
-      const resolvedPath = resolveArchivePath(rootPath, relativePath);
+    async readPreview(rootPath, relativePath, options = {}) {
+      const resolvedPath = resolveArchivePath(rootPath, relativePath, options);
 
       return withConnection(config, async (client) => {
         const sftp = await getSftp(client);
@@ -611,7 +617,7 @@ function createArchiveService(config) {
       });
     },
     async readFile(rootPath, relativePath, options = {}) {
-      const resolvedPath = resolveArchivePath(rootPath, relativePath);
+      const resolvedPath = resolveArchivePath(rootPath, relativePath, options);
       const maxBytes = Number(options.maxBytes) || 0;
 
       return withConnection(config, async (client) => {
@@ -651,8 +657,8 @@ function createArchiveService(config) {
         };
       });
     },
-    async streamFile(rootPath, relativePath, response) {
-      const resolvedPath = resolveArchivePath(rootPath, relativePath);
+    async streamFile(rootPath, relativePath, response, options = {}) {
+      const resolvedPath = resolveArchivePath(rootPath, relativePath, options);
 
       if (!isArchiveConfigured(config)) {
         throw new Error("Archive server credentials are not configured.");

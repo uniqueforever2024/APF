@@ -1,5 +1,6 @@
 const http = require("http");
 const https = require("https");
+const fsSync = require("fs");
 const fs = require("fs/promises");
 const path = require("path");
 const zlib = require("zlib");
@@ -26,6 +27,15 @@ const DIRECTORY_PROXY_HOST = directoryProxy.host;
 const DIRECTORY_PROXY_PORT = directoryProxy.port;
 const DIRECTORY_PROXY_USERNAME = directoryProxy.username;
 const DIRECTORY_PROXY_PASSWORD = directoryProxy.password;
+const GROUPECAT_LOGO_DATA_URI = (() => {
+  try {
+    const logoPath = path.join(__dirname, "public", "groupecatlogo.png");
+    const logoBuffer = fsSync.readFileSync(logoPath);
+    return `data:image/png;base64,${logoBuffer.toString("base64")}`;
+  } catch (error) {
+    return "";
+  }
+})();
 const DIRECTORY_PROXY_BYPASS_HOSTS = new Set(
   [
     DIRECTORY_TARGET_HOST.toLowerCase(),
@@ -179,6 +189,9 @@ function sendHtml(response, statusCode, html) {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store, max-age=0, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
     "Content-Type": "text/html; charset=utf-8"
   });
   response.end(html);
@@ -242,6 +255,7 @@ function buildArchiveViewerDocument({
   entry,
   fileName,
   notice = "",
+  copyText = "",
   relativePath,
   size,
   modifiedAt,
@@ -250,22 +264,35 @@ function buildArchiveViewerDocument({
   contentHtml
 }) {
   const normalizedTheme = getNormalizedTheme(theme);
-  const stats = [
-    { label: "Partner", value: entry?.label || "Unknown partner" },
-    { label: "Path", value: relativePath || "/" },
-    { label: "Size", value: formatBytes(size) },
-    { label: "Updated", value: modifiedAt || "Not available" }
-  ];
-  const statsHtml = stats
-    .map(
-      (item) => `
-        <div class="apf-inline-stat">
-          <span>${escapeHtml(item.label)}</span>
-          <strong>${escapeHtml(item.value)}</strong>
-        </div>
-      `
-    )
-    .join("");
+  const hasCopyContent = String(copyText || "").length > 0;
+  const brandLogoHtml = GROUPECAT_LOGO_DATA_URI
+    ? `<img class="viewer-brand-logo" src="${GROUPECAT_LOGO_DATA_URI}" alt="Groupecat" />`
+    : `<span class="viewer-brand-fallback" aria-hidden="true">G</span>`;
+  const enhancedContentHtml = hasCopyContent
+    ? String(contentHtml || "").replace(
+        /<pre(\b[^>]*)>/i,
+        '<pre id="viewer-text-content"$1 spellcheck="false"></pre>'
+      )
+    : contentHtml;
+  const metaHtml = `
+    <div class="viewer-detail viewer-detail-file">
+      <span class="viewer-detail-label">File</span>
+      <strong class="viewer-detail-value viewer-detail-title">${escapeHtml(title)}</strong>
+    </div>
+    <div class="viewer-detail">
+      <span class="viewer-detail-label">Partner</span>
+      <span class="viewer-detail-value">${escapeHtml(entry?.label || "Unknown partner")}</span>
+    </div>
+    <div class="viewer-detail">
+      <span class="viewer-detail-label">Size</span>
+      <span class="viewer-detail-value">${escapeHtml(formatBytes(size))}</span>
+    </div>
+    <div class="viewer-detail">
+      <span class="viewer-detail-label">Updated</span>
+      <span class="viewer-detail-value">${escapeHtml(modifiedAt || "Not available")}</span>
+    </div>
+  `;
+  const copyPayload = JSON.stringify(String(copyText || "")).replace(/</g, "\\u003c");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -318,58 +345,147 @@ function buildArchiveViewerDocument({
       .viewer-shell {
         min-height: calc(100vh - 36px);
         display: grid;
-        gap: 14px;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        gap: 12px;
       }
 
+      .viewer-nav,
       .viewer-header,
-      .viewer-stats,
       .viewer-content {
         border: 1px solid var(--line);
-        border-radius: 24px;
+        border-radius: 20px;
         background: var(--surface);
         box-shadow: var(--shadow);
       }
 
-      .viewer-header {
+      .viewer-nav {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding: 20px;
+        gap: 12px;
+        padding: 12px 16px;
       }
 
-      .viewer-header-copy {
-        display: grid;
-        gap: 8px;
+      .viewer-brand {
         min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
 
-      .viewer-eyebrow {
-        color: var(--accent);
-        font-size: 0.74rem;
+      .viewer-brand-logo {
+        width: auto;
+        height: 28px;
+        display: block;
+        flex-shrink: 0;
+      }
+
+      .viewer-brand-fallback {
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent), #14b8d4);
+        color: #04111c;
+        font-size: 1rem;
         font-weight: 900;
-        letter-spacing: 0.12em;
+        flex-shrink: 0;
+      }
+
+      .viewer-brand-copy {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .viewer-brand-label {
+        color: var(--text-soft);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
-      .viewer-header h1 {
-        margin: 0;
-        font-size: clamp(1.4rem, 2.8vw, 2.2rem);
-        line-height: 1.04;
+      .viewer-brand-copy strong {
+        font-size: 1.02rem;
+        line-height: 1.2;
       }
 
-      .viewer-header p,
-      .viewer-header small,
+      .viewer-nav-chip {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-soft);
+        color: var(--text-soft);
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .viewer-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px 16px;
+      }
+
+      .viewer-details {
+        display: grid;
+        grid-template-columns:
+          minmax(220px, 1.15fr)
+          minmax(150px, 0.85fr)
+          minmax(110px, 0.6fr)
+          minmax(190px, 0.95fr);
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .viewer-detail {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: var(--surface-soft);
+        overflow: hidden;
+      }
+
+      .viewer-detail-label {
+        color: var(--text-soft);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .viewer-detail-value,
       .viewer-notice {
         margin: 0;
-        color: var(--text-soft);
+        color: var(--text);
+        min-width: 0;
         overflow-wrap: anywhere;
+        word-break: break-word;
+        white-space: normal;
+      }
+
+      .viewer-detail-title {
+        font-size: 1rem;
+        line-height: 1.28;
       }
 
       .viewer-actions {
         display: flex;
+        flex-direction: column;
         gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        justify-content: center;
+        align-self: stretch;
       }
 
       .viewer-action {
@@ -377,9 +493,31 @@ function buildArchiveViewerDocument({
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
         padding: 0 15px;
-        border-radius: 14px;
+        border-radius: 12px;
         border: 1px solid var(--line);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        white-space: nowrap;
+        min-width: 148px;
+      }
+
+      .viewer-action svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .viewer-action svg path,
+      .viewer-action svg rect {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .viewer-action-primary {
@@ -389,31 +527,87 @@ function buildArchiveViewerDocument({
         font-weight: 800;
       }
 
-      .viewer-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        padding: 12px;
-      }
-
-      .apf-inline-stat {
-        display: grid;
-        gap: 5px;
-        padding: 12px 14px;
-        border-radius: 16px;
+      .viewer-action-secondary {
         background: var(--surface-soft);
       }
 
-      .apf-inline-stat span {
-        color: var(--text-soft);
-        font-size: 0.76rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+      .viewer-content {
+        min-height: 0;
+        padding: 14px 16px;
+        overflow: auto;
       }
 
-      .viewer-content {
-        padding: 20px;
+      .viewer-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .viewer-search-shell {
+        flex: 1 1 320px;
+        min-width: min(320px, 100%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface-soft);
+      }
+
+      .viewer-search-shell svg {
+        width: 15px;
+        height: 15px;
+        color: var(--text-soft);
+        flex-shrink: 0;
+      }
+
+      .viewer-search-shell input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: none;
+        padding: 0;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .viewer-search-shell input::placeholder {
+        color: var(--text-soft);
+      }
+
+      .viewer-search-button {
+        min-width: 44px;
+        padding: 0 12px;
+      }
+
+      .viewer-search-status {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: var(--surface-soft);
+        color: var(--text-soft);
+        font-size: 0.84rem;
+        white-space: nowrap;
+      }
+
+      .viewer-search-status.empty {
+        color: var(--text-soft);
+      }
+
+      .viewer-search-status.match {
+        color: var(--accent);
+      }
+
+      .viewer-search-status.error {
+        color: #fca5a5;
       }
 
       .viewer-content pre {
@@ -423,10 +617,22 @@ function buildArchiveViewerDocument({
         font: 500 13px/1.65 "Cascadia Code", Consolas, "Courier New", monospace;
       }
 
+      .viewer-content mark {
+        padding: 0;
+        border-radius: 3px;
+        background: rgba(110, 231, 255, 0.28);
+        color: inherit;
+      }
+
+      ::highlight(viewer-search-match) {
+        background: rgba(110, 231, 255, 0.28);
+        color: inherit;
+      }
+
       .viewer-notice {
         margin-bottom: 14px;
         padding: 12px 14px;
-        border-radius: 14px;
+        border-radius: 12px;
         background: var(--accent-soft);
       }
 
@@ -439,12 +645,46 @@ function buildArchiveViewerDocument({
           min-height: calc(100vh - 24px);
         }
 
+        .viewer-nav,
         .viewer-header {
-          display: grid;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .viewer-header {
+          grid-template-columns: 1fr;
+        }
+
+        .viewer-nav-chip {
+          white-space: normal;
         }
 
         .viewer-actions {
+          flex-direction: row;
+          flex-wrap: wrap;
           justify-content: flex-start;
+          align-self: start;
+        }
+
+        .viewer-action {
+          min-width: 0;
+        }
+
+        .viewer-search-shell {
+          flex-basis: 100%;
+          min-width: 0;
+        }
+      }
+
+      @media (max-width: 1280px) {
+        .viewer-details {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .viewer-details {
+          grid-template-columns: 1fr;
         }
 
         .viewer-action {
@@ -455,23 +695,356 @@ function buildArchiveViewerDocument({
   </head>
   <body data-theme="${escapeHtml(normalizedTheme)}">
     <div class="viewer-shell">
+      <nav class="viewer-nav" aria-label="Archive viewer header">
+        <div class="viewer-brand">
+          ${brandLogoHtml}
+          <div class="viewer-brand-copy">
+            <span class="viewer-brand-label">Groupecat</span>
+            <strong>Archive File Viewer</strong>
+          </div>
+        </div>
+        <div class="viewer-nav-chip">${escapeHtml(entry?.label || "Archive viewer")}</div>
+      </nav>
       <header class="viewer-header">
-        <div class="viewer-header-copy">
-          <span class="viewer-eyebrow">Archive viewer</span>
-          <h1>${escapeHtml(title)}</h1>
-          <p>${escapeHtml(fileName)}</p>
-          <small>${escapeHtml(entry?.url || "")}</small>
+        <div class="viewer-details">
+          ${metaHtml}
         </div>
         <div class="viewer-actions">
+          ${hasCopyContent ? `
+            <button class="viewer-action viewer-action-secondary" type="button" id="viewer-copy-button" aria-label="Copy file content to clipboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span data-copy-label>Copy to clipboard</span>
+            </button>
+          ` : ""}
           <a class="viewer-action viewer-action-primary" href="${escapeHtml(downloadUrl)}">Download</a>
         </div>
       </header>
-      <section class="viewer-stats">${statsHtml}</section>
       <section class="viewer-content">
+        ${hasCopyContent ? `
+          <div class="viewer-toolbar">
+            <label class="viewer-search-shell" for="viewer-search-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="m16 16 4 4"></path>
+              </svg>
+              <input
+                id="viewer-search-input"
+                type="search"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Search in file"
+              />
+            </label>
+            <button class="viewer-action viewer-action-secondary viewer-search-button" type="button" id="viewer-search-previous" aria-label="Find previous match">
+              Prev
+            </button>
+            <button class="viewer-action viewer-action-secondary viewer-search-button" type="button" id="viewer-search-next" aria-label="Find next match">
+              Next
+            </button>
+            <div class="viewer-search-status empty" id="viewer-search-status">Type to search</div>
+          </div>
+        ` : ""}
         ${notice ? `<div class="viewer-notice">${escapeHtml(notice)}</div>` : ""}
-        ${contentHtml}
+        ${enhancedContentHtml}
       </section>
     </div>
+    <script>
+      (function () {
+        var copyButton = document.getElementById("viewer-copy-button");
+        var copyValue = ${copyPayload};
+        var copyButtonLabel = copyButton ? copyButton.querySelector("[data-copy-label]") : null;
+        var idleLabel = "Copy to clipboard";
+        var successLabel = "Copied";
+        var errorLabel = "Copy failed";
+        var resetTimer = null;
+        var searchInput = document.getElementById("viewer-search-input");
+        var searchPreviousButton = document.getElementById("viewer-search-previous");
+        var searchNextButton = document.getElementById("viewer-search-next");
+        var searchStatus = document.getElementById("viewer-search-status");
+        var viewerContent = document.querySelector(".viewer-content");
+        var textContentElement = document.getElementById("viewer-text-content");
+        var rawText = String(copyValue || "");
+        var rawTextLower = rawText.toLowerCase();
+        var activeQuery = "";
+        var activeMatchIndex = -1;
+        var searchDebounceTimer = null;
+        var activeSearchRange = null;
+        var canUseCustomHighlights = Boolean(
+          window.CSS &&
+            CSS.highlights &&
+            typeof window.Highlight === "function" &&
+            textContentElement
+        );
+
+        if (textContentElement) {
+          textContentElement.textContent = rawText;
+        }
+
+        function escapePreviewHtml(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function setButtonLabel(label) {
+          if (copyButtonLabel) {
+            copyButtonLabel.textContent = label;
+          }
+          if (resetTimer) {
+            window.clearTimeout(resetTimer);
+          }
+          resetTimer = window.setTimeout(function () {
+            if (copyButtonLabel) {
+              copyButtonLabel.textContent = idleLabel;
+            }
+          }, 1600);
+        }
+
+        async function copyToClipboard(value) {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+            return;
+          }
+
+          var helper = document.createElement("textarea");
+          helper.value = value;
+          helper.setAttribute("readonly", "");
+          helper.style.position = "fixed";
+          helper.style.opacity = "0";
+          document.body.appendChild(helper);
+          helper.select();
+          document.execCommand("copy");
+          document.body.removeChild(helper);
+        }
+
+        function setSearchStatus(label, tone) {
+          if (!searchStatus) {
+            return;
+          }
+
+          searchStatus.textContent = label;
+          searchStatus.className = "viewer-search-status";
+
+          if (tone) {
+            searchStatus.classList.add(tone);
+          }
+        }
+
+        function setSearchButtonsDisabled(disabled) {
+          [searchPreviousButton, searchNextButton].forEach(function (button) {
+            if (button) {
+              button.disabled = disabled;
+            }
+          });
+        }
+
+        function clearSearchHighlight() {
+          activeMatchIndex = -1;
+          activeSearchRange = null;
+
+          if (canUseCustomHighlights) {
+            CSS.highlights.delete("viewer-search-match");
+            if (textContentElement) {
+              textContentElement.textContent = rawText;
+            }
+            return;
+          }
+
+          if (textContentElement) {
+            textContentElement.textContent = rawText;
+          }
+        }
+
+        function findNextMatch(query, startIndex) {
+          if (!query) {
+            return -1;
+          }
+
+          var queryLower = query.toLowerCase();
+          var nextIndex = rawTextLower.indexOf(queryLower, Math.max(startIndex, 0));
+
+          if (nextIndex !== -1) {
+            return nextIndex;
+          }
+
+          return rawTextLower.indexOf(queryLower, 0);
+        }
+
+        function findPreviousMatch(query, startIndex) {
+          if (!query) {
+            return -1;
+          }
+
+          var queryLower = query.toLowerCase();
+          var previousIndex = rawTextLower.lastIndexOf(
+            queryLower,
+            Math.min(startIndex, rawTextLower.length - 1)
+          );
+
+          if (previousIndex !== -1) {
+            return previousIndex;
+          }
+
+          return rawTextLower.lastIndexOf(queryLower);
+        }
+
+        function scrollRangeIntoView(range) {
+          if (!range || !viewerContent) {
+            return;
+          }
+
+          var rect = range.getBoundingClientRect();
+          var containerRect = viewerContent.getBoundingClientRect();
+
+          if (!rect.height && !rect.width) {
+            return;
+          }
+
+          var relativeTop = rect.top - containerRect.top;
+          var relativeBottom = rect.bottom - containerRect.top;
+
+          if (relativeTop < 16 || relativeBottom > viewerContent.clientHeight - 16) {
+            viewerContent.scrollTop += relativeTop - viewerContent.clientHeight / 2;
+          }
+        }
+
+        function highlightMatch(matchIndex, query) {
+          if (!textContentElement || matchIndex < 0 || !query) {
+            clearSearchHighlight();
+            return false;
+          }
+
+          if (canUseCustomHighlights) {
+            textContentElement.textContent = rawText;
+            var textNode = textContentElement.firstChild;
+
+            if (!textNode) {
+              return false;
+            }
+
+            var range = document.createRange();
+            range.setStart(textNode, matchIndex);
+            range.setEnd(textNode, matchIndex + query.length);
+            CSS.highlights.set("viewer-search-match", new Highlight(range));
+            activeSearchRange = range;
+            scrollRangeIntoView(range);
+          } else {
+            textContentElement.innerHTML = [
+              escapePreviewHtml(rawText.slice(0, matchIndex)),
+              '<mark id="viewer-search-highlight">',
+              escapePreviewHtml(rawText.slice(matchIndex, matchIndex + query.length)),
+              "</mark>",
+              escapePreviewHtml(rawText.slice(matchIndex + query.length))
+            ].join("");
+
+            var highlightedNode = document.getElementById("viewer-search-highlight");
+
+            if (highlightedNode) {
+              highlightedNode.scrollIntoView({
+                block: "center",
+                inline: "nearest"
+              });
+            }
+          }
+
+          activeMatchIndex = matchIndex;
+          return true;
+        }
+
+        function executeSearch(direction, resetToStart) {
+          if (!searchInput || !textContentElement) {
+            return;
+          }
+
+          var nextQuery = String(searchInput.value || "").trim();
+          activeQuery = nextQuery;
+
+          if (!nextQuery) {
+            clearSearchHighlight();
+            setSearchButtonsDisabled(true);
+            setSearchStatus("Type to search", "empty");
+            return;
+          }
+
+          var matchIndex =
+            direction === "previous"
+              ? findPreviousMatch(
+                  nextQuery,
+                  activeMatchIndex > 0 ? activeMatchIndex - 1 : rawTextLower.length - 1
+                )
+              : findNextMatch(
+                  nextQuery,
+                  resetToStart || activeMatchIndex < 0
+                    ? 0
+                    : activeMatchIndex + Math.max(nextQuery.length, 1)
+                );
+
+          if (matchIndex === -1 || !highlightMatch(matchIndex, nextQuery)) {
+            clearSearchHighlight();
+            setSearchButtonsDisabled(true);
+            setSearchStatus("No match", "error");
+            return;
+          }
+
+          setSearchButtonsDisabled(false);
+          setSearchStatus("Match found", "match");
+        }
+
+        if (copyButton) {
+          if (copyButtonLabel) {
+            copyButtonLabel.textContent = idleLabel;
+          }
+
+          copyButton.addEventListener("click", async function () {
+            try {
+              await copyToClipboard(copyValue);
+              setButtonLabel(successLabel);
+            } catch (error) {
+              setButtonLabel(errorLabel);
+            }
+          });
+        }
+
+        if (searchInput && textContentElement) {
+          setSearchButtonsDisabled(true);
+
+          searchInput.addEventListener("input", function () {
+            if (searchDebounceTimer) {
+              window.clearTimeout(searchDebounceTimer);
+            }
+
+            searchDebounceTimer = window.setTimeout(function () {
+              executeSearch("next", true);
+            }, 140);
+          });
+
+          searchInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              executeSearch(event.shiftKey ? "previous" : "next", false);
+            }
+          });
+
+          if (searchPreviousButton) {
+            searchPreviousButton.addEventListener("click", function () {
+              executeSearch("previous", false);
+            });
+          }
+
+          if (searchNextButton) {
+            searchNextButton.addEventListener("click", function () {
+              executeSearch("next", false);
+            });
+          }
+        }
+      })();
+    <\/script>
   </body>
 </html>`;
 }
@@ -986,10 +1559,10 @@ function buildInlineFileDocumentShell({
     .filter((item) => item && item.label && item.value)
     .map(
       (item) => `
-        <div class="apf-inline-stat">
-          <span>${escapeHtml(item.label)}</span>
-          <strong>${escapeHtml(item.value)}</strong>
-        </div>
+        <span class="apf-inline-fact">
+          <span class="apf-inline-fact-label">${escapeHtml(item.label)}</span>
+          <span class="apf-inline-fact-value">${escapeHtml(item.value)}</span>
+        </span>
       `
     )
     .join("");
@@ -1063,8 +1636,8 @@ function buildInlineFileDocumentShell({
       .apf-inline-shell {
         min-height: calc(100vh - 36px);
         display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr);
-        gap: 14px;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 12px;
       }
 
       .apf-inline-toolbar {
@@ -1072,7 +1645,7 @@ function buildInlineFileDocumentShell({
         align-items: flex-start;
         justify-content: space-between;
         gap: 14px;
-        padding: 18px;
+        padding: 14px 16px;
         border: 1px solid var(--apf-line);
         border-radius: 22px;
         background:
@@ -1100,12 +1673,41 @@ function buildInlineFileDocumentShell({
         font-size: clamp(1.4rem, 2.5vw, 2.3rem);
         line-height: 1.04;
         letter-spacing: -0.03em;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .apf-inline-subtitle,
       .apf-inline-detail {
         color: var(--apf-muted);
         overflow-wrap: anywhere;
+      }
+
+      .apf-inline-facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px 14px;
+        min-width: 0;
+      }
+
+      .apf-inline-fact {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .apf-inline-fact-label {
+        color: var(--apf-muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .apf-inline-fact-value {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .apf-inline-actions {
@@ -1138,35 +1740,6 @@ function buildInlineFileDocumentShell({
         background: var(--apf-surface-soft);
       }
 
-      .apf-inline-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-      }
-
-      .apf-inline-stat {
-        display: grid;
-        gap: 6px;
-        padding: 14px 16px;
-        border: 1px solid var(--apf-line);
-        border-radius: 16px;
-        background: var(--apf-surface);
-        box-shadow: var(--apf-shadow);
-      }
-
-      .apf-inline-stat span {
-        color: var(--apf-muted);
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .apf-inline-stat strong {
-        font-size: 0.96rem;
-        overflow-wrap: anywhere;
-      }
-
       .apf-inline-notice {
         padding: 12px 14px;
         border: 1px solid rgba(255, 218, 48, 0.26);
@@ -1178,7 +1751,7 @@ function buildInlineFileDocumentShell({
 
       .apf-inline-content-shell {
         min-height: 0;
-        padding: 18px;
+        padding: 14px 16px;
         border: 1px solid var(--apf-line);
         border-radius: 22px;
         background: color-mix(in srgb, var(--apf-surface) 92%, #06080b);
@@ -1245,12 +1818,12 @@ function buildInlineFileDocumentShell({
           <h1>${escapeHtml(title)}</h1>
           <p class="apf-inline-subtitle">${escapeHtml(subtitle)}</p>
           <p class="apf-inline-detail">${escapeHtml(targetUrl)}</p>
+          ${statsHtml ? `<div class="apf-inline-facts">${statsHtml}</div>` : ""}
         </div>
         <div class="apf-inline-actions">
           ${toolbarActions}
         </div>
       </header>
-      ${statsHtml ? `<section class="apf-inline-stats">${statsHtml}</section>` : ""}
       <section class="apf-inline-content-shell">
         ${notice ? `<div class="apf-inline-notice">${escapeHtml(notice)}</div>` : ""}
         ${contentHtml}
@@ -2221,6 +2794,21 @@ async function findArchiveEntry(entryId) {
   return entries.find((entry) => entry.id === normalizedEntryId) || null;
 }
 
+function getArchiveAccessOptions(entry) {
+  const normalizedEntryRoot = archiveService.normalizeArchivePath(entry?.url, entry?.type);
+  const inboundRoot = archiveService.getSectionRoot("inbound");
+  const outboundRoot = archiveService.getSectionRoot("outbound");
+  const actualSectionRoot = [inboundRoot, outboundRoot].find(
+    (sectionRoot) =>
+      normalizedEntryRoot === sectionRoot ||
+      normalizedEntryRoot.startsWith(`${sectionRoot}/`)
+  );
+
+  return {
+    allowedRootPath: actualSectionRoot || normalizedEntryRoot
+  };
+}
+
 function sanitizeBusinessUnits(rawBusinessUnits) {
   const normalizedBusinessUnits = (Array.isArray(rawBusinessUnits) ? rawBusinessUnits : [])
     .map((businessUnit, index) => sanitizeBusinessUnit(businessUnit, index))
@@ -2462,7 +3050,11 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const archivePayload = await archiveService.list(entry.url, relativePath);
+      const archivePayload = await archiveService.list(
+        entry.url,
+        relativePath,
+        getArchiveAccessOptions(entry)
+      );
       sendJson(response, 200, {
         ok: true,
         entry: {
@@ -2511,9 +3103,14 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const filePayload = await archiveService.readFile(entry.url, relativePath, {
-        maxBytes: MAX_ARCHIVE_OPEN_BYTES
-      });
+      const filePayload = await archiveService.readFile(
+        entry.url,
+        relativePath,
+        {
+          ...getArchiveAccessOptions(entry),
+          maxBytes: MAX_ARCHIVE_OPEN_BYTES
+        }
+      );
 
       if (filePayload.tooLarge) {
         sendJson(response, 200, {
@@ -2547,7 +3144,6 @@ const server = http.createServer(async (request, response) => {
         fileBuffer = zlib.gunzipSync(fileBuffer);
         fileName = stripCompressionExtension(fileName);
         contentType = getArchiveOpenContentType(fileName);
-        notice = "GZip content expanded before preview.";
       } else if (/\.zip$/i.test(fileName)) {
         sendJson(response, 200, {
           ok: true,
@@ -2643,7 +3239,12 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      await archiveService.streamFile(entry.url, relativePath, response);
+      await archiveService.streamFile(
+        entry.url,
+        relativePath,
+        response,
+        getArchiveAccessOptions(entry)
+      );
     } catch (error) {
       console.error("GET /api/archive/download failed", error);
       if (!response.headersSent) {
@@ -2685,9 +3286,14 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const filePayload = await archiveService.readFile(entry.url, relativePath, {
-        maxBytes: MAX_ARCHIVE_OPEN_BYTES
-      });
+      const filePayload = await archiveService.readFile(
+        entry.url,
+        relativePath,
+        {
+          ...getArchiveAccessOptions(entry),
+          maxBytes: MAX_ARCHIVE_OPEN_BYTES
+        }
+      );
       const downloadUrl = `/api/archive/download?entryId=${encodeURIComponent(
         entry.id
       )}&path=${encodeURIComponent(relativePath)}`;
@@ -2721,7 +3327,6 @@ const server = http.createServer(async (request, response) => {
         fileBuffer = zlib.gunzipSync(fileBuffer);
         fileName = stripCompressionExtension(fileName);
         contentType = getArchiveOpenContentType(fileName);
-        notice = "GZip content expanded before opening.";
       } else if (/\.zip$/i.test(fileName)) {
         sendHtml(
           response,
@@ -2777,6 +3382,7 @@ const server = http.createServer(async (request, response) => {
             theme: requestedTheme,
             title: fileName,
             notice,
+            copyText: formatTextForPreview(previewTargetUrl, fileBuffer.toString("utf8")),
             contentHtml: `<pre>${escapeHtml(
               formatTextForPreview(previewTargetUrl, fileBuffer.toString("utf8"))
             )}</pre>`

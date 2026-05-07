@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" role="img" aria-label="Slovenia flag">
+  <rect width="30" height="6.67" fill="#FFFFFF" />
+  <rect y="6.67" width="30" height="6.66" fill="#0B4EA2" />
+  <rect y="13.33" width="30" height="6.67" fill="#D50032" />
+  <path d="M6 5.2h5.2v6.1A2.6 2.6 0 0 1 8.6 14 2.6 2.6 0 0 1 6 11.3Z" fill="#0B4EA2" stroke="#FFFFFF" stroke-width="0.5" />
+  <path d="M6.7 7.4 8.6 5.8l1.9 1.6 0.7 0.6H6Z" fill="#FFFFFF" />
+  <path d="M6.4 9.6h4.4" stroke="#FFCD00" stroke-width="0.5" />
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20" role="img" aria-label="Croatia flag">
+  <rect width="30" height="6.67" fill="#FF0000" />
+  <rect y="6.67" width="30" height="6.66" fill="#FFFFFF" />
+  <rect y="13.33" width="30" height="6.67" fill="#171796" />
+  <rect x="12" y="6.2" width="6" height="7.6" rx="0.8" fill="#D81E05" />
+  <path d="M12 7h6v5.8h-6Z" fill="#FFFFFF" />
+  <path d="M12 7h3v2.9h-3ZM15 9.9h3v2.9h-3ZM15 7h3v2.9h-3ZM12 9.9h3v2.9h-3Z" fill="#D81E05" />
+</svg>

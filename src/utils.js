@@ -157,6 +157,7 @@ export function mergeBusinessUnits(defaultUnits, customUnits) {
 
   [...defaultUnits, ...customUnits].forEach((businessUnit) => {
     const normalizedUnit = normalizeBusinessUnit(businessUnit);
+    const previousUnit = mergedUnits.get(normalizedUnit.id) || null;
 
     if (!normalizedUnit.id) {
       return;
@@ -168,8 +169,11 @@ export function mergeBusinessUnits(defaultUnits, customUnits) {
     }
 
     mergedUnits.set(normalizedUnit.id, {
-      ...(mergedUnits.get(normalizedUnit.id) || {}),
+      ...previousUnit,
       ...normalizedUnit,
+      flag: normalizedUnit.flag || previousUnit?.flag || "",
+      flagId: normalizedUnit.flagId || previousUnit?.flagId || "",
+      palette: normalizedUnit.palette || previousUnit?.palette || null,
       removed: false
     });
   });

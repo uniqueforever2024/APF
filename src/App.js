@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
+  buildArchiveOpenUrl,
   buildArchiveDownloadUrl,
   getArchiveFilePreview,
   listArchive,
@@ -21,10 +22,12 @@ const ADMIN_LOGIN_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
 const EMPTY_BROWSER_STATE = {
   loading: false,
   error: "",
+  entry: null,
   currentPath: "",
   relativePath: "",
   parentRelativePath: "",
   rootPath: "",
+  canGoUp: false,
   items: []
 };
 const EMPTY_FILE_PREVIEW_STATE = {
@@ -43,50 +46,50 @@ const EMPTY_FILE_PREVIEW_STATE = {
   open: false
 };
 const DEFAULT_BU_VISUAL = {
-  accent: "#38bdf8",
-  soft: "rgba(56, 189, 248, 0.16)",
-  glow: "rgba(56, 189, 248, 0.26)"
+  accent: "#22d3ee",
+  soft: "rgba(34, 211, 238, 0.18)",
+  glow: "rgba(45, 140, 255, 0.3)"
 };
 const BU_VISUALS = {
   fr: {
-    accent: "#3b82f6",
-    soft: "rgba(59, 130, 246, 0.18)",
-    glow: "rgba(59, 130, 246, 0.28)"
+    accent: "#2d8cff",
+    soft: "rgba(45, 140, 255, 0.18)",
+    glow: "rgba(45, 140, 255, 0.3)"
   },
   hr: {
-    accent: "#ef4444",
-    soft: "rgba(239, 68, 68, 0.18)",
-    glow: "rgba(239, 68, 68, 0.28)"
+    accent: "#ff6b6b",
+    soft: "rgba(255, 107, 107, 0.18)",
+    glow: "rgba(255, 107, 107, 0.3)"
   },
   ib: {
-    accent: "#f97316",
-    soft: "rgba(249, 115, 22, 0.18)",
-    glow: "rgba(249, 115, 22, 0.28)"
+    accent: "#ff8f3d",
+    soft: "rgba(255, 143, 61, 0.18)",
+    glow: "rgba(255, 143, 61, 0.3)"
   },
   it: {
-    accent: "#22c55e",
-    soft: "rgba(34, 197, 94, 0.18)",
-    glow: "rgba(34, 197, 94, 0.28)"
+    accent: "#3ddc97",
+    soft: "rgba(61, 220, 151, 0.18)",
+    glow: "rgba(61, 220, 151, 0.3)"
   },
   lt: {
-    accent: "#f59e0b",
-    soft: "rgba(245, 158, 11, 0.18)",
-    glow: "rgba(245, 158, 11, 0.28)"
+    accent: "#ffbf47",
+    soft: "rgba(255, 191, 71, 0.18)",
+    glow: "rgba(255, 191, 71, 0.3)"
   },
   pl: {
-    accent: "#e11d48",
-    soft: "rgba(225, 29, 72, 0.18)",
-    glow: "rgba(225, 29, 72, 0.28)"
+    accent: "#ff5fa2",
+    soft: "rgba(255, 95, 162, 0.18)",
+    glow: "rgba(255, 95, 162, 0.3)"
   },
   si: {
-    accent: "#2563eb",
-    soft: "rgba(37, 99, 235, 0.18)",
-    glow: "rgba(37, 99, 235, 0.28)"
+    accent: "#5a7cff",
+    soft: "rgba(90, 124, 255, 0.18)",
+    glow: "rgba(90, 124, 255, 0.3)"
   },
   ua: {
-    accent: "#2563eb",
-    soft: "rgba(37, 99, 235, 0.18)",
-    glow: "rgba(250, 204, 21, 0.22)"
+    accent: "#3f8cff",
+    soft: "rgba(63, 140, 255, 0.18)",
+    glow: "rgba(255, 196, 61, 0.26)"
   }
 };
 
@@ -160,15 +163,62 @@ function formatDateTime(value) {
   }
 }
 
+function getModifiedTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function sortDirectoryItems(items, sortOrder = "desc") {
+  const direction = sortOrder === "asc" ? 1 : -1;
+
+  return [...items].sort((leftItem, rightItem) => {
+    if (leftItem.kind !== rightItem.kind) {
+      return leftItem.kind === "directory" ? -1 : 1;
+    }
+
+    const leftTimestamp = getModifiedTimestamp(leftItem.modifiedAt);
+    const rightTimestamp = getModifiedTimestamp(rightItem.modifiedAt);
+
+    if (leftTimestamp === null && rightTimestamp !== null) {
+      return 1;
+    }
+
+    if (leftTimestamp !== null && rightTimestamp === null) {
+      return -1;
+    }
+
+    if (leftTimestamp !== null && rightTimestamp !== null && leftTimestamp !== rightTimestamp) {
+      return (leftTimestamp - rightTimestamp) * direction;
+    }
+
+    return String(leftItem.name || "").localeCompare(String(rightItem.name || ""), undefined, {
+      numeric: true,
+      sensitivity: "base"
+    });
+  });
+}
+
+function getBusinessUnit(businessUnits, businessUnitId) {
+  return businessUnits.find((businessUnit) => businessUnit.id === businessUnitId) || null;
+}
+
 function getBusinessUnitName(businessUnits, businessUnitId) {
   return (
-    businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.name ||
+    getBusinessUnit(businessUnits, businessUnitId)?.name ||
     String(businessUnitId || "").toUpperCase()
   );
 }
 
 function getBusinessUnitFlag(businessUnits, businessUnitId) {
-  return businessUnits.find((businessUnit) => businessUnit.id === businessUnitId)?.flag || "";
+  return getBusinessUnit(businessUnits, businessUnitId)?.flag || "";
+}
+
+function getBusinessUnitFlagId(businessUnits, businessUnitId) {
+  return getBusinessUnit(businessUnits, businessUnitId)?.flagId || "";
 }
 
 function getBuVisualStyle(businessUnitId) {
@@ -186,15 +236,211 @@ function getContactHref(value) {
   return normalizedValue && normalizedValue.includes("@") ? `mailto:${normalizedValue}` : "";
 }
 
+function getFlagAssetPath(flagId) {
+  const normalizedFlagId = String(flagId || "").trim().toLowerCase();
+  return normalizedFlagId ? `${process.env.PUBLIC_URL || ""}/flags/${normalizedFlagId}.svg` : "";
+}
+
 function getMapGroup(entry) {
   return /\/amap(?:[/_-]|$)/i.test(String(entry?.url || "")) ? "amap" : "bmap";
 }
 
+function splitArchivePath(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "")
+    .split("/")
+    .filter(Boolean);
+}
+
+function getArchiveMapMatch(value) {
+  const pathSegments = splitArchivePath(value);
+  const mapIndex = pathSegments.findIndex((segment) => /^(?:amap|bmap)(?:$|[_-].*)/i.test(segment));
+
+  if (mapIndex === -1) {
+    return null;
+  }
+
+  const segment = pathSegments[mapIndex];
+  return {
+    index: mapIndex,
+    group: /^amap/i.test(segment) ? "amap" : "bmap",
+    segment,
+    segments: pathSegments,
+    parentPathLower: pathSegments.slice(0, mapIndex).join("/").toLowerCase()
+  };
+}
+
+function getPathMapGroup(value) {
+  return getArchiveMapMatch(value)?.group || "";
+}
+
+function getRelativePathBetweenAbsolutePaths(fromPath, toPath) {
+  const fromSegments = splitArchivePath(fromPath);
+  const toSegments = splitArchivePath(toPath);
+  let sharedIndex = 0;
+
+  while (
+    sharedIndex < fromSegments.length &&
+    sharedIndex < toSegments.length &&
+    fromSegments[sharedIndex].toLowerCase() === toSegments[sharedIndex].toLowerCase()
+  ) {
+    sharedIndex += 1;
+  }
+
+  return normalizeRelativeBrowsePath(
+    [
+      ...new Array(Math.max(fromSegments.length - sharedIndex, 0)).fill(".."),
+      ...toSegments.slice(sharedIndex)
+    ].join("/")
+  );
+}
+
+function filterBrowserItems(items, query) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return items;
+  }
+
+  return items.filter((item) => String(item?.name || "").toLowerCase().includes(normalizedQuery));
+}
+
+function buildSiblingMapSegment(segment, mapGroup) {
+  return String(segment || "").replace(/^(?:amap|bmap)/i, mapGroup.toUpperCase());
+}
+
+function buildMapBrowseTargets({ browserState, currentEntry, mapEntries = [] }) {
+  const rootPath = String(browserState?.entry?.rootPath || currentEntry?.url || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "");
+  const currentPath = String(browserState?.currentPath || rootPath)
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "");
+
+  if (!rootPath || !currentPath) {
+    return {};
+  }
+
+  const currentMapMatch = getArchiveMapMatch(currentPath);
+
+  if (currentMapMatch) {
+    const knownSegmentsByGroup = new Map([[currentMapMatch.group, currentMapMatch.segment]]);
+
+    mapEntries.forEach((entry) => {
+      const entryMapMatch = getArchiveMapMatch(entry?.url || "");
+
+      if (entryMapMatch && entryMapMatch.parentPathLower === currentMapMatch.parentPathLower) {
+        knownSegmentsByGroup.set(entryMapMatch.group, entryMapMatch.segment);
+      }
+    });
+
+    return ["amap", "bmap"].reduce((targets, mapGroup) => {
+      const targetSegment =
+        knownSegmentsByGroup.get(mapGroup) ||
+        buildSiblingMapSegment(currentMapMatch.segment, mapGroup);
+      const targetAbsolutePath = [
+        ...currentMapMatch.segments.slice(0, currentMapMatch.index),
+        targetSegment,
+        ...currentMapMatch.segments.slice(currentMapMatch.index + 1)
+      ].join("/");
+
+      return {
+        ...targets,
+        [mapGroup]: getRelativePathBetweenAbsolutePaths(rootPath, targetAbsolutePath)
+      };
+    }, {});
+  }
+
+  const directTargets = ["amap", "bmap"].reduce((targets, mapGroup) => {
+    const matchingItem = (browserState?.items || []).find(
+      (item) =>
+        item?.kind === "directory" &&
+        new RegExp(`^${mapGroup}(?:$|[_-].*)`, "i").test(String(item?.name || ""))
+    );
+
+    if (!matchingItem) {
+      return targets;
+    }
+
+    return {
+      ...targets,
+      [mapGroup]: normalizeRelativeBrowsePath(matchingItem.relativePath)
+    };
+  }, {});
+
+  if (Object.keys(directTargets).length) {
+    return directTargets;
+  }
+
+  return mapEntries.reduce((targets, entry) => {
+    const entryMapMatch = getArchiveMapMatch(entry?.url || "");
+
+    if (!entryMapMatch) {
+      return targets;
+    }
+
+    return {
+      ...targets,
+      [entryMapMatch.group]: getRelativePathBetweenAbsolutePaths(rootPath, entry.url)
+    };
+  }, {});
+}
+
+function getPartnerBasePath(entry) {
+  const normalizedPath = String(entry?.url || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "");
+  const pathSegments = normalizedPath.split("/").filter(Boolean);
+  const lastSegment = String(pathSegments[pathSegments.length - 1] || "").trim();
+
+  if (/^(?:amap|bmap)(?:$|[_-])/i.test(lastSegment)) {
+    pathSegments.pop();
+  }
+
+  return pathSegments.join("/").toLowerCase();
+}
+
+function normalizePartnerLabel(label) {
+  const mapTokenPattern = /\b(?:amap|bmap)(?:[_\s-]*db)?\b/gi;
+  const trailingTokenPattern = /\b(?:fr|be|pl|hr|ib|it|lt|ua|es|pt|si|ws)\b$/i;
+  let normalizedValue = String(label || "")
+    .trim()
+    .replace(/\([^)]*\)/g, (match) => match.replace(mapTokenPattern, ""))
+    .replace(mapTokenPattern, " ")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  while (trailingTokenPattern.test(normalizedValue)) {
+    normalizedValue = normalizedValue.replace(trailingTokenPattern, "").trim();
+  }
+
+  return normalizedValue.replace(/[^a-z0-9]+/g, "");
+}
+
 function getPartnerGroupKey(entry) {
+  const variantKey = getPartnerMapVariantKey(entry);
+
+  if (variantKey) {
+    return variantKey;
+  }
+
+  const normalizedUrl = String(entry?.url || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "")
+    .toLowerCase();
+
   return [
     String(entry?.bu || "").trim().toLowerCase(),
     String(entry?.type || "").trim().toLowerCase(),
-    String(entry?.label || "").trim().toLowerCase()
+    normalizedUrl || String(entry?.id || "").trim().toLowerCase()
   ].join("|");
 }
 
@@ -205,6 +451,100 @@ function getPreferredPartnerEntry(entries, preferredMapGroup = "bmap") {
     entries.find((entry) => getMapGroup(entry) === "amap") ||
     entries[0] ||
     null
+  );
+}
+
+function getPartnerMapVariantKey(entry) {
+  const normalizedPath = String(entry?.url || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/\/+$/, "");
+  const pathSegments = normalizedPath.split("/").filter(Boolean);
+  const lastSegment = String(pathSegments[pathSegments.length - 1] || "").trim().toLowerCase();
+
+  if (!/^(?:amap|bmap)(?:$|[_-].*)/.test(lastSegment)) {
+    return "";
+  }
+
+  pathSegments.pop();
+
+  return [
+    String(entry?.bu || "").trim().toLowerCase(),
+    String(entry?.type || "").trim().toLowerCase(),
+    pathSegments.join("/").toLowerCase()
+  ].join("|");
+}
+
+function getPartnerMapEntries(entries, currentEntry) {
+  if (!currentEntry) {
+    return [];
+  }
+
+  const variantKey = getPartnerMapVariantKey(currentEntry);
+
+  if (!variantKey) {
+    return entries.filter((entry) => entry.id === currentEntry.id);
+  }
+
+  return entries.filter((entry) => getPartnerMapVariantKey(entry) === variantKey);
+}
+
+function findPartnerMapEntry(entries, currentEntry, mapGroup) {
+  return getPreferredPartnerEntry(
+    getPartnerMapEntries(entries, currentEntry).filter((entry) => getMapGroup(entry) === mapGroup),
+    mapGroup
+  );
+}
+
+function normalizeRelativeBrowsePath(value) {
+  const segments = String(value || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter((segment) => segment && segment !== ".");
+  const normalizedSegments = [];
+
+  segments.forEach((segment) => {
+    if (segment === "..") {
+      if (
+        normalizedSegments.length &&
+        normalizedSegments[normalizedSegments.length - 1] !== ".."
+      ) {
+        normalizedSegments.pop();
+        return;
+      }
+    }
+
+    normalizedSegments.push(segment);
+  });
+
+  return normalizedSegments.join("/");
+}
+
+function getPreviousBrowsePath(currentRelativePath) {
+  const normalizedCurrentPath = normalizeRelativeBrowsePath(currentRelativePath);
+  return normalizeRelativeBrowsePath(
+    normalizedCurrentPath ? `${normalizedCurrentPath}/..` : ".."
+  );
+}
+
+function getDirectionLabel(direction) {
+  return String(direction || "").toLowerCase() === "outbound" ? "Outbound" : "Inbound";
+}
+
+function BusinessUnitFlag({ businessUnit, className = "bu-flag" }) {
+  const flagLabel = String(
+    businessUnit?.name || businessUnit?.label || businessUnit?.id || "Business unit"
+  ).trim();
+  const flagSrc = getFlagAssetPath(businessUnit?.flagId);
+
+  if (flagSrc) {
+    return <img className={className} src={flagSrc} alt={`${flagLabel} flag`} />;
+  }
+
+  return (
+    <span className={className} aria-label={`${flagLabel} flag`}>
+      {String(businessUnit?.flag || businessUnit?.id || "BU").trim() || "BU"}
+    </span>
   );
 }
 
@@ -240,6 +580,9 @@ function App() {
   const [activeDirection, setActiveDirection] = useState("inbound");
   const [activeMapGroup, setActiveMapGroup] = useState("bmap");
   const [browsePath, setBrowsePath] = useState("");
+  const [browseForwardStack, setBrowseForwardStack] = useState([]);
+  const [directorySortOrder, setDirectorySortOrder] = useState("desc");
+  const [browserSearchValue, setBrowserSearchValue] = useState("");
   const [searchState, setSearchState] = useState({
     loading: false,
     error: "",
@@ -307,18 +650,99 @@ function App() {
     [currentBuEntries, selectedPartnerId]
   );
   const selectedPartnerMapEntries = useMemo(() => {
-    if (!selectedPartner) {
-      return [];
-    }
-
-    const selectedGroupKey = getPartnerGroupKey(selectedPartner);
-    return currentBuEntries.filter((entry) => getPartnerGroupKey(entry) === selectedGroupKey);
+    return getPartnerMapEntries(currentBuEntries, selectedPartner);
   }, [currentBuEntries, selectedPartner]);
   const selectedPartnerMapGroups = useMemo(
     () => new Set(selectedPartnerMapEntries.map(getMapGroup)),
     [selectedPartnerMapEntries]
   );
+  const activePartnerMapEntry = useMemo(
+    () => findPartnerMapEntry(currentBuEntries, selectedPartner, activeMapGroup),
+    [activeMapGroup, currentBuEntries, selectedPartner]
+  );
+  const currentBrowserPath = useMemo(
+    () =>
+      String(browserState.currentPath || browserState.entry?.rootPath || selectedPartner?.url || ""),
+    [browserState.currentPath, browserState.entry?.rootPath, selectedPartner?.url]
+  );
+  const currentBrowserMapGroup = useMemo(
+    () => getPathMapGroup(currentBrowserPath),
+    [currentBrowserPath]
+  );
+  const browserSearchMode = currentBrowserMapGroup ? "file" : "partner";
+  const mapBrowseTargets = useMemo(
+    () =>
+      buildMapBrowseTargets({
+        browserState,
+        currentEntry: selectedPartner,
+        mapEntries: selectedPartnerMapEntries
+      }),
+    [browserState, selectedPartner, selectedPartnerMapEntries]
+  );
+  const sortedBrowserItems = useMemo(
+    () => sortDirectoryItems(browserState.items, directorySortOrder),
+    [browserState.items, directorySortOrder]
+  );
+  const visibleBrowserItems = useMemo(
+    () =>
+      browserSearchMode === "partner"
+        ? filterBrowserItems(sortedBrowserItems, browserSearchValue)
+        : sortedBrowserItems,
+    [browserSearchMode, browserSearchValue, sortedBrowserItems]
+  );
+  const displayedPartner =
+    !browserState.loading && browserState.entry ? browserState.entry : selectedPartner;
+  const canBrowseForward = browseForwardStack.length > 0;
   const showHomeView = !selectedBuId && !selectedPartner;
+  const isArchiveFileSearchEnabled =
+    showHomeView || Boolean(selectedPartner && browserSearchMode === "file");
+
+  useEffect(() => {
+    if (!selectedPartner) {
+      return;
+    }
+
+    const nextMapGroup = currentBrowserMapGroup || getMapGroup(selectedPartner);
+
+    if (activeMapGroup !== nextMapGroup) {
+      setActiveMapGroup(nextMapGroup);
+    }
+  }, [activeMapGroup, currentBrowserMapGroup, selectedPartner]);
+
+  useEffect(() => {
+    if (!selectedPartner || !selectedPartnerMapEntries.length) {
+      return;
+    }
+
+    if (activePartnerMapEntry || currentBrowserMapGroup) {
+      return;
+    }
+
+    if (selectedPartnerMapGroups.has("bmap")) {
+      setActiveMapGroup("bmap");
+      return;
+    }
+
+    if (selectedPartnerMapGroups.has("amap")) {
+      setActiveMapGroup("amap");
+    }
+  }, [
+    activeMapGroup,
+    activePartnerMapEntry,
+    currentBrowserMapGroup,
+    selectedPartner,
+    selectedPartnerMapEntries.length,
+    selectedPartnerMapGroups
+  ]);
+
+  useEffect(() => {
+    if (!selectedPartner || !activePartnerMapEntry || activePartnerMapEntry.id === selectedPartner.id) {
+      return;
+    }
+
+    setSelectedPartnerId(activePartnerMapEntry.id);
+    resetBrowseNavigation();
+  }, [activePartnerMapEntry, selectedPartner]);
 
   useEffect(() => {
     document.body.dataset.theme = themeMode;
@@ -389,21 +813,88 @@ function App() {
     if (selectedBuId && !businessUnits.some((businessUnit) => businessUnit.id === selectedBuId)) {
       setSelectedBuId("");
       setSelectedPartnerId("");
-      setBrowsePath("");
+      resetBrowseNavigation();
     }
   }, [businessUnits, selectedBuId]);
 
   useEffect(() => {
     if (selectedPartnerId && !currentBuEntries.some((entry) => entry.id === selectedPartnerId)) {
       setSelectedPartnerId("");
-      setBrowsePath("");
+      resetBrowseNavigation();
     }
   }, [currentBuEntries, selectedPartnerId]);
 
   useEffect(() => {
-    const normalizedQuery = searchQuery.trim();
+    if (!businessUnits.length) {
+      return;
+    }
 
-    if (normalizedQuery.length < 2) {
+    const businessUnitNameByFlagId = new Map(
+      businessUnits.map((businessUnit) => [
+        String(
+          getBusinessUnitFlagId(businessUnits, businessUnit.id) || businessUnit.id || ""
+        )
+          .trim()
+          .toLowerCase(),
+        getBusinessUnitName(businessUnits, businessUnit.id)
+      ])
+    );
+
+    document.querySelectorAll(".bu-flag:not(img)").forEach((flagNode) => {
+      const flagId = String(
+        flagNode.getAttribute("data-flag-id") || flagNode.textContent || ""
+      )
+        .trim()
+        .toLowerCase();
+      const flagSrc = getFlagAssetPath(flagId);
+
+      if (!flagSrc) {
+        return;
+      }
+
+      flagNode.setAttribute("data-flag-id", flagId);
+      flagNode.setAttribute(
+        "aria-label",
+        `${businessUnitNameByFlagId.get(flagId) || flagId.toUpperCase()} flag`
+      );
+      flagNode.textContent = "";
+      flagNode.style.backgroundImage = `url("${flagSrc}")`;
+      flagNode.style.backgroundSize = "cover";
+      flagNode.style.backgroundPosition = "center";
+      flagNode.style.backgroundRepeat = "no-repeat";
+      flagNode.style.color = "transparent";
+      flagNode.style.fontSize = "0";
+    });
+  }, [businessUnits, searchState.results.length, selectedBuId, selectedPartnerId]);
+
+  useEffect(() => {
+    const businessUnitHeader = document.querySelector(".bu-directory-hero .bu-directory-copy");
+
+    if (!businessUnitHeader || !currentBusinessUnit) {
+      return;
+    }
+
+    const titleNode = businessUnitHeader.querySelector("strong");
+    const detailNode = businessUnitHeader.querySelector("p");
+
+    if (!titleNode) {
+      return;
+    }
+
+    titleNode.textContent = `${String(currentBusinessUnit.id || "").toUpperCase()} ${String(
+      currentBusinessUnit.name || ""
+    ).toUpperCase()}`.trim();
+
+    if (detailNode) {
+      detailNode.textContent = "";
+      detailNode.setAttribute("hidden", "true");
+    }
+  }, [currentBusinessUnit]);
+
+  useEffect(() => {
+    const normalizedQuery = isArchiveFileSearchEnabled ? searchQuery.trim() : "";
+
+    if (!isArchiveFileSearchEnabled || normalizedQuery.length < 2) {
       setSearchState({
         loading: false,
         error: "",
@@ -451,7 +942,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [searchQuery, selectedPartner]);
+  }, [isArchiveFileSearchEnabled, searchQuery, selectedPartner]);
 
   useEffect(() => {
     if (!selectedPartner) {
@@ -463,11 +954,11 @@ function App() {
     let cancelled = false;
     setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
 
-    setBrowserState((previous) => ({
-      ...previous,
+    setBrowserState({
+      ...EMPTY_BROWSER_STATE,
       loading: true,
       error: ""
-    }));
+    });
 
     listArchive(selectedPartner.id, browsePath)
       .then((payload) => {
@@ -478,10 +969,12 @@ function App() {
         setBrowserState({
           loading: false,
           error: "",
+          entry: payload?.entry || null,
           currentPath: String(payload?.currentPath || ""),
           relativePath: String(payload?.relativePath || ""),
           parentRelativePath: String(payload?.parentRelativePath || ""),
           rootPath: String(payload?.rootPath || ""),
+          canGoUp: payload?.canGoUp === true,
           items: Array.isArray(payload?.items) ? payload.items : []
         });
       })
@@ -491,13 +984,9 @@ function App() {
         }
 
         setBrowserState({
+          ...EMPTY_BROWSER_STATE,
           loading: false,
           error: error.message || "Unable to load this partner.",
-          currentPath: "",
-          relativePath: "",
-          parentRelativePath: "",
-          rootPath: "",
-          items: []
         });
       });
 
@@ -505,6 +994,40 @@ function App() {
       cancelled = true;
     };
   }, [browsePath, selectedPartner]);
+
+  function resetBrowseNavigation(nextPath = "") {
+    setBrowseForwardStack([]);
+    setBrowsePath(normalizeRelativeBrowsePath(nextPath));
+  }
+
+  function browseDirectory(nextPath) {
+    resetBrowseNavigation(nextPath);
+  }
+
+  function handleBrowsePreviousDirectory() {
+    if (!browserState.canGoUp) {
+      return;
+    }
+
+    const currentRelativePath = normalizeRelativeBrowsePath(browserState.relativePath);
+
+    if (currentRelativePath) {
+      setBrowseForwardStack((previousStack) => [...previousStack, currentRelativePath]);
+    }
+
+    setBrowsePath(getPreviousBrowsePath(currentRelativePath));
+  }
+
+  function handleBrowseNextDirectory() {
+    const nextPath = browseForwardStack[browseForwardStack.length - 1];
+
+    if (nextPath === undefined) {
+      return;
+    }
+
+    setBrowseForwardStack((previousStack) => previousStack.slice(0, -1));
+    setBrowsePath(normalizeRelativeBrowsePath(nextPath));
+  }
 
   function clearSearchState() {
     setFileSearchValue("");
@@ -665,7 +1188,7 @@ function App() {
         setSelectedBuId(savedEntry.bu);
         setSelectedPartnerId(savedEntry.id);
         setActiveDirection(savedEntry.type);
-        setBrowsePath("");
+        resetBrowseNavigation();
       }
 
       clearSearchState();
@@ -689,7 +1212,7 @@ function App() {
 
       if (selectedPartnerId === managerForm.id) {
         setSelectedPartnerId("");
-        setBrowsePath("");
+        resetBrowseNavigation();
       }
 
       clearSearchState();
@@ -704,7 +1227,7 @@ function App() {
     setSession(null);
     setSelectedBuId("");
     setSelectedPartnerId("");
-    setBrowsePath("");
+    resetBrowseNavigation();
     clearSearchState();
     setMenuOpen(false);
     handleCloseManager();
@@ -713,7 +1236,7 @@ function App() {
   function handleReturnHome() {
     setSelectedBuId("");
     setSelectedPartnerId("");
-    setBrowsePath("");
+    resetBrowseNavigation();
     clearSearchState();
     setMenuOpen(false);
   }
@@ -721,18 +1244,17 @@ function App() {
   function handleSelectBusinessUnit(businessUnitId) {
     setSelectedBuId(businessUnitId);
     setSelectedPartnerId("");
-    setBrowsePath("");
+    resetBrowseNavigation();
     clearSearchState();
   }
 
   function handleSelectPartner(entry) {
-    const groupKey = getPartnerGroupKey(entry);
-    const matchingEntries = entries.filter((candidate) => getPartnerGroupKey(candidate) === groupKey);
-    const preferredEntry = getPreferredPartnerEntry(matchingEntries, activeMapGroup) || entry;
-
-    setSelectedBuId(preferredEntry.bu);
-    setSelectedPartnerId(preferredEntry.id);
-    setBrowsePath("");
+    setSelectedBuId(entry.bu);
+    setSelectedPartnerId(entry.id);
+    setActiveDirection(entry.type);
+    setActiveMapGroup(getMapGroup(entry));
+    setBrowserSearchValue("");
+    resetBrowseNavigation();
     clearSearchState();
   }
 
@@ -741,16 +1263,32 @@ function App() {
       return;
     }
 
-    const nextPartner = selectedPartnerMapEntries.find(
-      (entry) => getMapGroup(entry) === mapGroup
-    );
+    const nextBrowsePath = mapBrowseTargets[mapGroup];
+
+    if (nextBrowsePath === undefined) {
+      return;
+    }
+
+    const nextPartner = findPartnerMapEntry(currentBuEntries, selectedPartner, mapGroup);
 
     setActiveMapGroup(mapGroup);
+    setBrowserSearchValue("");
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
+    clearSearchState();
+    resetBrowseNavigation(nextBrowsePath);
 
     if (nextPartner && nextPartner.id !== selectedPartner.id) {
       setSelectedPartnerId(nextPartner.id);
-      setBrowsePath("");
-      clearSearchState();
+    }
+  }
+
+  function openArchiveWindow(entryId, relativePath = "") {
+    const archiveWindowUrl = buildArchiveOpenUrl(entryId, relativePath, themeMode);
+    const previewWindow = window.open(archiveWindowUrl, "_blank");
+
+    if (previewWindow) {
+      previewWindow.opener = null;
+      previewWindow.focus();
     }
   }
 
@@ -808,20 +1346,20 @@ function App() {
   }
 
   function handleOpenSearchResult(result) {
-    openFilePreview({
-      entryId: result.entryId,
-      relativePath: result.relativePath,
-      source: "search",
-      fileName: result.fileName,
-      size: result.size,
-      modifiedAt: result.modifiedAt
-    });
+    openArchiveWindow(result.entryId, result.relativePath);
   }
 
   function handleBrowseSearchResult(result) {
+    const matchedEntry = entries.find((entry) => entry.id === result.entryId) || null;
+
     setSelectedBuId(result.bu);
     setSelectedPartnerId(result.entryId);
-    setBrowsePath(result.directory || "");
+    setBrowserSearchValue("");
+    if (matchedEntry) {
+      setActiveDirection(matchedEntry.type);
+      setActiveMapGroup(getMapGroup(matchedEntry));
+    }
+    resetBrowseNavigation(result.directory || "");
     setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     clearSearchState();
   }
@@ -831,18 +1369,15 @@ function App() {
       return;
     }
 
-    openFilePreview({
-      entryId: selectedPartner.id,
-      relativePath: item.relativePath,
-      source: "directory",
-      fileName: item.name,
-      size: item.size,
-      modifiedAt: item.modifiedAt
-    });
+    openArchiveWindow(selectedPartner.id, item.relativePath);
   }
 
   function handleCloseFilePreview() {
     setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
+  }
+
+  function handleToggleDirectorySortOrder() {
+    setDirectorySortOrder((previousSortOrder) => (previousSortOrder === "asc" ? "desc" : "asc"));
   }
 
   if (!session) {
@@ -956,7 +1491,7 @@ function App() {
                     style={getBuVisualStyle(businessUnit.id)}
                     onClick={() => handleSelectBusinessUnit(businessUnit.id)}
                   >
-                    <span className="bu-flag">{businessUnit.flag || businessUnit.label}</span>
+                    <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
                     <strong>{businessUnit.label}</strong>
                     <small>{businessUnit.name}</small>
                   </button>
@@ -995,6 +1530,7 @@ function App() {
             setPartnerSearchValue={setPartnerSearchValue}
             activeDirection={activeDirection}
             setActiveDirection={setActiveDirection}
+            onBackToList={handleReturnHome}
             onBrowsePartner={handleSelectPartner}
             t={t}
           />
@@ -1004,9 +1540,9 @@ function App() {
           <section className="partner-focus" style={getBuVisualStyle(selectedPartner.bu)}>
             <div className="focused-header">
               <div>
-                <strong>{selectedPartner.label}</strong>
+                <strong>{displayedPartner?.label || selectedPartner.label}</strong>
                 <ContactValue
-                  value={selectedPartner.backup}
+                  value={displayedPartner?.backup || selectedPartner.backup}
                   fallback={t("contactUnavailable", "Contact not available")}
                 />
               </div>
@@ -1029,15 +1565,22 @@ function App() {
             </div>
 
             <PartnerFileControls
-              activeMapGroup={getMapGroup(selectedPartner)}
-              fileSearchValue={fileSearchValue}
-              mapGroups={selectedPartnerMapGroups}
+              activeMapGroup={currentBrowserMapGroup || activeMapGroup}
+              canGoForward={canBrowseForward}
+              canGoUp={browserState.canGoUp}
+              mapTargets={mapBrowseTargets}
+              onBrowseNext={handleBrowseNextDirectory}
+              onBrowsePrevious={handleBrowsePreviousDirectory}
               onSelectMapGroup={handleSelectPartnerMapGroup}
-              setFileSearchValue={setFileSearchValue}
+              searchMode={browserSearchMode}
+              searchValue={browserSearchMode === "file" ? fileSearchValue : browserSearchValue}
+              setSearchValue={
+                browserSearchMode === "file" ? setFileSearchValue : setBrowserSearchValue
+              }
               t={t}
             />
 
-            {searchState.query ? (
+            {browserSearchMode === "file" && searchState.query ? (
               <SearchResults
                 businessUnits={businessUnits}
                 error={searchState.error}
@@ -1054,11 +1597,14 @@ function App() {
 
             <DirectoryBrowser
               browserState={browserState}
+              dateSortOrder={directorySortOrder}
               filePreviewState={filePreviewState}
-              onBrowse={setBrowsePath}
+              items={visibleBrowserItems}
+              onBrowse={browseDirectory}
               onClosePreview={handleCloseFilePreview}
               onOpenFile={handleOpenFile}
-              selectedPartner={selectedPartner}
+              onToggleDateSort={handleToggleDirectorySortOrder}
+              selectedPartner={displayedPartner || selectedPartner}
               t={t}
             />
           </section>
@@ -1091,6 +1637,7 @@ function BusinessUnitDirectory({
   setPartnerSearchValue,
   activeDirection,
   setActiveDirection,
+  onBackToList,
   onBrowsePartner,
   t
 }) {
@@ -1099,74 +1646,98 @@ function BusinessUnitDirectory({
     .join(" ");
 
   return (
-    <section className="bu-directory" style={getBuVisualStyle(businessUnit?.id)}>
-      <div className="bu-directory-hero">
-        <div className="bu-directory-copy">
-          <span className="bu-pill bu-pill-large">
-            <span>{businessUnit?.flag || businessUnit?.label || "BU"}</span>
-          </span>
-          <strong>{businessUnitTitle}</strong>
+    <section className="bu-directory-shell" style={getBuVisualStyle(businessUnit?.id)}>
+      <div className="directory-controls">
+        <div className="segmented-controls" aria-label="Direction">
+          <button
+            className={activeDirection === "inbound" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveDirection("inbound")}
+          >
+            Inbound
+          </button>
+          <button
+            className={activeDirection === "outbound" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveDirection("outbound")}
+          >
+            Outbound
+          </button>
         </div>
+
+        <div className="search-input-shell partner-search-shell directory-search-shell">
+          <AppIcon type="search" />
+          <input
+            type="search"
+            value={partnerSearchValue}
+            placeholder={t("searchPartnerPlaceholder", "Search partner")}
+            onChange={(event) => setPartnerSearchValue(event.target.value)}
+          />
+        </div>
+
+        <button className="secondary-button compact-button" type="button" onClick={onBackToList}>
+          <AppIcon type="back" />
+          <span>{t("backToList", "Back to list")}</span>
+        </button>
       </div>
 
-      <section className="partners-panel">
-        <div className="panel-header">
-          <div>
-            <strong>Partners</strong>
+      <section className="bu-directory">
+        <div className="bu-directory-hero">
+          <div className="bu-directory-copy">
+            <span className="bu-pill bu-pill-large">
+              <span>{businessUnit?.flag || businessUnit?.label || "BU"}</span>
+            </span>
+            <strong>{businessUnitTitle}</strong>
           </div>
-          <small>{entries.length} partners</small>
         </div>
 
-        <div className="directory-controls">
-          <div className="search-input-shell partner-search-shell">
-            <AppIcon type="search" />
-            <input
-              type="search"
-              value={partnerSearchValue}
-              placeholder={t("searchPartnerPlaceholder", "Search partner")}
-              onChange={(event) => setPartnerSearchValue(event.target.value)}
+        <section className="partners-panel">
+          <div className="panel-header">
+            <div>
+              <strong>Partners</strong>
+            </div>
+            <small>{entries.length} partners</small>
+          </div>
+
+          {entries.length ? (
+            <div className="partner-grid">
+              {entries.map((entry) => (
+                <button
+                  className="partner-grid-card"
+                  key={entry.id}
+                  type="button"
+                  style={getBuVisualStyle(entry.bu)}
+                  onClick={() => onBrowsePartner(entry)}
+                >
+                  <div className="partner-grid-card-top">
+                    <span className="partner-grid-card-eyebrow">
+                      <BusinessUnitFlag
+                        businessUnit={businessUnit}
+                        className="bu-flag partner-grid-flag"
+                      />
+                      <span>{getDirectionLabel(entry.type)}</span>
+                    </span>
+                  </div>
+
+                  <div className="partner-grid-card-body">
+                    <strong>{entry.label}</strong>
+                  </div>
+
+                  <div className="partner-grid-card-bottom">
+                    <span className="partner-grid-card-arrow">
+                      <AppIcon type="forward" />
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title={t("noEntries", "No partners found.")}
+              detail="Try another filter."
             />
-          </div>
-
-          <div className="segmented-controls" aria-label="Direction">
-            <button
-              className={activeDirection === "inbound" ? "active" : ""}
-              type="button"
-              onClick={() => setActiveDirection("inbound")}
-            >
-              Inbound
-            </button>
-            <button
-              className={activeDirection === "outbound" ? "active" : ""}
-              type="button"
-              onClick={() => setActiveDirection("outbound")}
-            >
-              Outbound
-            </button>
-          </div>
-
-        </div>
-
-        {entries.length ? (
-          <div className="partner-grid">
-            {entries.map((entry) => (
-              <button
-                className="partner-grid-card"
-                key={entry.id}
-                type="button"
-                style={getBuVisualStyle(entry.bu)}
-                onClick={() => onBrowsePartner(entry)}
-              >
-                <strong>{entry.label}</strong>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title={t("noEntries", "No partners found.")}
-            detail="Try another filter."
-          />
-        )}
+          )}
+        </section>
       </section>
     </section>
   );
@@ -1187,6 +1758,36 @@ function LoginScreen({
   const [adminPassword, setAdminPassword] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminError, setAdminError] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadNotificationMessage() {
+      try {
+        const response = await fetch(`${assetBase}/notification.txt`, {
+          cache: "no-store",
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          setNotificationMessage("");
+          return;
+        }
+
+        const nextMessage = (await response.text()).replace(/\s+/g, " ").trim();
+        setNotificationMessage(nextMessage);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setNotificationMessage("");
+        }
+      }
+    }
+
+    loadNotificationMessage();
+
+    return () => controller.abort();
+  }, [assetBase]);
 
   async function handleAdminSubmit(event) {
     event.preventDefault();
@@ -1243,6 +1844,18 @@ function LoginScreen({
           </button>
         </div>
       </header>
+
+      {notificationMessage ? (
+        <section className="login-notification" role="status" aria-live="polite">
+          <span className="login-notification-badge">Alert</span>
+          <div className="login-notification-marquee">
+            <div className="login-notification-track">
+              <span>{notificationMessage}</span>
+              <span aria-hidden="true">{notificationMessage}</span>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <main className="login-stage">
         <section className="login-hero">
@@ -1460,12 +2073,7 @@ function SearchPanel({ query, setQuery, t }) {
       <div className="search-panel-spark search-panel-spark-one" aria-hidden="true" />
       <div className="search-panel-spark search-panel-spark-two" aria-hidden="true" />
 
-      <div className="panel-header search-panel-header">
-        <div>
-          <strong>Search file</strong>
-        </div>
-      </div>
-
+      
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
         <div className="search-input-shell">
           <AppIcon type="search" />
@@ -1483,36 +2091,68 @@ function SearchPanel({ query, setQuery, t }) {
 
 function PartnerFileControls({
   activeMapGroup,
-  fileSearchValue,
-  mapGroups,
+  canGoForward,
+  canGoUp,
+  mapTargets,
+  onBrowseNext,
+  onBrowsePrevious,
   onSelectMapGroup,
-  setFileSearchValue,
+  searchMode,
+  searchValue,
+  setSearchValue,
   t
 }) {
+  const searchPlaceholder =
+    searchMode === "file"
+      ? t("searchFilePlaceholder", "Search file")
+      : t("searchPartnerPlaceholder", "Search partner");
+
   return (
     <div className="partner-file-controls">
+      <div className="partner-file-controls-left">
+        <div className="segmented-controls" aria-label="Map">
+          {["bmap", "amap"].map((mapGroup) => (
+            <button
+              className={activeMapGroup === mapGroup ? "active" : ""}
+              disabled={mapTargets?.[mapGroup] === undefined}
+              key={mapGroup}
+              type="button"
+              onClick={() => onSelectMapGroup(mapGroup)}
+            >
+              {mapGroup.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className="secondary-button compact-button"
+          disabled={!canGoUp}
+          type="button"
+          onClick={onBrowsePrevious}
+        >
+          <AppIcon type="back" />
+          <span>{t("previousDirectory", "Previous directory")}</span>
+        </button>
+
+        <button
+          className="secondary-button compact-button"
+          disabled={!canGoForward}
+          type="button"
+          onClick={onBrowseNext}
+        >
+          <AppIcon type="forward" />
+          <span>{t("nextDirectory", "Next directory")}</span>
+        </button>
+      </div>
+
       <div className="search-input-shell partner-search-shell">
         <AppIcon type="search" />
         <input
           type="search"
-          value={fileSearchValue}
-          placeholder={t("searchFilePlaceholder", "Search file")}
-          onChange={(event) => setFileSearchValue(event.target.value)}
+          value={searchValue}
+          placeholder={searchPlaceholder}
+          onChange={(event) => setSearchValue(event.target.value)}
         />
-      </div>
-
-      <div className="segmented-controls" aria-label="Map">
-        {["amap", "bmap"].map((mapGroup) => (
-          <button
-            className={activeMapGroup === mapGroup ? "active" : ""}
-            disabled={!mapGroups.has(mapGroup)}
-            key={mapGroup}
-            type="button"
-            onClick={() => onSelectMapGroup(mapGroup)}
-          >
-            {mapGroup.toUpperCase()}
-          </button>
-        ))}
       </div>
     </div>
   );
@@ -1551,7 +2191,10 @@ function SearchResults({
               <div className="search-result-primary">
                 <div className="search-result-title">
                   <span className="bu-pill">
-                    <span>{getBusinessUnitFlag(businessUnits, result.bu) || "BU"}</span>
+                    <BusinessUnitFlag
+                      businessUnit={getBusinessUnit(businessUnits, result.bu)}
+                      className="bu-flag bu-pill-flag"
+                    />
                     <span>{getBusinessUnitName(businessUnits, result.bu)}</span>
                   </span>
                 </div>
@@ -1601,10 +2244,13 @@ function SearchResults({
 
 function DirectoryBrowser({
   browserState,
+  dateSortOrder,
   filePreviewState,
+  items,
   onBrowse,
   onClosePreview,
   onOpenFile,
+  onToggleDateSort,
   selectedPartner,
   t
 }) {
@@ -1616,30 +2262,36 @@ function DirectoryBrowser({
     return <EmptyState title="Directory unavailable" detail={browserState.error} tone="warning" />;
   }
 
+  const sortArrow = dateSortOrder === "asc" ? "↑" : "↓";
+  const sortDirectionLabel =
+    dateSortOrder === "asc"
+      ? t("sortOldestToNewest", "Oldest to newest")
+      : t("sortNewestToOldest", "Newest to oldest");
+
   return (
     <section className="directory-browser">
       <div className="browser-bar">
         <div>
           <strong>{selectedPartner.label}</strong>
+          <small>{`${items.length} item${items.length === 1 ? "" : "s"}`}</small>
         </div>
+        <button
+          className="secondary-button compact-button browser-sort-button"
+          type="button"
+          onClick={onToggleDateSort}
+          aria-label={`${t("dateModified", "Date modified")}: ${sortDirectionLabel}`}
+          title={`${t("dateModified", "Date modified")}: ${sortDirectionLabel}`}
+        >
+          <span className="browser-sort-button-label">{t("dateModified", "Date modified")}</span>
+          <span className="browser-sort-button-direction" aria-hidden="true">
+            {sortArrow}
+          </span>
+        </button>
       </div>
 
-      <div className="browser-actions">
-        {browserState.relativePath ? (
-          <button
-            className="secondary-button compact-button"
-            type="button"
-            onClick={() => onBrowse(browserState.parentRelativePath)}
-          >
-            <AppIcon type="back" />
-            <span>Up one level</span>
-          </button>
-        ) : null}
-      </div>
-
-      {browserState.items.length ? (
+      {items.length ? (
         <div className="browser-table">
-          {browserState.items.map((item) =>
+          {items.map((item) =>
             item.kind === "directory" ? (
               <button
                 key={item.relativePath || item.name}
@@ -1652,7 +2304,7 @@ function DirectoryBrowser({
                     <AppIcon type="folder" />
                   </span>
                   <div>
-                    <strong>{item.name}</strong>
+                    <strong title={item.name}>{item.name}</strong>
                   </div>
                 </div>
                 <div className="browser-row-meta">
@@ -1666,7 +2318,7 @@ function DirectoryBrowser({
                     <AppIcon type="file" />
                   </span>
                   <div>
-                    <strong>{item.name}</strong>
+                    <strong title={item.name}>{item.name}</strong>
                   </div>
                 </div>
                 <div className="browser-row-meta">
@@ -1799,6 +2451,15 @@ function AppIcon({ type }) {
       <svg {...commonProps}>
         <path d="M14.5 6.5 8.5 12l6 5.5" />
         <path d="M9 12h8" />
+      </svg>
+    );
+  }
+
+  if (type === "forward") {
+    return (
+      <svg {...commonProps}>
+        <path d="M9.5 6.5 15.5 12l-6 5.5" />
+        <path d="M15 12H7" />
       </svg>
     );
   }
