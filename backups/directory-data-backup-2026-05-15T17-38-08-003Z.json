@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-05-15T17:58:08.866Z",
+  "backupCreatedAt": "2026-05-15T17:38:08.003Z",
+  "source": "json",
   "entries": [
     {
       "id": "seed-fr-scans-0",
@@ -16,6 +17,14 @@
       "label": "Cavaillon",
       "url": "/B2BP/UserData/archives/RECU/CAVA",
       "backup": ""
+    },
+    {
+      "id": "seed-fr-annonces-0",
+      "bu": "fr",
+      "type": "inbound",
+      "label": "CLAIMS TOYOTA",
+      "url": "/B2BP/UserData/archives/RECU/TOYOTACLAIMS2VIA_FR/BMAP",
+      "backup": "FR.VIA.claimstoyota@lc.re7.groupecat.com"
     },
     {
       "id": "seed-fr-scans-2",
@@ -4505,5 +4514,6 @@
       "url": "/chaine/CMG_INREFTIER",
       "backup": ""
     }
-  ]
+  ],
+  "generatedAt": "2026-05-15T17:38:07.995Z"
 }

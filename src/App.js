@@ -53,50 +53,50 @@ const DEFAULT_CLIENT_SESSION = {
   username: "portal-user"
 };
 const DEFAULT_BU_VISUAL = {
-  accent: "#22d3ee",
-  soft: "rgba(34, 211, 238, 0.18)",
-  glow: "rgba(45, 140, 255, 0.3)"
+  accent: "#89a8ff",
+  soft: "rgba(137, 168, 255, 0.12)",
+  glow: "rgba(137, 168, 255, 0.18)"
 };
 const BU_VISUALS = {
   fr: {
-    accent: "#2d8cff",
-    soft: "rgba(45, 140, 255, 0.18)",
-    glow: "rgba(45, 140, 255, 0.3)"
+    accent: "#7eaef8",
+    soft: "rgba(126, 174, 248, 0.12)",
+    glow: "rgba(126, 174, 248, 0.18)"
   },
   hr: {
-    accent: "#ff6b6b",
-    soft: "rgba(255, 107, 107, 0.18)",
-    glow: "rgba(255, 107, 107, 0.3)"
+    accent: "#7fbfb5",
+    soft: "rgba(127, 191, 181, 0.12)",
+    glow: "rgba(127, 191, 181, 0.18)"
   },
   ib: {
-    accent: "#ff8f3d",
-    soft: "rgba(255, 143, 61, 0.18)",
-    glow: "rgba(255, 143, 61, 0.3)"
+    accent: "#8ea6f0",
+    soft: "rgba(142, 166, 240, 0.12)",
+    glow: "rgba(142, 166, 240, 0.18)"
   },
   it: {
-    accent: "#3ddc97",
-    soft: "rgba(61, 220, 151, 0.18)",
-    glow: "rgba(61, 220, 151, 0.3)"
+    accent: "#7fc9a8",
+    soft: "rgba(127, 201, 168, 0.12)",
+    glow: "rgba(127, 201, 168, 0.18)"
   },
   lt: {
-    accent: "#ffbf47",
-    soft: "rgba(255, 191, 71, 0.18)",
-    glow: "rgba(255, 191, 71, 0.3)"
+    accent: "#b6b98c",
+    soft: "rgba(182, 185, 140, 0.12)",
+    glow: "rgba(182, 185, 140, 0.18)"
   },
   pl: {
-    accent: "#ff5fa2",
-    soft: "rgba(255, 95, 162, 0.18)",
-    glow: "rgba(255, 95, 162, 0.3)"
+    accent: "#a491df",
+    soft: "rgba(164, 145, 223, 0.12)",
+    glow: "rgba(164, 145, 223, 0.18)"
   },
   si: {
-    accent: "#5a7cff",
-    soft: "rgba(90, 124, 255, 0.18)",
-    glow: "rgba(90, 124, 255, 0.3)"
+    accent: "#88bad0",
+    soft: "rgba(136, 186, 208, 0.12)",
+    glow: "rgba(136, 186, 208, 0.18)"
   },
   ua: {
-    accent: "#3f8cff",
-    soft: "rgba(63, 140, 255, 0.18)",
-    glow: "rgba(255, 196, 61, 0.26)"
+    accent: "#8dbfff",
+    soft: "rgba(141, 191, 255, 0.12)",
+    glow: "rgba(141, 191, 255, 0.18)"
   }
 };
 
@@ -299,7 +299,23 @@ async function parseBulkImportFile(file) {
 function readStoredSession() {
   try {
     const rawValue = window.sessionStorage.getItem(AUTH_STORAGE_KEY);
-    return rawValue ? JSON.parse(rawValue) : null;
+    const parsedValue = rawValue ? JSON.parse(rawValue) : null;
+
+    if (parsedValue?.role === "admin") {
+      const token = String(parsedValue?.token || "").trim();
+
+      if (!token) {
+        return DEFAULT_CLIENT_SESSION;
+      }
+
+      return {
+        role: "admin",
+        username: String(parsedValue?.username || "admin").trim().toLowerCase() || "admin",
+        token
+      };
+    }
+
+    return DEFAULT_CLIENT_SESSION;
   } catch (error) {
     return null;
   }
@@ -858,7 +874,6 @@ function App() {
   const [businessUnitSaving, setBusinessUnitSaving] = useState(false);
   const [businessUnitError, setBusinessUnitError] = useState("");
   const menuRef = useRef(null);
-  const adminCommandCenterRef = useRef(null);
   const homePartnerSearchQuery = useDeferredValue(homePartnerSearchValue);
   const searchQuery = useDeferredValue(fileSearchValue);
   const {
@@ -871,7 +886,7 @@ function App() {
   );
   const text = getText(language);
   const t = (key, fallback) => text[key] || fallback;
-  const isAdmin = session?.role === "admin";
+  const isAdmin = session?.role === "admin" && Boolean(String(session?.token || "").trim());
   const homePartnerResults = useMemo(() => {
     const normalizedQuery = homePartnerSearchQuery.trim().toLowerCase();
 
@@ -1377,10 +1392,17 @@ function App() {
   }
 
   async function saveDirectoryData(nextEntries, nextBusinessUnits = savedBusinessUnits) {
+    const adminToken = String(session?.token || "").trim();
+
+    if (!adminToken) {
+      throw new Error("Admin authentication is required to save directory data.");
+    }
+
     const response = await fetch(DIRECTORY_DATA_API_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Admin-Token": adminToken
       },
       body: JSON.stringify({
         entries: nextEntries,
@@ -1415,9 +1437,16 @@ function App() {
       throw new Error(payload?.error || t("loginErrorAdmin", "Admin access details are not correct."));
     }
 
+    const adminToken = String(payload?.token || "").trim();
+
+    if (!adminToken) {
+      throw new Error("Admin authentication is not available right now.");
+    }
+
     setSession({
       role: "admin",
-      username: payload.username || String(credentials?.username || "").trim().toLowerCase() || "admin"
+      username: payload.username || String(credentials?.username || "").trim().toLowerCase() || "admin",
+      token: adminToken
     });
   }
 
@@ -1432,12 +1461,6 @@ function App() {
         password: adminPassword
       });
       handleCloseAdminLogin();
-      setTimeout(() => {
-        adminCommandCenterRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }, 0);
     } catch (error) {
       setAdminLoginError(
         error.message || t("loginErrorAdmin", "Admin access details are not correct.")
@@ -1450,10 +1473,6 @@ function App() {
     setMenuOpen(false);
 
     if (isAdmin) {
-      adminCommandCenterRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
       return;
     }
 
@@ -1974,9 +1993,15 @@ function App() {
     setAdminPassword("");
     setAdminLoginBusy(false);
     setAdminLoginError("");
+    setSelectedBuId("");
+    setSelectedPartnerId("");
+    setPartnerSearchValue("");
+    setPartnerViewMode("grid");
+    resetBrowseNavigation();
     clearBusinessUnitSelection();
     clearPartnerSelection();
     setAdminActionError("");
+    clearSearchState();
     setMenuOpen(false);
     handleCloseManager();
     handleCloseBulkManager();
@@ -2203,50 +2228,64 @@ function App() {
                   <AppIcon type="mail" />
                   <span className="menu-item-copy">
                     <span className="menu-item-label">Help</span>
-                    <small className="menu-item-meta">{SUPPORT_EMAIL}</small>
                   </span>
                 </a>
 
-                <button className="menu-item" type="button" onClick={handleOpenAdminMode}>
-                  <AppIcon type="shield" />
-                  <span className="menu-item-copy">
-                    <span className="menu-item-label">{t("adminMode", "Admin mode")}</span>
-                    <small className="menu-item-meta">
-                      {isAdmin ? "Enabled" : "Restricted access"}
-                    </small>
-                  </span>
-                </button>
+                {isAdmin ? (
+                  <>
+                    <div className="menu-divider" aria-hidden="true" />
+
+                    <button className="menu-item" type="button" onClick={handleOpenCreateManager}>
+                      <AppIcon type="plus" />
+                      <span className="menu-item-copy">
+                        <span className="menu-item-label">{t("openManager", "Add New Partner")}</span>
+                      </span>
+                    </button>
+
+                    <button className="menu-item" type="button" onClick={handleOpenBusinessUnitManager}>
+                      <AppIcon type="office" />
+                      <span className="menu-item-copy">
+                        <span className="menu-item-label">
+                          {t("openBusinessUnitManager", "Add New Business Unit")}
+                        </span>
+                      </span>
+                    </button>
+
+                    <button className="menu-item" type="button" onClick={handleOpenBulkManager}>
+                      <AppIcon type="upload" />
+                      <span className="menu-item-copy">
+                        <span className="menu-item-label">{t("bulkUpdate", "Bulk update")}</span>
+                      </span>
+                    </button>
+
+                    <button className="menu-item menu-item-danger" type="button" onClick={handleLogout}>
+                      <AppIcon type="logout" />
+                      <span className="menu-item-copy">
+                        <span className="menu-item-label">{t("logout", "Logout")}</span>
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <button className="menu-item" type="button" onClick={handleOpenAdminMode}>
+                    <AppIcon type="shield" />
+                    <span className="menu-item-copy">
+                      <span className="menu-item-label">{t("adminMode", "Admin mode")}</span>
+                    </span>
+                  </button>
+                )}
               </div>
             ) : null}
           </div>
         </div>
       </header>
 
-      <main className="shell-body">
-        {isAdmin ? (
-          <AdminCommandCenter
-            adminActionBusy={adminActionBusy}
-            currentBusinessUnit={currentBusinessUnit}
-            onExitAdmin={handleLogout}
-            onOpenBulkManager={handleOpenBulkManager}
-            onOpenBusinessUnitManager={handleOpenBusinessUnitManager}
-            onOpenManager={handleOpenCreateManager}
-            selectedPartner={selectedPartner}
-            t={t}
-            targetRef={adminCommandCenterRef}
-          />
-        ) : null}
-
+      <main className={`shell-body ${showHomeView ? "shell-body-home" : ""}`.trim()}>
         {showHomeView ? (
-          <>
-           <section className="bu-strip bu-strip-home">
-              <div className="panel-header panel-header-centered">
+          <section className="home-stage">
+            <section className="bu-strip bu-strip-home">
+              <div className="panel-header panel-header-centered panel-header-home">
                 <div>
-                  <span className="section-kicker">Business units</span>
-                  
-                </div>
-                <div className="panel-header-actions">
-                  <small>{businessUnits.length} business units</small>
+                  <span className="section-kicker">Business Units</span>
                 </div>
               </div>
 
@@ -2286,11 +2325,11 @@ function App() {
 
               {adminActionError ? <div className="form-error inline-feedback">{adminActionError}</div> : null}
 
-              <div className="bu-strip-grid bu-strip-grid-centered">
+              <div className="bu-strip-grid bu-strip-grid-centered bu-strip-grid-home">
                 {businessUnits.map((businessUnit) => (
                   <article
                     key={businessUnit.id}
-                    className={`bu-tile ${
+                    className={`bu-tile bu-tile-home ${
                       selectedBusinessUnitIdSet.has(businessUnit.id) ? "selected" : ""
                     }`.trim()}
                     style={getBuVisualStyle(businessUnit.id)}
@@ -2298,13 +2337,16 @@ function App() {
                     <div className="bu-tile-top">
                       <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
                       {isAdmin ? (
-                        <label className="partner-select-toggle" onClick={(event) => event.stopPropagation()}>
+                        <label
+                          className="partner-select-toggle checkbox-only"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <input
+                            aria-label={`Select ${businessUnit.label}`}
                             type="checkbox"
                             checked={selectedBusinessUnitIdSet.has(businessUnit.id)}
                             onChange={() => handleToggleBusinessUnitSelection(businessUnit.id)}
                           />
-                          <span>{t("select", "Select")}</span>
                         </label>
                       ) : null}
                     </div>
@@ -2354,7 +2396,7 @@ function App() {
                 t={t}
               />
             ) : null}
-          </>
+          </section>
         ) : null}
 
         {selectedBuId && !selectedPartner ? (
@@ -2556,38 +2598,37 @@ function BusinessUnitDirectory({
   onToggleSelectAllPartners,
   t
 }) {
-  const businessUnitTitle = [businessUnit?.label || "BU", businessUnit?.name || "Business unit"]
-    .filter(Boolean)
-    .join(" ");
+  const businessUnitTitle = [
+    String(businessUnit?.name || businessUnit?.label || "Business unit").toUpperCase(),
+    getDirectionLabel(activeDirection).toUpperCase()
+  ].join(" ");
   const selectedPartnerKeySet = new Set(selectedPartnerKeys);
 
   return (
     <section className="bu-directory-shell" style={getBuVisualStyle(businessUnit?.id)}>
-      <section className="bu-directory-hero">
-        <div className="bu-directory-copy">
-          <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag bu-directory-flag" />
-          <div>
-            <span className="section-kicker">Business unit</span>
-            <strong>{businessUnitTitle}</strong>
-            <p>{entries.length} partners</p>
+      <section className="bu-directory">
+        <div className="directory-header-inline">
+          <div className="directory-header-copy">
+            <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag bu-directory-flag" />
+            <div>
+              <strong>{businessUnitTitle}</strong>
+            </div>
+          </div>
+
+          <div className="directory-header-actions">
+            {isAdmin ? (
+              <button className="secondary-button compact-button" type="button" onClick={onOpenManager}>
+                <AppIcon type="plus" />
+                <span>{t("openManager", "Add New Partner")}</span>
+              </button>
+            ) : null}
+            <button className="secondary-button compact-button" type="button" onClick={onBackToList}>
+              <AppIcon type="back" />
+              <span>{t("backToList", "Back to list")}</span>
+            </button>
           </div>
         </div>
 
-        <div className="bu-directory-hero-actions">
-          {isAdmin ? (
-            <button className="secondary-button compact-button" type="button" onClick={onOpenManager}>
-              <AppIcon type="plus" />
-              <span>{t("openManager", "Add New Partner")}</span>
-            </button>
-          ) : null}
-          <button className="secondary-button compact-button" type="button" onClick={onBackToList}>
-            <AppIcon type="back" />
-            <span>{t("backToList", "Back to list")}</span>
-          </button>
-        </div>
-      </section>
-
-      <section className="bu-directory">
         <div className="directory-controls directory-controls-wide">
           <div className="segmented-controls" aria-label="Direction">
             <button
@@ -2644,14 +2685,6 @@ function BusinessUnitDirectory({
         </div>
 
         <section className="partners-panel">
-          <div className="panel-header">
-            <div>
-              <span className="section-kicker">Directory</span>
-              <strong>Partners</strong>
-            </div>
-            <small>{entries.length} partners</small>
-          </div>
-
           {isAdmin ? (
             <div className="admin-partner-toolbar">
               <div className="admin-partner-toolbar-copy">
@@ -2833,60 +2866,6 @@ function BusinessUnitDirectory({
   );
 }
 
-function AdminCommandCenter({
-  adminActionBusy,
-  currentBusinessUnit,
-  onExitAdmin,
-  onOpenBulkManager,
-  onOpenBusinessUnitManager,
-  onOpenManager,
-  selectedPartner,
-  t,
-  targetRef
-}) {
-  return (
-    <section className="admin-command-center" ref={targetRef}>
-      <div className="admin-command-copy">
-        <span className="section-kicker">{t("adminMode", "Admin mode")}</span>
-        <strong>Control center</strong>
-        <small>
-          {selectedPartner?.label
-            ? selectedPartner.label
-            : currentBusinessUnit?.label || "Directory controls"}
-        </small>
-      </div>
-
-      <div className="admin-command-actions">
-        <button className="secondary-button compact-button" type="button" onClick={onOpenManager}>
-          <AppIcon type="plus" />
-          <span>{t("openManager", "Add New Partner")}</span>
-        </button>
-        <button
-          className="secondary-button compact-button"
-          type="button"
-          onClick={onOpenBusinessUnitManager}
-        >
-          <AppIcon type="office" />
-          <span>{t("openBusinessUnitManager", "Add New Business Unit")}</span>
-        </button>
-        <button className="secondary-button compact-button" type="button" onClick={onOpenBulkManager}>
-          <AppIcon type="upload" />
-          <span>{t("bulkUpdate", "Bulk update")}</span>
-        </button>
-        <button
-          className="secondary-button compact-button admin-danger-button"
-          type="button"
-          onClick={onExitAdmin}
-          disabled={adminActionBusy}
-        >
-          <AppIcon type="logout" />
-          <span>{t("logout", "Exit admin")}</span>
-        </button>
-      </div>
-    </section>
-  );
-}
-
 function PartnerSearchResults({ onBrowsePartner, results, t }) {
   return (
     <section className="results-panel">
@@ -2931,6 +2910,44 @@ function PartnerSearchResults({ onBrowsePartner, results, t }) {
   );
 }
 
+function ManagerModalHero({ badge, description, iconType, onClose, title, titleId }) {
+  return (
+    <div className="manager-modal-hero">
+      <div className="manager-modal-hero-main">
+        <div className="manager-modal-hero-icon" aria-hidden="true">
+          <AppIcon type={iconType} />
+        </div>
+
+        <div className="manager-header-copy manager-header-copy-hero">
+          <span className="version-chip">{badge}</span>
+          <strong id={titleId}>{title}</strong>
+          <p>{description}</p>
+        </div>
+      </div>
+
+      <button className="manager-close-button" type="button" onClick={onClose} aria-label="Close">
+        <AppIcon type="close" />
+      </button>
+    </div>
+  );
+}
+
+function ManagerField({ after = null, children, className = "", hint = "", iconType, label }) {
+  return (
+    <label className={`manager-field ${className}`.trim()}>
+      <span>{label}</span>
+      <div className="manager-input-shell">
+        <span className="manager-input-icon" aria-hidden="true">
+          <AppIcon type={iconType} />
+        </span>
+        {children}
+      </div>
+      {after}
+      {hint ? <small className="form-note">{hint}</small> : null}
+    </label>
+  );
+}
+
 function AdminAccessModal({
   busy,
   error,
@@ -2956,15 +2973,17 @@ function AdminAccessModal({
         aria-labelledby="admin-access-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="manager-header-copy">
-          <span className="version-chip">{t("adminMode", "Admin mode")}</span>
-          <strong id="admin-access-title">{t("adminAccessTitle", "Admin access")}</strong>
-          <p>{t("adminWelcomeCopy", "Use your admin credentials to manage links and access the portal tools.")}</p>
-        </div>
+        <ManagerModalHero
+          badge={t("adminMode", "Admin mode")}
+          description={t("adminWelcomeCopy", "Use your admin credentials to manage links and access the portal tools.")}
+          iconType="shield"
+          onClose={onClose}
+          title={t("adminAccessTitle", "Admin access")}
+          titleId="admin-access-title"
+        />
 
         <form className="manager-form admin-access-form" onSubmit={onSubmit}>
-          <label>
-            <span>{t("userId", "UserId")}</span>
+          <ManagerField iconType="users" label={t("userId", "UserId")}>
             <input
               autoComplete="username"
               type="text"
@@ -2972,10 +2991,9 @@ function AdminAccessModal({
               placeholder={t("userIdPlaceholder", "Enter your UserId")}
               onChange={(event) => onUsernameChange(event.target.value)}
             />
-          </label>
+          </ManagerField>
 
-          <label>
-            <span>{t("passwordLabel", "Password")}</span>
+          <ManagerField iconType="lock" label={t("passwordLabel", "Password")}>
             <input
               autoComplete="current-password"
               type="password"
@@ -2983,16 +3001,28 @@ function AdminAccessModal({
               placeholder={t("passwordPlaceholder", "Enter your password")}
               onChange={(event) => onPasswordChange(event.target.value)}
             />
-          </label>
+          </ManagerField>
+
+          <div className="admin-access-extras">
+            <label className="admin-access-checkbox">
+              <input type="checkbox" checked readOnly />
+              <span>{t("rememberMe", "Remember me")}</span>
+            </label>
+
+            <a className="admin-access-link" href={`mailto:${SUPPORT_EMAIL}`}>
+              {t("forgotPassword", "Forgot password?")}
+            </a>
+          </div>
 
           {error ? <div className="form-error">{error}</div> : null}
 
-          <div className="form-actions">
+          <div className="form-actions admin-access-actions">
             <button className="secondary-button compact-button" type="button" onClick={onClose}>
               {t("cancel", "Cancel")}
             </button>
             <button className="primary-button compact-button" type="submit" disabled={busy}>
-              {busy ? "Signing in..." : t("signIn", "Sign in")}
+              <span>{busy ? "Signing in..." : t("signIn", "Sign in")}</span>
+              <AppIcon type="forward" />
             </button>
           </div>
         </form>
@@ -3028,23 +3058,31 @@ function DirectoryManager({
         aria-labelledby="manager-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="panel-header manager-header">
-          <div className="manager-header-copy">
-            <span className="version-chip">
-              {mode === "edit" ? t("editEntry", "Edit") : t("openManager", "Add New Partner")}
-            </span>
-            <strong id="manager-title">{t("managerTitle", "Add New Partner")}</strong>
-            <p>{t("managerCopy", "Changes are saved through the directory data service and are available to the portal immediately.")}</p>
-          </div>
+        <ManagerModalHero
+          badge={mode === "edit" ? t("editEntry", "Edit") : t("openManager", "Add New Partner")}
+          description={t("managerCopy", "Changes are saved through the directory data service and are available to the portal immediately.")}
+          iconType="users"
+          onClose={onClose}
+          title={mode === "edit" ? t("editEntry", "Edit partner") : t("managerTitle", "Add New Partner")}
+          titleId="manager-title"
+        />
 
-          <button className="secondary-button compact-button" type="button" onClick={onClose}>
-            {t("cancel", "Cancel")}
-          </button>
-        </div>
-
-        <form className="manager-form" onSubmit={onSubmit}>
-          <label>
-            <span>{t("businessUnit", "Business unit")}</span>
+        <form className="manager-form partner-manager-form" onSubmit={onSubmit}>
+          <ManagerField
+            after={
+              <button
+                className="secondary-button compact-button manager-helper-button"
+                type="button"
+                onClick={onOpenBusinessUnitManager}
+                disabled={saving}
+              >
+                <AppIcon type="office" />
+                <span>{t("openBusinessUnitManager", "Add New Business Unit")}</span>
+              </button>
+            }
+            iconType="office"
+            label={t("businessUnit", "Business unit")}
+          >
             <select value={values.bu} onChange={(event) => onChange("bu", event.target.value)}>
               <option value="">Select BU</option>
               {businessUnits.map((businessUnit) => (
@@ -3053,52 +3091,39 @@ function DirectoryManager({
                 </option>
               ))}
             </select>
-            <button
-              className="secondary-button compact-button manager-helper-button"
-              type="button"
-              onClick={onOpenBusinessUnitManager}
-              disabled={saving}
-            >
-              <AppIcon type="office" />
-              <span>{t("openBusinessUnitManager", "Add New Business Unit")}</span>
-            </button>
-          </label>
+          </ManagerField>
 
-          <label>
-            <span>{t("section", "Section")}</span>
+          <ManagerField iconType="grid" label={t("section", "Section")}>
             <select value={values.type} onChange={(event) => onChange("type", event.target.value)}>
               <option value="inbound">Inbound</option>
               <option value="outbound">Outbound</option>
             </select>
-          </label>
+          </ManagerField>
 
-          <label className="manager-field-full">
-            <span>{t("label", "Label")}</span>
+          <ManagerField className="manager-field-full" iconType="tag" label={t("label", "Label")}>
             <input
               type="text"
               value={values.label}
               onChange={(event) => onChange("label", event.target.value)}
             />
-          </label>
+          </ManagerField>
 
-          <label className="manager-field-full">
-            <span>{t("url", "Path or full URL")}</span>
+          <ManagerField className="manager-field-full" iconType="folder" label={t("url", "Path or full URL")}>
             <input
               type="text"
               value={values.url}
               placeholder={t("urlPlaceholder", "/B2BI_archives/... or full URL")}
               onChange={(event) => onChange("url", event.target.value)}
             />
-          </label>
+          </ManagerField>
 
-          <label className="manager-field-full">
-            <span>{t("contact", "Backup email or note")}</span>
+          <ManagerField className="manager-field-full" iconType="mail" label={t("contact", "Backup email or note")}>
             <input
               type="text"
               value={values.backup}
               onChange={(event) => onChange("backup", event.target.value)}
             />
-          </label>
+          </ManagerField>
 
           {error ? <div className="form-error">{error}</div> : null}
 
@@ -3148,28 +3173,24 @@ function BusinessUnitManager({
         aria-labelledby="business-unit-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="panel-header manager-header">
-          <div className="manager-header-copy">
-            <span className="version-chip">{t("openBusinessUnitManager", "Add New Business Unit")}</span>
-            <strong id="business-unit-title">
-              {t("businessUnitManagerTitle", "Create business unit")}
-            </strong>
-            <p>
-              {t(
-                "businessUnitManagerCopy",
-                "Add a business unit here and it will be saved through the existing directory data service. No backend code update is needed."
-              )}
-            </p>
-          </div>
-
-          <button className="secondary-button compact-button" type="button" onClick={onClose}>
-            {t("cancel", "Cancel")}
-          </button>
-        </div>
+        <ManagerModalHero
+          badge={t("openBusinessUnitManager", "Add New Business Unit")}
+          description={t(
+            "businessUnitManagerCopy",
+            "Add a business unit here and it will be saved through the existing directory data service. No backend code update is needed."
+          )}
+          iconType="office"
+          onClose={onClose}
+          title={t("businessUnitManagerTitle", "Create business unit")}
+          titleId="business-unit-title"
+        />
 
         <form className="manager-form business-unit-form" onSubmit={onSubmit}>
-          <label>
-            <span>{t("businessUnitCode", "BU code")}</span>
+          <ManagerField
+            hint={t("businessUnitCodeHint", "Use letters, numbers, - or _. Example: de")}
+            iconType="code"
+            label={t("businessUnitCode", "BU code")}
+          >
             <input
               type="text"
               value={values.id}
@@ -3177,13 +3198,9 @@ function BusinessUnitManager({
               onChange={(event) => onChange("id", event.target.value)}
               disabled={saving}
             />
-            <small className="form-note">
-              {t("businessUnitCodeHint", "Use letters, numbers, - or _. Example: de")}
-            </small>
-          </label>
+          </ManagerField>
 
-          <label>
-            <span>{t("businessUnitName", "Business unit name")}</span>
+          <ManagerField iconType="office" label={t("businessUnitName", "Business unit name")}>
             <input
               type="text"
               value={values.name}
@@ -3191,10 +3208,9 @@ function BusinessUnitManager({
               onChange={(event) => onChange("name", event.target.value)}
               disabled={saving}
             />
-          </label>
+          </ManagerField>
 
-          <label>
-            <span>{t("businessUnitLabel", "Business unit label")}</span>
+          <ManagerField iconType="tag" label={t("businessUnitLabel", "Business unit label")}>
             <input
               type="text"
               value={values.label}
@@ -3202,24 +3218,31 @@ function BusinessUnitManager({
               onChange={(event) => onChange("label", event.target.value)}
               disabled={saving}
             />
-          </label>
+          </ManagerField>
 
-          <label>
-            <span>{t("businessUnitFlag", "Flag or short badge")}</span>
+          <ManagerField
+            hint={t("businessUnitFlagHint", "Optional. Leave empty to auto-generate a badge from the BU code.")}
+            iconType="flag"
+            label={t("businessUnitFlag", "Flag or short badge")}
+          >
             <input
               type="text"
               value={values.flag}
-              placeholder={t("businessUnitFlagPlaceholder", "=ç¬=ç¬")}
+              placeholder={t("businessUnitFlagPlaceholder", "IN")}
               onChange={(event) => onChange("flag", event.target.value)}
               disabled={saving}
             />
-            <small className="form-note">
-              {t("businessUnitFlagHint", "Optional. Leave empty to auto-generate a badge from the BU code.")}
-            </small>
-          </label>
+          </ManagerField>
 
-          <label className="manager-field-full">
-            <span>{t("businessUnitFlagId", "Flag asset id")}</span>
+          <ManagerField
+            className="manager-field-full"
+            hint={t(
+              "businessUnitFlagIdHint",
+              "Optional. Use this only if a matching SVG already exists in public/flags."
+            )}
+            iconType="image"
+            label={t("businessUnitFlagId", "Flag asset id")}
+          >
             <input
               type="text"
               value={values.flagId}
@@ -3227,13 +3250,7 @@ function BusinessUnitManager({
               onChange={(event) => onChange("flagId", event.target.value)}
               disabled={saving}
             />
-            <small className="form-note">
-              {t(
-                "businessUnitFlagIdHint",
-                "Optional. Use this only if a matching SVG already exists in public/flags."
-              )}
-            </small>
-          </label>
+          </ManagerField>
 
           {error ? <div className="form-error">{error}</div> : null}
 
@@ -3275,56 +3292,62 @@ function BulkPartnerManager({
         aria-labelledby="bulk-manager-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="panel-header manager-header">
-          <div className="manager-header-copy">
-            <span className="version-chip">{t("bulkUpdate", "Bulk update")}</span>
-            <strong id="bulk-manager-title">{t("bulkUpdateTitle", "Bulk partner update")}</strong>
-            <p>
-              {t(
-                "bulkUpdateCopy",
-                "Download the CSV template, fill it with multiple partners, and upload it here. CSV and JSON files are supported."
-              )}
-            </p>
-          </div>
-
-          <button className="secondary-button compact-button" type="button" onClick={onClose}>
-            {t("cancel", "Cancel")}
-          </button>
-        </div>
+        <ManagerModalHero
+          badge={t("bulkUpdate", "Bulk update")}
+          description={t(
+            "bulkUpdateCopy",
+            "Download the CSV template, fill it with multiple partners, and upload it here. CSV and JSON files are supported."
+          )}
+          iconType="upload"
+          onClose={onClose}
+          title={t("bulkUpdateTitle", "Bulk partner update")}
+          titleId="bulk-manager-title"
+        />
 
         <form className="manager-form bulk-manager-form" onSubmit={onSubmit}>
-          <div className="manager-field-full bulk-template-actions">
+          <div className="manager-field-full bulk-template-actions manager-callout-card">
+            <div className="manager-callout-copy">
+              <span className="manager-input-icon manager-input-icon-static" aria-hidden="true">
+                <AppIcon type="download" />
+              </span>
+              <div>
+                <strong>{t("downloadTemplate", "Download template")}</strong>
+                <small className="bulk-note">
+                  {t(
+                    "bulkTemplateHint",
+                    "Leave id empty to add a new partner. Keep or supply id to update an existing one."
+                  )}
+                </small>
+              </div>
+            </div>
             <button
               className="secondary-button compact-button"
               type="button"
               onClick={onDownloadTemplate}
               disabled={saving}
             >
-              <AppIcon type="download" />
               <span>{t("downloadTemplate", "Download template")}</span>
             </button>
-            <small className="bulk-note">
-              {t(
-                "bulkTemplateHint",
-                "Leave id empty to add a new partner. Keep or supply id to update an existing one."
-              )}
-            </small>
           </div>
 
-          <label className="manager-field-full">
-            <span>{t("bulkUploadFile", "Bulk update file")}</span>
+          <ManagerField
+            className="manager-field-full"
+            hint={
+              file?.name
+                ? `${t("selectedFile", "Selected file")}: ${file.name}`
+                : t("bulkUploadHint", "Choose a CSV or JSON file with partner entries.")
+            }
+            iconType="upload"
+            label={t("bulkUploadFile", "Bulk update file")}
+          >
             <input
+              className="manager-file-input"
               type="file"
               accept=".csv,.json,text/csv,application/json"
               onChange={onFileChange}
               disabled={saving}
             />
-            <small className="bulk-file-meta">
-              {file?.name
-                ? `${t("selectedFile", "Selected file")}: ${file.name}`
-                : t("bulkUploadHint", "Choose a CSV or JSON file with partner entries.")}
-            </small>
-          </label>
+          </ManagerField>
 
           {error ? <div className="form-error">{error}</div> : null}
 
@@ -3356,45 +3379,12 @@ function SearchPanel({
 
   return (
     <section className="search-panel">
-      <div className="search-panel-glow search-panel-glow-one" aria-hidden="true" />
-      <div className="search-panel-glow search-panel-glow-two" aria-hidden="true" />
-
-      <div className="search-panel-header">
-        <div>
-          <span className="section-kicker">Search</span>
-          
-        </div>
-
-        <div className="segmented-controls search-mode-switch" aria-label="Search mode">
-          <button
-            className={mode === "partner" ? "active" : ""}
-            type="button"
-            onClick={() => onModeChange("partner")}
-          >
-            <AppIcon type="users" />
-            <span>Partner Search</span>
-          </button>
-          <button
-            className={mode === "file" ? "active" : ""}
-            type="button"
-            onClick={() => onModeChange("file")}
-          >
-            <AppIcon type="file" />
-            <span>File Search</span>
-          </button>
-        </div>
-      </div>
-
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
         <div className="search-input-shell search-input-shell-large">
           <input
             type="search"
             value={query}
-            placeholder={
-              mode === "partner"
-                ? t("searchPartnerPlaceholder", "Search partner")
-                : t("searchFilePlaceholder", "Search all production files")
-            }
+            placeholder="Search Partner or File..."
             onChange={(event) => setQuery(event.target.value)}
           />
           <div className="search-input-actions">
@@ -3408,12 +3398,24 @@ function SearchPanel({
                 <AppIcon type="close" />
               </button>
             ) : null}
-            <span className="search-mode-icon">
-              <AppIcon type={mode === "partner" ? "users" : "file"} />
-            </span>
-            <span className="search-mode-icon accent">
-              <AppIcon type="search" />
-            </span>
+            <button
+              className={`search-mode-button ${mode === "partner" ? "active" : ""}`.trim()}
+              type="button"
+              aria-label="Partner Search"
+              title="Partner Search"
+              onClick={() => onModeChange("partner")}
+            >
+              <AppIcon type="users" />
+            </button>
+            <button
+              className={`search-mode-button ${mode === "file" ? "active" : ""}`.trim()}
+              type="button"
+              aria-label="File Search"
+              title="File Search"
+              onClick={() => onModeChange("file")}
+            >
+              <AppIcon type="file" />
+            </button>
           </div>
         </div>
       </form>
@@ -3909,6 +3911,53 @@ function AppIcon({ type }) {
       <svg {...commonProps}>
         <path d="M12 5v14" />
         <path d="M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (type === "code") {
+    return (
+      <svg {...commonProps}>
+        <path d="m9 8-4 4 4 4" />
+        <path d="m15 8 4 4-4 4" />
+        <path d="M13 6.5 11 17.5" />
+      </svg>
+    );
+  }
+
+  if (type === "tag") {
+    return (
+      <svg {...commonProps}>
+        <path d="M11 4.5H6.5a1 1 0 0 0-1 1V10l7.5 7.5a1 1 0 0 0 1.4 0l3.1-3.1a1 1 0 0 0 0-1.4Z" />
+        <path d="M8.5 8.5h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "flag") {
+    return (
+      <svg {...commonProps}>
+        <path d="M6.5 19V5.5" />
+        <path d="M6.5 6h8l-1.5 3 1.5 3h-8" />
+      </svg>
+    );
+  }
+
+  if (type === "image") {
+    return (
+      <svg {...commonProps}>
+        <rect x="4.5" y="5.5" width="15" height="13" rx="2" />
+        <path d="m7.5 15 3-3 2.5 2.5 2-2 2 2.5" />
+        <path d="M15.5 9.5h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "lock") {
+    return (
+      <svg {...commonProps}>
+        <rect x="6.5" y="10.5" width="11" height="8" rx="2" />
+        <path d="M9 10.5V8.8a3 3 0 1 1 6 0v1.7" />
       </svg>
     );
   }
