@@ -9,7 +9,7 @@ import {
 import { BU_OPTIONS, LANGUAGES } from "./config";
 import { getText } from "./text";
 import useDirectoryData from "./useDirectoryData";
-import { mergeBusinessUnits } from "./utils";
+import { mergeBusinessUnits, normalizeEntry } from "./utils";
 import LanguageDropdown from "./components/LanguageDropdown";
 import ThemeToggle from "./components/ThemeToggle";
 
@@ -19,6 +19,9 @@ const LANGUAGE_STORAGE_KEY = "apf_v2_language";
 const DIRECTORY_API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
 const DIRECTORY_DATA_API_URL = `${DIRECTORY_API_BASE}/api/directory-data`;
 const ADMIN_LOGIN_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
+const BULK_TEMPLATE_FILE_NAME = "apf-partner-bulk-template.csv";
+const BULK_TEMPLATE_HEADERS = ["id", "bu", "type", "label", "url", "backup"];
+const SUPPORT_EMAIL = "HCL-EDI-TEAM@hcltech.com";
 const EMPTY_BROWSER_STATE = {
   loading: false,
   error: "",
@@ -44,6 +47,10 @@ const EMPTY_FILE_PREVIEW_STATE = {
   notice: "",
   previewable: false,
   open: false
+};
+const DEFAULT_CLIENT_SESSION = {
+  role: "client",
+  username: "portal-user"
 };
 const DEFAULT_BU_VISUAL = {
   accent: "#22d3ee",
@@ -107,6 +114,186 @@ function createManagerDraft(defaults = {}) {
     backup: "",
     ...defaults
   };
+}
+
+function createBusinessUnitDraft(defaults = {}) {
+  return {
+    id: "",
+    label: "",
+    name: "",
+    flag: "",
+    flagId: "",
+    ...defaults
+  };
+}
+
+function normalizeBusinessUnitCode(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+}
+
+function buildFlagEmoji(countryCode) {
+  const normalizedCode = String(countryCode || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+
+  if (normalizedCode.length !== 2) {
+    return "";
+  }
+
+  return Array.from(normalizedCode)
+    .map((character) => String.fromCodePoint(127397 + character.charCodeAt(0)))
+    .join("");
+}
+
+function getBusinessUnitFlagFallback(businessUnitId) {
+  return buildFlagEmoji(businessUnitId) || String(businessUnitId || "").trim().toUpperCase();
+}
+
+function escapeCsvValue(value) {
+  const normalizedValue = String(value ?? "");
+
+  return /[",\n\r]/.test(normalizedValue)
+    ? `"${normalizedValue.replace(/"/g, '""')}"`
+    : normalizedValue;
+}
+
+function buildPartnerBulkTemplate() {
+  const rows = [
+    BULK_TEMPLATE_HEADERS,
+    ["", "fr", "inbound", "Sample Partner", "/B2BI_archives/RECU/sample-partner", "sample@example.com"]
+  ];
+
+  return `\uFEFF${rows.map((row) => row.map(escapeCsvValue).join(",")).join("\n")}`;
+}
+
+function parseCsvText(rawValue) {
+  const rows = [];
+  let currentRow = [];
+  let currentValue = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < rawValue.length; index += 1) {
+    const character = rawValue[index];
+
+    if (character === '"') {
+      if (insideQuotes && rawValue[index + 1] === '"') {
+        currentValue += '"';
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+
+      continue;
+    }
+
+    if (character === "," && !insideQuotes) {
+      currentRow.push(currentValue);
+      currentValue = "";
+      continue;
+    }
+
+    if ((character === "\n" || character === "\r") && !insideQuotes) {
+      if (character === "\r" && rawValue[index + 1] === "\n") {
+        index += 1;
+      }
+
+      currentRow.push(currentValue);
+      rows.push(currentRow);
+      currentRow = [];
+      currentValue = "";
+      continue;
+    }
+
+    currentValue += character;
+  }
+
+  if (currentValue || currentRow.length) {
+    currentRow.push(currentValue);
+    rows.push(currentRow);
+  }
+
+  return rows;
+}
+
+function normalizeBulkImportEntry(entry, rowLabel) {
+  const rawEntry = {
+    id: String(entry?.id || "").trim(),
+    bu: String(entry?.bu || "").trim().toLowerCase(),
+    type: String(entry?.type || "inbound").trim().toLowerCase(),
+    label: String(entry?.label || "").trim(),
+    url: String(entry?.url || "").trim(),
+    backup: String(entry?.backup || "").trim()
+  };
+
+  if (!rawEntry.bu || !rawEntry.type || !rawEntry.label || !rawEntry.url) {
+    throw new Error(`${rowLabel} must include bu, type, label, and url.`);
+  }
+
+  return normalizeEntry({
+    ...rawEntry,
+    id: rawEntry.id || createEntryId()
+  });
+}
+
+async function parseBulkImportFile(file) {
+  const rawValue = (await file.text()).replace(/^\uFEFF/, "");
+
+  if (!rawValue.trim()) {
+    throw new Error("The selected bulk file is empty.");
+  }
+
+  const looksLikeJson =
+    /\.json$/i.test(file.name || "") ||
+    rawValue.trimStart().startsWith("{") ||
+    rawValue.trimStart().startsWith("[");
+
+  if (looksLikeJson) {
+    const parsedValue = JSON.parse(rawValue);
+    const rawEntries = Array.isArray(parsedValue)
+      ? parsedValue
+      : Array.isArray(parsedValue?.entries)
+        ? parsedValue.entries
+        : parsedValue && typeof parsedValue === "object"
+          ? [parsedValue]
+          : [];
+
+    if (!rawEntries.length) {
+      throw new Error("The JSON file does not contain any partner entries.");
+    }
+
+    return rawEntries.map((entry, index) =>
+      normalizeBulkImportEntry(entry, `Entry ${index + 1}`)
+    );
+  }
+
+  const rows = parseCsvText(rawValue).filter((row) =>
+    row.some((cell) => String(cell || "").trim())
+  );
+
+  if (rows.length < 2) {
+    throw new Error("The CSV file must include a header row and at least one partner row.");
+  }
+
+  const headers = rows[0].map((header) => String(header || "").trim().toLowerCase());
+  const requiredHeaders = ["bu", "type", "label", "url"];
+  const missingHeaders = requiredHeaders.filter((header) => !headers.includes(header));
+
+  if (missingHeaders.length) {
+    throw new Error(`Missing required CSV column(s): ${missingHeaders.join(", ")}.`);
+  }
+
+  return rows.slice(1).map((row, index) => {
+    const record = headers.reduce((result, header, headerIndex) => {
+      result[header] = row[headerIndex] ?? "";
+      return result;
+    }, {});
+
+    return normalizeBulkImportEntry(record, `Row ${index + 2}`);
+  });
 }
 
 function readStoredSession() {
@@ -444,6 +631,58 @@ function getPartnerGroupKey(entry) {
   ].join("|");
 }
 
+function getPartnerGroupEntries(entries, currentEntry) {
+  const partnerGroupKey = getPartnerGroupKey(currentEntry);
+
+  return entries.filter((entry) => getPartnerGroupKey(entry) === partnerGroupKey);
+}
+
+function getBulkEntryMatchKey(entry) {
+  return [
+    String(entry?.bu || "").trim().toLowerCase(),
+    String(entry?.type || "").trim().toLowerCase(),
+    normalizePartnerLabel(entry?.label || ""),
+    getMapGroup(entry) || "default"
+  ].join("|");
+}
+
+function mergeBulkEntries(existingEntries, importedEntries) {
+  const entriesById = new Map(existingEntries.map((entry) => [entry.id, entry]));
+  const entryIdByMatchKey = new Map(
+    existingEntries.map((entry) => [getBulkEntryMatchKey(entry), entry.id])
+  );
+  let created = 0;
+  let updated = 0;
+
+  importedEntries.forEach((entry) => {
+    const matchedEntryId =
+      (entry.id && entriesById.has(entry.id) && entry.id) ||
+      entryIdByMatchKey.get(getBulkEntryMatchKey(entry));
+
+    if (matchedEntryId) {
+      const nextEntry = {
+        ...entry,
+        id: matchedEntryId
+      };
+
+      entriesById.set(matchedEntryId, nextEntry);
+      entryIdByMatchKey.set(getBulkEntryMatchKey(nextEntry), matchedEntryId);
+      updated += 1;
+      return;
+    }
+
+    entriesById.set(entry.id, entry);
+    entryIdByMatchKey.set(getBulkEntryMatchKey(entry), entry.id);
+    created += 1;
+  });
+
+  return {
+    created,
+    updated,
+    entries: [...entriesById.values()]
+  };
+}
+
 function getPreferredPartnerEntry(entries, preferredMapGroup = "bmap") {
   return (
     entries.find((entry) => getMapGroup(entry) === preferredMapGroup) ||
@@ -569,14 +808,22 @@ function ContactValue({ value, fallback }) {
 
 function App() {
   const assetBase = process.env.PUBLIC_URL || "";
-  const [session, setSession] = useState(() => readStoredSession());
+  const [session, setSession] = useState(() => readStoredSession() || DEFAULT_CLIENT_SESSION);
   const [themeMode, setThemeMode] = useState(() => readStoredTheme());
   const [language, setLanguage] = useState(() => readStoredLanguage());
   const [menuOpen, setMenuOpen] = useState(false);
+  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminLoginBusy, setAdminLoginBusy] = useState(false);
+  const [adminLoginError, setAdminLoginError] = useState("");
   const [selectedBuId, setSelectedBuId] = useState("");
   const [selectedPartnerId, setSelectedPartnerId] = useState("");
+  const [homeSearchMode, setHomeSearchMode] = useState("partner");
+  const [homePartnerSearchValue, setHomePartnerSearchValue] = useState("");
   const [fileSearchValue, setFileSearchValue] = useState("");
   const [partnerSearchValue, setPartnerSearchValue] = useState("");
+  const [partnerViewMode, setPartnerViewMode] = useState("grid");
   const [activeDirection, setActiveDirection] = useState("inbound");
   const [activeMapGroup, setActiveMapGroup] = useState("bmap");
   const [browsePath, setBrowsePath] = useState("");
@@ -593,12 +840,26 @@ function App() {
   const [filePreviewState, setFilePreviewState] = useState(EMPTY_FILE_PREVIEW_STATE);
   const [entries, setEntries] = useState([]);
   const [savedBusinessUnits, setSavedBusinessUnits] = useState([]);
+  const [selectedBusinessUnitIds, setSelectedBusinessUnitIds] = useState([]);
+  const [selectedPartnerKeys, setSelectedPartnerKeys] = useState([]);
+  const [adminActionBusy, setAdminActionBusy] = useState(false);
+  const [adminActionError, setAdminActionError] = useState("");
   const [managerOpen, setManagerOpen] = useState(false);
   const [managerMode, setManagerMode] = useState("create");
   const [managerForm, setManagerForm] = useState(() => createManagerDraft());
   const [managerSaving, setManagerSaving] = useState(false);
   const [managerError, setManagerError] = useState("");
+  const [bulkManagerOpen, setBulkManagerOpen] = useState(false);
+  const [bulkUploadFile, setBulkUploadFile] = useState(null);
+  const [bulkUploadSaving, setBulkUploadSaving] = useState(false);
+  const [bulkUploadError, setBulkUploadError] = useState("");
+  const [businessUnitManagerOpen, setBusinessUnitManagerOpen] = useState(false);
+  const [businessUnitForm, setBusinessUnitForm] = useState(() => createBusinessUnitDraft());
+  const [businessUnitSaving, setBusinessUnitSaving] = useState(false);
+  const [businessUnitError, setBusinessUnitError] = useState("");
   const menuRef = useRef(null);
+  const adminCommandCenterRef = useRef(null);
+  const homePartnerSearchQuery = useDeferredValue(homePartnerSearchValue);
   const searchQuery = useDeferredValue(fileSearchValue);
   const {
     entries: initialEntries,
@@ -611,6 +872,56 @@ function App() {
   const text = getText(language);
   const t = (key, fallback) => text[key] || fallback;
   const isAdmin = session?.role === "admin";
+  const homePartnerResults = useMemo(() => {
+    const normalizedQuery = homePartnerSearchQuery.trim().toLowerCase();
+
+    if (normalizedQuery.length < 2) {
+      return [];
+    }
+
+    const groupedEntries = new Map();
+
+    entries.forEach((entry) => {
+      const businessUnit = getBusinessUnit(businessUnits, entry.bu);
+      const searchableValue = [
+        entry.label,
+        entry.type,
+        businessUnit?.label,
+        businessUnit?.name,
+        businessUnit?.id
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (!searchableValue.includes(normalizedQuery)) {
+        return;
+      }
+
+      const groupKey = getPartnerGroupKey(entry);
+      groupedEntries.set(groupKey, [...(groupedEntries.get(groupKey) || []), entry]);
+    });
+
+    return [...groupedEntries.values()]
+      .map((groupEntries) => {
+        const entry = getPreferredPartnerEntry(groupEntries, "bmap");
+
+        if (!entry) {
+          return null;
+        }
+
+        return {
+          businessUnit: getBusinessUnit(businessUnits, entry.bu),
+          entry
+        };
+      })
+      .filter(Boolean)
+      .sort((leftResult, rightResult) =>
+        leftResult.entry.label.localeCompare(rightResult.entry.label, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        })
+      );
+  }, [businessUnits, entries, homePartnerSearchQuery]);
   const currentBusinessUnit = useMemo(
     () => businessUnits.find((businessUnit) => businessUnit.id === selectedBuId) || null,
     [businessUnits, selectedBuId]
@@ -645,6 +956,24 @@ function App() {
         })
       );
   }, [activeDirection, activeMapGroup, currentBuEntries, partnerSearchValue]);
+  const selectedBusinessUnitIdSet = useMemo(
+    () => new Set(selectedBusinessUnitIds),
+    [selectedBusinessUnitIds]
+  );
+  const allVisibleBusinessUnitsSelected =
+    businessUnits.length > 0 &&
+    businessUnits.every((businessUnit) => selectedBusinessUnitIdSet.has(businessUnit.id));
+  const selectedPartnerKeySet = useMemo(
+    () => new Set(selectedPartnerKeys),
+    [selectedPartnerKeys]
+  );
+  const visiblePartnerKeys = useMemo(
+    () => filteredBuEntries.map((entry) => getPartnerGroupKey(entry)),
+    [filteredBuEntries]
+  );
+  const allVisiblePartnersSelected =
+    visiblePartnerKeys.length > 0 &&
+    visiblePartnerKeys.every((partnerKey) => selectedPartnerKeySet.has(partnerKey));
   const selectedPartner = useMemo(
     () => currentBuEntries.find((entry) => entry.id === selectedPartnerId) || null,
     [currentBuEntries, selectedPartnerId]
@@ -695,7 +1024,8 @@ function App() {
   const canBrowseForward = browseForwardStack.length > 0;
   const showHomeView = !selectedBuId && !selectedPartner;
   const isArchiveFileSearchEnabled =
-    showHomeView || Boolean(selectedPartner && browserSearchMode === "file");
+    (showHomeView && homeSearchMode === "file") ||
+    Boolean(selectedPartner && browserSearchMode === "file");
 
   useEffect(() => {
     if (!selectedPartner) {
@@ -787,14 +1117,42 @@ function App() {
   }, [session]);
 
   useEffect(() => {
-    if (session?.role !== "admin" && managerOpen) {
-      setManagerOpen(false);
-      setManagerMode("create");
-      setManagerForm(createManagerDraft());
-      setManagerError("");
-      setManagerSaving(false);
+    if (session?.role !== "admin") {
+      if (managerOpen) {
+        setManagerOpen(false);
+        setManagerMode("create");
+        setManagerForm(createManagerDraft());
+        setManagerError("");
+        setManagerSaving(false);
+      }
+
+      if (bulkManagerOpen) {
+        setBulkManagerOpen(false);
+        setBulkUploadFile(null);
+        setBulkUploadSaving(false);
+        setBulkUploadError("");
+      }
+
+      if (businessUnitManagerOpen) {
+        setBusinessUnitManagerOpen(false);
+        setBusinessUnitForm(createBusinessUnitDraft());
+        setBusinessUnitSaving(false);
+        setBusinessUnitError("");
+      }
+
+      if (selectedPartnerKeys.length || adminActionError) {
+        setSelectedPartnerKeys([]);
+        setAdminActionError("");
+      }
     }
-  }, [managerOpen, session]);
+  }, [
+    adminActionError,
+    bulkManagerOpen,
+    businessUnitManagerOpen,
+    managerOpen,
+    selectedPartnerKeys.length,
+    session
+  ]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -825,71 +1183,32 @@ function App() {
   }, [currentBuEntries, selectedPartnerId]);
 
   useEffect(() => {
-    if (!businessUnits.length) {
-      return;
-    }
+    const visibleBusinessUnitIds = new Set(businessUnits.map((businessUnit) => businessUnit.id));
 
-    const businessUnitNameByFlagId = new Map(
-      businessUnits.map((businessUnit) => [
-        String(
-          getBusinessUnitFlagId(businessUnits, businessUnit.id) || businessUnit.id || ""
-        )
-          .trim()
-          .toLowerCase(),
-        getBusinessUnitName(businessUnits, businessUnit.id)
-      ])
-    );
-
-    document.querySelectorAll(".bu-flag:not(img)").forEach((flagNode) => {
-      const flagId = String(
-        flagNode.getAttribute("data-flag-id") || flagNode.textContent || ""
-      )
-        .trim()
-        .toLowerCase();
-      const flagSrc = getFlagAssetPath(flagId);
-
-      if (!flagSrc) {
-        return;
-      }
-
-      flagNode.setAttribute("data-flag-id", flagId);
-      flagNode.setAttribute(
-        "aria-label",
-        `${businessUnitNameByFlagId.get(flagId) || flagId.toUpperCase()} flag`
+    setSelectedBusinessUnitIds((previousSelectedBusinessUnitIds) => {
+      const nextSelectedBusinessUnitIds = previousSelectedBusinessUnitIds.filter(
+        (businessUnitId) => visibleBusinessUnitIds.has(businessUnitId)
       );
-      flagNode.textContent = "";
-      flagNode.style.backgroundImage = `url("${flagSrc}")`;
-      flagNode.style.backgroundSize = "cover";
-      flagNode.style.backgroundPosition = "center";
-      flagNode.style.backgroundRepeat = "no-repeat";
-      flagNode.style.color = "transparent";
-      flagNode.style.fontSize = "0";
+
+      return nextSelectedBusinessUnitIds.length === previousSelectedBusinessUnitIds.length
+        ? previousSelectedBusinessUnitIds
+        : nextSelectedBusinessUnitIds;
     });
-  }, [businessUnits, searchState.results.length, selectedBuId, selectedPartnerId]);
+  }, [businessUnits]);
 
   useEffect(() => {
-    const businessUnitHeader = document.querySelector(".bu-directory-hero .bu-directory-copy");
+    const visiblePartnerKeySet = new Set(visiblePartnerKeys);
 
-    if (!businessUnitHeader || !currentBusinessUnit) {
-      return;
-    }
+    setSelectedPartnerKeys((previousSelectedPartnerKeys) => {
+      const nextSelectedPartnerKeys = previousSelectedPartnerKeys.filter((partnerKey) =>
+        visiblePartnerKeySet.has(partnerKey)
+      );
 
-    const titleNode = businessUnitHeader.querySelector("strong");
-    const detailNode = businessUnitHeader.querySelector("p");
-
-    if (!titleNode) {
-      return;
-    }
-
-    titleNode.textContent = `${String(currentBusinessUnit.id || "").toUpperCase()} ${String(
-      currentBusinessUnit.name || ""
-    ).toUpperCase()}`.trim();
-
-    if (detailNode) {
-      detailNode.textContent = "";
-      detailNode.setAttribute("hidden", "true");
-    }
-  }, [currentBusinessUnit]);
+      return nextSelectedPartnerKeys.length === previousSelectedPartnerKeys.length
+        ? previousSelectedPartnerKeys
+        : nextSelectedPartnerKeys;
+    });
+  }, [visiblePartnerKeys]);
 
   useEffect(() => {
     const normalizedQuery = isArchiveFileSearchEnabled ? searchQuery.trim() : "";
@@ -1031,6 +1350,7 @@ function App() {
 
   function clearSearchState() {
     setFileSearchValue("");
+    setHomePartnerSearchValue("");
     setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     setSearchState({
       loading: false,
@@ -1038,6 +1358,22 @@ function App() {
       query: "",
       results: []
     });
+  }
+
+  function clearBusinessUnitSelection() {
+    setSelectedBusinessUnitIds([]);
+  }
+
+  function clearPartnerSelection() {
+    setSelectedPartnerKeys([]);
+  }
+
+  function handleCloseAdminLogin() {
+    setAdminLoginOpen(false);
+    setAdminUsername("");
+    setAdminPassword("");
+    setAdminLoginBusy(false);
+    setAdminLoginError("");
   }
 
   async function saveDirectoryData(nextEntries, nextBusinessUnits = savedBusinessUnits) {
@@ -1065,13 +1401,6 @@ function App() {
     return payload;
   }
 
-  function handleClientLogin() {
-    setSession({
-      role: "client",
-      username: "portal-user"
-    });
-  }
-
   async function handleAdminLogin(credentials) {
     const response = await fetch(ADMIN_LOGIN_API_URL, {
       method: "POST",
@@ -1092,11 +1421,58 @@ function App() {
     });
   }
 
+  async function handleAdminModeSubmit(event) {
+    event.preventDefault();
+    setAdminLoginBusy(true);
+    setAdminLoginError("");
+
+    try {
+      await handleAdminLogin({
+        username: adminUsername,
+        password: adminPassword
+      });
+      handleCloseAdminLogin();
+      setTimeout(() => {
+        adminCommandCenterRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 0);
+    } catch (error) {
+      setAdminLoginError(
+        error.message || t("loginErrorAdmin", "Admin access details are not correct.")
+      );
+      setAdminLoginBusy(false);
+    }
+  }
+
+  function handleOpenAdminMode() {
+    setMenuOpen(false);
+
+    if (isAdmin) {
+      adminCommandCenterRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+      return;
+    }
+
+    setAdminLoginOpen(true);
+    setAdminLoginError("");
+  }
+
   function handleOpenCreateManager() {
     if (!isAdmin) {
       return;
     }
 
+    setBusinessUnitManagerOpen(false);
+    setBusinessUnitSaving(false);
+    setBusinessUnitError("");
+    setBulkManagerOpen(false);
+    setBulkUploadFile(null);
+    setBulkUploadError("");
+    setAdminActionError("");
     setManagerMode("create");
     setManagerForm(
       createManagerDraft({
@@ -1114,6 +1490,13 @@ function App() {
       return;
     }
 
+    setBusinessUnitManagerOpen(false);
+    setBusinessUnitSaving(false);
+    setBusinessUnitError("");
+    setBulkManagerOpen(false);
+    setBulkUploadFile(null);
+    setBulkUploadError("");
+    setAdminActionError("");
     setManagerMode("edit");
     setManagerForm(
       createManagerDraft({
@@ -1138,9 +1521,66 @@ function App() {
     setManagerSaving(false);
   }
 
+  function handleOpenBulkManager() {
+    if (!isAdmin) {
+      return;
+    }
+
+    setManagerOpen(false);
+    setManagerError("");
+    setManagerSaving(false);
+    setBusinessUnitManagerOpen(false);
+    setBusinessUnitSaving(false);
+    setBusinessUnitError("");
+    setBulkUploadFile(null);
+    setBulkUploadError("");
+    setBulkUploadSaving(false);
+    setBulkManagerOpen(true);
+    setMenuOpen(false);
+  }
+
+  function handleCloseBulkManager() {
+    setBulkManagerOpen(false);
+    setBulkUploadFile(null);
+    setBulkUploadSaving(false);
+    setBulkUploadError("");
+  }
+
+  function handleOpenBusinessUnitManager() {
+    if (!isAdmin) {
+      return;
+    }
+
+    setManagerOpen(false);
+    setManagerError("");
+    setManagerSaving(false);
+    setBulkManagerOpen(false);
+    setBulkUploadFile(null);
+    setBulkUploadError("");
+    setBusinessUnitForm(createBusinessUnitDraft());
+    setBusinessUnitSaving(false);
+    setBusinessUnitError("");
+    setBusinessUnitManagerOpen(true);
+    setMenuOpen(false);
+  }
+
+  function handleCloseBusinessUnitManager() {
+    setBusinessUnitManagerOpen(false);
+    setBusinessUnitForm(createBusinessUnitDraft());
+    setBusinessUnitSaving(false);
+    setBusinessUnitError("");
+  }
+
   function handleManagerFieldChange(field, value) {
     setManagerForm((previousManagerForm) => ({
       ...previousManagerForm,
+      [field]: value
+    }));
+  }
+
+  function handleBusinessUnitFieldChange(field, value) {
+    setBusinessUnitForm((previousBusinessUnitForm) => ({
+      ...previousBusinessUnitForm,
       [field]: value
     }));
   }
@@ -1191,6 +1631,8 @@ function App() {
         resetBrowseNavigation();
       }
 
+      clearPartnerSelection();
+      setAdminActionError("");
       clearSearchState();
       handleCloseManager();
     } catch (error) {
@@ -1215,6 +1657,8 @@ function App() {
         resetBrowseNavigation();
       }
 
+      clearPartnerSelection();
+      setAdminActionError("");
       clearSearchState();
       handleCloseManager();
     } catch (error) {
@@ -1223,20 +1667,331 @@ function App() {
     }
   }
 
+  function handleBulkFileChange(event) {
+    setBulkUploadFile(event.target.files?.[0] || null);
+    setBulkUploadError("");
+  }
+
+  function handleTogglePartnerSelection(entry) {
+    const partnerKey = getPartnerGroupKey(entry);
+
+    setSelectedPartnerKeys((previousSelectedPartnerKeys) =>
+      previousSelectedPartnerKeys.includes(partnerKey)
+        ? previousSelectedPartnerKeys.filter((selectedPartnerKey) => selectedPartnerKey !== partnerKey)
+        : [...previousSelectedPartnerKeys, partnerKey]
+    );
+  }
+
+  function handleToggleBusinessUnitSelection(businessUnitId) {
+    setSelectedBusinessUnitIds((previousSelectedBusinessUnitIds) =>
+      previousSelectedBusinessUnitIds.includes(businessUnitId)
+        ? previousSelectedBusinessUnitIds.filter(
+            (selectedBusinessUnitId) => selectedBusinessUnitId !== businessUnitId
+          )
+        : [...previousSelectedBusinessUnitIds, businessUnitId]
+    );
+  }
+
+  function handleToggleSelectAllBusinessUnits() {
+    setSelectedBusinessUnitIds((previousSelectedBusinessUnitIds) => {
+      if (allVisibleBusinessUnitsSelected) {
+        return [];
+      }
+
+      return businessUnits.map((businessUnit) => businessUnit.id);
+    });
+  }
+
+  function handleToggleSelectAllVisiblePartners() {
+    setSelectedPartnerKeys((previousSelectedPartnerKeys) => {
+      if (allVisiblePartnersSelected) {
+        return previousSelectedPartnerKeys.filter(
+          (selectedPartnerKey) => !visiblePartnerKeys.includes(selectedPartnerKey)
+        );
+      }
+
+      return [...new Set([...previousSelectedPartnerKeys, ...visiblePartnerKeys])];
+    });
+  }
+
+  function handleDownloadBulkTemplate() {
+    const templateBlob = new Blob([buildPartnerBulkTemplate()], {
+      type: "text/csv;charset=utf-8;"
+    });
+    const templateUrl = window.URL.createObjectURL(templateBlob);
+    const link = document.createElement("a");
+
+    link.href = templateUrl;
+    link.download = BULK_TEMPLATE_FILE_NAME;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(templateUrl);
+  }
+
+  async function handleDeletePartner(entry) {
+    if (!isAdmin || !entry) {
+      return;
+    }
+
+    const partnerEntries = getPartnerGroupEntries(entries, entry);
+    const partnerKey = getPartnerGroupKey(entry);
+    const confirmMessage =
+      partnerEntries.length > 1
+        ? `Delete "${entry.label}" and its ${partnerEntries.length} saved links?`
+        : `Delete "${entry.label}"?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setAdminActionBusy(true);
+    setAdminActionError("");
+
+    try {
+      await saveDirectoryData(
+        entries.filter((currentEntry) => getPartnerGroupKey(currentEntry) !== partnerKey)
+      );
+
+      if (selectedPartner && getPartnerGroupKey(selectedPartner) === partnerKey) {
+        setSelectedPartnerId("");
+        resetBrowseNavigation();
+      }
+
+      clearPartnerSelection();
+      clearSearchState();
+    } catch (error) {
+      setAdminActionError(
+        error.message || t("removePartnerError", "Unable to remove the partner right now.")
+      );
+    } finally {
+      setAdminActionBusy(false);
+    }
+  }
+
+  async function handleDeleteSelectedPartners() {
+    if (!selectedPartnerKeys.length) {
+      return;
+    }
+
+    const selectedPartnerKeySetForDelete = new Set(selectedPartnerKeys);
+    const entryCountToDelete = entries.filter((entry) =>
+      selectedPartnerKeySetForDelete.has(getPartnerGroupKey(entry))
+    ).length;
+
+    if (
+      !window.confirm(
+        `Delete ${selectedPartnerKeys.length} selected partner${selectedPartnerKeys.length === 1 ? "" : "s"} and ${entryCountToDelete} saved link${entryCountToDelete === 1 ? "" : "s"}?`
+      )
+    ) {
+      return;
+    }
+
+    setAdminActionBusy(true);
+    setAdminActionError("");
+
+    try {
+      await saveDirectoryData(
+        entries.filter((entry) => !selectedPartnerKeySetForDelete.has(getPartnerGroupKey(entry)))
+      );
+
+      if (
+        selectedPartner &&
+        selectedPartnerKeySetForDelete.has(getPartnerGroupKey(selectedPartner))
+      ) {
+        setSelectedPartnerId("");
+        resetBrowseNavigation();
+      }
+
+      clearPartnerSelection();
+      clearSearchState();
+    } catch (error) {
+      setAdminActionError(
+        error.message || t("removePartnerError", "Unable to remove the partner right now.")
+      );
+    } finally {
+      setAdminActionBusy(false);
+    }
+  }
+
+  async function handleDeleteSelectedBusinessUnits() {
+    if (!isAdmin || !selectedBusinessUnitIds.length) {
+      return;
+    }
+
+    const selectedBusinessUnitIdSetForDelete = new Set(selectedBusinessUnitIds);
+    const deletedBusinessUnits = businessUnits.filter((businessUnit) =>
+      selectedBusinessUnitIdSetForDelete.has(businessUnit.id)
+    );
+    const businessUnitEntries = entries.filter((entry) =>
+      selectedBusinessUnitIdSetForDelete.has(entry.bu)
+    );
+    const confirmMessage = `Delete ${deletedBusinessUnits.length} selected business unit${deletedBusinessUnits.length === 1 ? "" : "s"} and ${businessUnitEntries.length} partner link${businessUnitEntries.length === 1 ? "" : "s"}?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setAdminActionBusy(true);
+    setAdminActionError("");
+
+    try {
+      const nextBusinessUnits = [
+        ...savedBusinessUnits.filter(
+          (businessUnit) => !selectedBusinessUnitIdSetForDelete.has(businessUnit.id)
+        ),
+        ...deletedBusinessUnits.map((businessUnit) => ({
+          id: businessUnit.id,
+          removed: true
+        }))
+      ];
+
+      await saveDirectoryData(
+        entries.filter((entry) => !selectedBusinessUnitIdSetForDelete.has(entry.bu)),
+        nextBusinessUnits
+      );
+
+      if (selectedBuId && selectedBusinessUnitIdSetForDelete.has(selectedBuId)) {
+        setSelectedBuId("");
+      }
+
+      if (selectedPartner && selectedBusinessUnitIdSetForDelete.has(selectedPartner.bu)) {
+        setSelectedPartnerId("");
+      }
+
+      resetBrowseNavigation();
+      clearBusinessUnitSelection();
+      clearPartnerSelection();
+      clearSearchState();
+    } catch (error) {
+      setAdminActionError(
+        error.message || "Unable to remove the business unit right now."
+      );
+    } finally {
+      setAdminActionBusy(false);
+    }
+  }
+
+  async function handleBulkUploadSubmit(event) {
+    event.preventDefault();
+
+    if (!bulkUploadFile) {
+      setBulkUploadError("Select a CSV or JSON file before starting the bulk update.");
+      return;
+    }
+
+    setBulkUploadSaving(true);
+    setBulkUploadError("");
+
+    try {
+      const importedEntries = await parseBulkImportFile(bulkUploadFile);
+      const mergeResult = mergeBulkEntries(entries, importedEntries);
+
+      await saveDirectoryData(mergeResult.entries);
+
+      if (importedEntries[0]) {
+        setSelectedBuId(importedEntries[0].bu);
+        setActiveDirection(importedEntries[0].type);
+        setSelectedPartnerId("");
+        resetBrowseNavigation();
+      }
+
+      clearPartnerSelection();
+      setAdminActionError("");
+      clearSearchState();
+      handleCloseBulkManager();
+    } catch (error) {
+      setBulkUploadError(
+        error.message || "Unable to process the bulk update file right now."
+      );
+      setBulkUploadSaving(false);
+    }
+  }
+
+  async function handleBusinessUnitSubmit(event) {
+    event.preventDefault();
+
+    const normalizedId = normalizeBusinessUnitCode(businessUnitForm.id);
+    const normalizedFlagId = normalizeBusinessUnitCode(businessUnitForm.flagId);
+    const normalizedLabel =
+      String(businessUnitForm.label || "").trim() || `BU ${normalizedId.toUpperCase()}`;
+    const normalizedName = String(businessUnitForm.name || "").trim() || normalizedLabel;
+    const normalizedFlag =
+      String(businessUnitForm.flag || "").trim() || getBusinessUnitFlagFallback(normalizedId);
+
+    if (!normalizedId) {
+      setBusinessUnitError("Business unit code is required. Use letters, numbers, - or _.");
+      return;
+    }
+
+    if (!normalizedName) {
+      setBusinessUnitError("Business unit name is required.");
+      return;
+    }
+
+    if (businessUnits.some((businessUnit) => businessUnit.id === normalizedId)) {
+      setBusinessUnitError(`Business unit "${normalizedId}" already exists.`);
+      return;
+    }
+
+    setBusinessUnitSaving(true);
+    setBusinessUnitError("");
+
+    try {
+      const nextBusinessUnits = [
+        ...savedBusinessUnits.filter((businessUnit) => businessUnit.id !== normalizedId),
+        {
+          id: normalizedId,
+          label: normalizedLabel,
+          name: normalizedName,
+          flag: normalizedFlag,
+          flagId: normalizedFlagId
+        }
+      ];
+
+      await saveDirectoryData(entries, nextBusinessUnits);
+
+      setSelectedBuId(normalizedId);
+      setSelectedPartnerId("");
+      resetBrowseNavigation();
+      clearBusinessUnitSelection();
+      clearPartnerSelection();
+      setAdminActionError("");
+      clearSearchState();
+      handleCloseBusinessUnitManager();
+    } catch (error) {
+      setBusinessUnitError(
+        error.message || "Unable to save the business unit right now."
+      );
+      setBusinessUnitSaving(false);
+    }
+  }
+
   function handleLogout() {
-    setSession(null);
-    setSelectedBuId("");
-    setSelectedPartnerId("");
-    resetBrowseNavigation();
-    clearSearchState();
+    setSession(DEFAULT_CLIENT_SESSION);
+    setAdminLoginOpen(false);
+    setAdminUsername("");
+    setAdminPassword("");
+    setAdminLoginBusy(false);
+    setAdminLoginError("");
+    clearBusinessUnitSelection();
+    clearPartnerSelection();
+    setAdminActionError("");
     setMenuOpen(false);
     handleCloseManager();
+    handleCloseBulkManager();
+    handleCloseBusinessUnitManager();
   }
 
   function handleReturnHome() {
     setSelectedBuId("");
     setSelectedPartnerId("");
+    setPartnerSearchValue("");
+    setPartnerViewMode("grid");
     resetBrowseNavigation();
+    clearBusinessUnitSelection();
+    clearPartnerSelection();
+    setAdminActionError("");
     clearSearchState();
     setMenuOpen(false);
   }
@@ -1244,7 +1999,12 @@ function App() {
   function handleSelectBusinessUnit(businessUnitId) {
     setSelectedBuId(businessUnitId);
     setSelectedPartnerId("");
+    setPartnerSearchValue("");
+    setPartnerViewMode("grid");
     resetBrowseNavigation();
+    clearBusinessUnitSelection();
+    clearPartnerSelection();
+    setAdminActionError("");
     clearSearchState();
   }
 
@@ -1379,24 +2139,12 @@ function App() {
   function handleToggleDirectorySortOrder() {
     setDirectorySortOrder((previousSortOrder) => (previousSortOrder === "asc" ? "desc" : "asc"));
   }
-
-  if (!session) {
-    return (
-      <LoginScreen
-        language={language}
-        onAdminLogin={handleAdminLogin}
-        onLogin={handleClientLogin}
-        onToggleTheme={() =>
-          setThemeMode((previousThemeMode) =>
-            previousThemeMode === "dark" ? "light" : "dark"
-          )
-        }
-        onSelectLanguage={setLanguage}
-        themeMode={themeMode}
-        t={t}
-      />
-    );
-  }
+  const showHomePartnerResults =
+    showHomeView && homeSearchMode === "partner" && homePartnerSearchQuery.trim().length >= 2;
+  const showFileResults =
+    Boolean(searchState.query) &&
+    ((showHomeView && homeSearchMode === "file") ||
+      Boolean(selectedPartner && browserSearchMode === "file"));
 
   return (
     <div className="app-root">
@@ -1404,7 +2152,8 @@ function App() {
         <div className="topbar-title">
           <img className="topbar-logo" src={`${assetBase}/groupecatlogo.png`} alt="Groupecat" />
           <div className="topbar-heading-copy">
-            <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
+            
+            <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILE")}</strong>
           </div>
         </div>
 
@@ -1424,11 +2173,6 @@ function App() {
             }
             label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
           />
-          {isAdmin ? (
-            <button className="secondary-button" type="button" onClick={handleOpenCreateManager}>
-              <span>{t("openManager", "Add New Partner")}</span>
-            </button>
-          ) : null}
           <button
             className="icon-action-button"
             type="button"
@@ -1440,7 +2184,7 @@ function App() {
           </button>
           <div className="menu-shell" ref={menuRef}>
             <button
-              className={`icon-action-button ${menuOpen ? "active" : ""}`.trim()}
+              className={`icon-action-button menu-trigger-button ${menuOpen ? "active" : ""}`.trim()}
               type="button"
               aria-label="Open menu"
               title="Open menu"
@@ -1450,20 +2194,27 @@ function App() {
             </button>
 
             {menuOpen ? (
-              <div className="menu-popover">
-                {isAdmin ? (
-                  <button className="menu-item" type="button" onClick={handleOpenCreateManager}>
-                    <AppIcon type="plus" />
-                    <span>{t("openManager", "Add New Partner")}</span>
-                  </button>
-                ) : null}
-                <button className="menu-item" type="button">
-                  <AppIcon type="help" />
-                  <span>Help</span>
-                </button>
-                <button className="menu-item" type="button" onClick={handleLogout}>
-                  <AppIcon type="logout" />
-                  <span>{t("logout", "Logout")}</span>
+              <div className="menu-popover menu-popover-minimal">
+                <a
+                  className="menu-item"
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <AppIcon type="mail" />
+                  <span className="menu-item-copy">
+                    <span className="menu-item-label">Help</span>
+                    <small className="menu-item-meta">{SUPPORT_EMAIL}</small>
+                  </span>
+                </a>
+
+                <button className="menu-item" type="button" onClick={handleOpenAdminMode}>
+                  <AppIcon type="shield" />
+                  <span className="menu-item-copy">
+                    <span className="menu-item-label">{t("adminMode", "Admin mode")}</span>
+                    <small className="menu-item-meta">
+                      {isAdmin ? "Enabled" : "Restricted access"}
+                    </small>
+                  </span>
                 </button>
               </div>
             ) : null}
@@ -1472,40 +2223,124 @@ function App() {
       </header>
 
       <main className="shell-body">
+        {isAdmin ? (
+          <AdminCommandCenter
+            adminActionBusy={adminActionBusy}
+            currentBusinessUnit={currentBusinessUnit}
+            onExitAdmin={handleLogout}
+            onOpenBulkManager={handleOpenBulkManager}
+            onOpenBusinessUnitManager={handleOpenBusinessUnitManager}
+            onOpenManager={handleOpenCreateManager}
+            selectedPartner={selectedPartner}
+            t={t}
+            targetRef={adminCommandCenterRef}
+          />
+        ) : null}
+
         {showHomeView ? (
           <>
-            <section className="bu-strip">
-              <div className="panel-header">
+           <section className="bu-strip bu-strip-home">
+              <div className="panel-header panel-header-centered">
                 <div>
-                  <strong>Select partner by BU</strong>
+                  <span className="section-kicker">Business units</span>
+                  
                 </div>
-                <small>{businessUnits.length} business units</small>
+                <div className="panel-header-actions">
+                  <small>{businessUnits.length} business units</small>
+                </div>
               </div>
 
-              <div className="bu-strip-grid">
+              {isAdmin ? (
+                <div className="admin-partner-toolbar">
+                  <div className="admin-partner-toolbar-copy">
+                    <strong>
+                      {selectedBusinessUnitIds.length
+                        ? `${selectedBusinessUnitIds.length} selected`
+                        : t("adminMode", "Admin mode")}
+                    </strong>
+                    <small>Business unit actions</small>
+                  </div>
+
+                  <div className="admin-partner-toolbar-actions">
+                    <button
+                      className="secondary-button compact-button"
+                      type="button"
+                      onClick={handleToggleSelectAllBusinessUnits}
+                      disabled={!businessUnits.length || adminActionBusy}
+                    >
+                      {allVisibleBusinessUnitsSelected
+                        ? t("clearSelection", "Clear selection")
+                        : t("selectAllVisible", "Select all visible")}
+                    </button>
+                    <button
+                      className="secondary-button compact-button admin-danger-button"
+                      type="button"
+                      onClick={handleDeleteSelectedBusinessUnits}
+                      disabled={!selectedBusinessUnitIds.length || adminActionBusy}
+                    >
+                      {adminActionBusy ? t("deleting", "Deleting...") : t("deleteSelected", "Delete selected")}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {adminActionError ? <div className="form-error inline-feedback">{adminActionError}</div> : null}
+
+              <div className="bu-strip-grid bu-strip-grid-centered">
                 {businessUnits.map((businessUnit) => (
-                  <button
+                  <article
                     key={businessUnit.id}
-                    type="button"
-                    className="bu-tile"
+                    className={`bu-tile ${
+                      selectedBusinessUnitIdSet.has(businessUnit.id) ? "selected" : ""
+                    }`.trim()}
                     style={getBuVisualStyle(businessUnit.id)}
-                    onClick={() => handleSelectBusinessUnit(businessUnit.id)}
                   >
-                    <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
-                    <strong>{businessUnit.label}</strong>
-                    <small>{businessUnit.name}</small>
-                  </button>
+                    <div className="bu-tile-top">
+                      <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
+                      {isAdmin ? (
+                        <label className="partner-select-toggle" onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedBusinessUnitIdSet.has(businessUnit.id)}
+                            onChange={() => handleToggleBusinessUnitSelection(businessUnit.id)}
+                          />
+                          <span>{t("select", "Select")}</span>
+                        </label>
+                      ) : null}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="bu-tile-launch"
+                      onClick={() => handleSelectBusinessUnit(businessUnit.id)}
+                    >
+                      <strong>{businessUnit.label}</strong>
+                      <small>{businessUnit.name}</small>
+                    </button>
+                  </article>
                 ))}
               </div>
             </section>
 
             <SearchPanel
-              query={fileSearchValue}
-              setQuery={setFileSearchValue}
+              fileQuery={fileSearchValue}
+              mode={homeSearchMode}
+              onFileQueryChange={setFileSearchValue}
+              onModeChange={setHomeSearchMode}
+              onPartnerQueryChange={setHomePartnerSearchValue}
+              partnerQuery={homePartnerSearchValue}
               t={t}
             />
 
-            {searchState.query ? (
+            {showHomePartnerResults ? (
+              <PartnerSearchResults
+                onBrowsePartner={handleSelectPartner}
+                results={homePartnerResults}
+                t={t}
+              />
+            ) : null}
+
+            {showFileResults ? (
               <SearchResults
                 businessUnits={businessUnits}
                 error={searchState.error}
@@ -1524,14 +2359,27 @@ function App() {
 
         {selectedBuId && !selectedPartner ? (
           <BusinessUnitDirectory
+            adminBusy={adminActionBusy}
+            adminError={adminActionError}
+            allVisiblePartnersSelected={allVisiblePartnersSelected}
             businessUnit={currentBusinessUnit}
             entries={filteredBuEntries}
+            isAdmin={isAdmin}
+            onDeletePartner={handleDeletePartner}
+            onDeleteSelectedPartners={handleDeleteSelectedPartners}
+            onEditPartner={handleOpenEditManager}
+            onOpenManager={handleOpenCreateManager}
             partnerSearchValue={partnerSearchValue}
+            partnerViewMode={partnerViewMode}
+            selectedPartnerKeys={selectedPartnerKeys}
             setPartnerSearchValue={setPartnerSearchValue}
             activeDirection={activeDirection}
+            setPartnerViewMode={setPartnerViewMode}
             setActiveDirection={setActiveDirection}
             onBackToList={handleReturnHome}
             onBrowsePartner={handleSelectPartner}
+            onTogglePartnerSelection={handleTogglePartnerSelection}
+            onToggleSelectAllPartners={handleToggleSelectAllVisiblePartners}
             t={t}
           />
         ) : null}
@@ -1553,8 +2401,19 @@ function App() {
                     className="secondary-button"
                     type="button"
                     onClick={() => handleOpenEditManager(selectedPartner)}
+                    disabled={adminActionBusy}
                   >
                     <span>{t("editEntry", "Edit")}</span>
+                  </button>
+                ) : null}
+                {isAdmin ? (
+                  <button
+                    className="secondary-button admin-danger-button"
+                    type="button"
+                    onClick={() => handleDeletePartner(selectedPartner)}
+                    disabled={adminActionBusy}
+                  >
+                    <span>{t("deleteEntry", "Delete")}</span>
                   </button>
                 ) : null}
                 <button className="secondary-button" type="button" onClick={() => setSelectedPartnerId("")}>
@@ -1563,6 +2422,8 @@ function App() {
                 </button>
               </div>
             </div>
+
+            {adminActionError ? <div className="form-error inline-feedback">{adminActionError}</div> : null}
 
             <PartnerFileControls
               activeMapGroup={currentBrowserMapGroup || activeMapGroup}
@@ -1591,11 +2452,11 @@ function App() {
                 onOpen={handleOpenSearchResult}
                 query={searchState.query}
                 results={searchState.results}
-                t={t}
-              />
-            ) : null}
+              t={t}
+            />
+          ) : null}
 
-            <DirectoryBrowser
+          <DirectoryBrowser
               browserState={browserState}
               dateSortOrder={directorySortOrder}
               filePreviewState={filePreviewState}
@@ -1619,6 +2480,7 @@ function App() {
           onChange={handleManagerFieldChange}
           onClose={handleCloseManager}
           onDelete={handleManagerDelete}
+          onOpenBusinessUnitManager={handleOpenBusinessUnitManager}
           onSubmit={handleManagerSubmit}
           open={managerOpen}
           saving={managerSaving}
@@ -1626,116 +2488,344 @@ function App() {
           values={managerForm}
         />
       ) : null}
+
+      {isAdmin ? (
+        <BulkPartnerManager
+          error={bulkUploadError}
+          file={bulkUploadFile}
+          onClose={handleCloseBulkManager}
+          onDownloadTemplate={handleDownloadBulkTemplate}
+          onFileChange={handleBulkFileChange}
+          onSubmit={handleBulkUploadSubmit}
+          open={bulkManagerOpen}
+          saving={bulkUploadSaving}
+          t={t}
+        />
+      ) : null}
+
+      {isAdmin ? (
+        <BusinessUnitManager
+          error={businessUnitError}
+          onChange={handleBusinessUnitFieldChange}
+          onClose={handleCloseBusinessUnitManager}
+          onSubmit={handleBusinessUnitSubmit}
+          open={businessUnitManagerOpen}
+          saving={businessUnitSaving}
+          t={t}
+          values={businessUnitForm}
+        />
+      ) : null}
+
+      <AdminAccessModal
+        busy={adminLoginBusy}
+        error={adminLoginError}
+        onClose={handleCloseAdminLogin}
+        onPasswordChange={setAdminPassword}
+        onSubmit={handleAdminModeSubmit}
+        onUsernameChange={setAdminUsername}
+        open={adminLoginOpen}
+        password={adminPassword}
+        t={t}
+        username={adminUsername}
+      />
     </div>
   );
 }
 
 function BusinessUnitDirectory({
+  adminBusy,
+  adminError,
+  allVisiblePartnersSelected,
   businessUnit,
   entries,
+  isAdmin,
+  onDeletePartner,
+  onDeleteSelectedPartners,
+  onEditPartner,
+  onOpenManager,
   partnerSearchValue,
+  partnerViewMode,
+  selectedPartnerKeys,
   setPartnerSearchValue,
   activeDirection,
+  setPartnerViewMode,
   setActiveDirection,
   onBackToList,
   onBrowsePartner,
+  onTogglePartnerSelection,
+  onToggleSelectAllPartners,
   t
 }) {
   const businessUnitTitle = [businessUnit?.label || "BU", businessUnit?.name || "Business unit"]
     .filter(Boolean)
     .join(" ");
+  const selectedPartnerKeySet = new Set(selectedPartnerKeys);
 
   return (
     <section className="bu-directory-shell" style={getBuVisualStyle(businessUnit?.id)}>
-      <div className="directory-controls">
-        <div className="segmented-controls" aria-label="Direction">
-          <button
-            className={activeDirection === "inbound" ? "active" : ""}
-            type="button"
-            onClick={() => setActiveDirection("inbound")}
-          >
-            Inbound
-          </button>
-          <button
-            className={activeDirection === "outbound" ? "active" : ""}
-            type="button"
-            onClick={() => setActiveDirection("outbound")}
-          >
-            Outbound
-          </button>
+      <section className="bu-directory-hero">
+        <div className="bu-directory-copy">
+          <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag bu-directory-flag" />
+          <div>
+            <span className="section-kicker">Business unit</span>
+            <strong>{businessUnitTitle}</strong>
+            <p>{entries.length} partners</p>
+          </div>
         </div>
 
-        <div className="search-input-shell partner-search-shell directory-search-shell">
-          <AppIcon type="search" />
-          <input
-            type="search"
-            value={partnerSearchValue}
-            placeholder={t("searchPartnerPlaceholder", "Search partner")}
-            onChange={(event) => setPartnerSearchValue(event.target.value)}
-          />
+        <div className="bu-directory-hero-actions">
+          {isAdmin ? (
+            <button className="secondary-button compact-button" type="button" onClick={onOpenManager}>
+              <AppIcon type="plus" />
+              <span>{t("openManager", "Add New Partner")}</span>
+            </button>
+          ) : null}
+          <button className="secondary-button compact-button" type="button" onClick={onBackToList}>
+            <AppIcon type="back" />
+            <span>{t("backToList", "Back to list")}</span>
+          </button>
         </div>
-
-        <button className="secondary-button compact-button" type="button" onClick={onBackToList}>
-          <AppIcon type="back" />
-          <span>{t("backToList", "Back to list")}</span>
-        </button>
-      </div>
+      </section>
 
       <section className="bu-directory">
-        <div className="bu-directory-hero">
-          <div className="bu-directory-copy">
-            <span className="bu-pill bu-pill-large">
-              <span>{businessUnit?.flag || businessUnit?.label || "BU"}</span>
-            </span>
-            <strong>{businessUnitTitle}</strong>
+        <div className="directory-controls directory-controls-wide">
+          <div className="segmented-controls" aria-label="Direction">
+            <button
+              className={activeDirection === "inbound" ? "active" : ""}
+              type="button"
+              onClick={() => setActiveDirection("inbound")}
+            >
+              Inbound
+            </button>
+            <button
+              className={activeDirection === "outbound" ? "active" : ""}
+              type="button"
+              onClick={() => setActiveDirection("outbound")}
+            >
+              Outbound
+            </button>
+          </div>
+
+          <div className="search-input-shell partner-search-shell directory-search-shell">
+            <input
+              type="search"
+              value={partnerSearchValue}
+              placeholder={t("searchPartnerPlaceholder", "Search partner")}
+              onChange={(event) => setPartnerSearchValue(event.target.value)}
+            />
+            <div className="search-input-actions" aria-hidden="true">
+              <span className="search-mode-icon">
+                <AppIcon type="users" />
+              </span>
+              <span className="search-mode-icon accent">
+                <AppIcon type="search" />
+              </span>
+            </div>
+          </div>
+
+          <div className="segmented-controls view-mode-toggle" aria-label="View">
+            <button
+              className={partnerViewMode === "grid" ? "active" : ""}
+              type="button"
+              onClick={() => setPartnerViewMode("grid")}
+            >
+              <AppIcon type="grid" />
+              <span>Grid</span>
+            </button>
+            <button
+              className={partnerViewMode === "list" ? "active" : ""}
+              type="button"
+              onClick={() => setPartnerViewMode("list")}
+            >
+              <AppIcon type="list" />
+              <span>List</span>
+            </button>
           </div>
         </div>
 
         <section className="partners-panel">
           <div className="panel-header">
             <div>
+              <span className="section-kicker">Directory</span>
               <strong>Partners</strong>
             </div>
             <small>{entries.length} partners</small>
           </div>
 
-          {entries.length ? (
-            <div className="partner-grid">
-              {entries.map((entry) => (
+          {isAdmin ? (
+            <div className="admin-partner-toolbar">
+              <div className="admin-partner-toolbar-copy">
+                <strong>
+                  {selectedPartnerKeys.length
+                    ? `${selectedPartnerKeys.length} selected`
+                    : t("adminMode", "Admin mode")}
+                </strong>
+                <small>Partner actions</small>
+              </div>
+
+              <div className="admin-partner-toolbar-actions">
                 <button
-                  className="partner-grid-card"
-                  key={entry.id}
+                  className="secondary-button compact-button"
                   type="button"
-                  style={getBuVisualStyle(entry.bu)}
-                  onClick={() => onBrowsePartner(entry)}
+                  onClick={onToggleSelectAllPartners}
+                  disabled={!entries.length || adminBusy}
                 >
-                  <div className="partner-grid-card-top">
-                    <span className="partner-grid-card-eyebrow">
-                      <BusinessUnitFlag
-                        businessUnit={businessUnit}
-                        className="bu-flag partner-grid-flag"
-                      />
-                      <span>{getDirectionLabel(entry.type)}</span>
-                    </span>
-                  </div>
-
-                  <div className="partner-grid-card-body">
-                    <strong>{entry.label}</strong>
-                  </div>
-
-                  <div className="partner-grid-card-bottom">
-                    <span className="partner-grid-card-arrow">
-                      <AppIcon type="forward" />
-                    </span>
-                  </div>
+                  {allVisiblePartnersSelected
+                    ? t("clearSelection", "Clear selection")
+                    : t("selectAllVisible", "Select all visible")}
                 </button>
-              ))}
+                <button
+                  className="secondary-button compact-button admin-danger-button"
+                  type="button"
+                  onClick={onDeleteSelectedPartners}
+                  disabled={!selectedPartnerKeys.length || adminBusy}
+                >
+                  {adminBusy ? t("deleting", "Deleting...") : t("deleteSelected", "Delete selected")}
+                </button>
+              </div>
             </div>
+          ) : null}
+
+          {adminError ? <div className="form-error inline-feedback">{adminError}</div> : null}
+
+          {entries.length ? (
+            partnerViewMode === "list" ? (
+              <div className="partner-list-modern">
+                {entries.map((entry) => (
+                  <article
+                    className={`partner-list-card ${
+                      selectedPartnerKeySet.has(getPartnerGroupKey(entry)) ? "selected" : ""
+                    }`.trim()}
+                    key={entry.id}
+                    style={getBuVisualStyle(entry.bu)}
+                  >
+                    <button
+                      className="partner-list-launch partner-list-launch-modern"
+                      type="button"
+                      onClick={() => onBrowsePartner(entry)}
+                    >
+                      <div className="partner-list-main">
+                        <span className="partner-grid-card-eyebrow">
+                          <BusinessUnitFlag
+                            businessUnit={businessUnit}
+                            className="bu-flag partner-grid-flag"
+                          />
+                          <span>{getDirectionLabel(entry.type)}</span>
+                        </span>
+                        <strong>{entry.label}</strong>
+                      </div>
+                      <span className="partner-list-arrow">
+                        <AppIcon type="forward" />
+                      </span>
+                    </button>
+
+                    {isAdmin ? (
+                      <div className="partner-grid-card-admin partner-grid-card-admin-inline">
+                        <label
+                          className="partner-select-toggle"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedPartnerKeySet.has(getPartnerGroupKey(entry))}
+                            onChange={() => onTogglePartnerSelection(entry)}
+                          />
+                          <span>{t("select", "Select")}</span>
+                        </label>
+                        <button
+                          className="secondary-button compact-button"
+                          type="button"
+                          onClick={() => onEditPartner(entry)}
+                          disabled={adminBusy}
+                        >
+                          {t("editEntry", "Edit")}
+                        </button>
+                        <button
+                          className="secondary-button compact-button admin-danger-button"
+                          type="button"
+                          onClick={() => onDeletePartner(entry)}
+                          disabled={adminBusy}
+                        >
+                          {t("deleteEntry", "Delete")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="partner-grid">
+                {entries.map((entry) => (
+                  <article
+                    className={`partner-grid-card ${
+                      selectedPartnerKeySet.has(getPartnerGroupKey(entry)) ? "selected" : ""
+                    }`.trim()}
+                    key={entry.id}
+                    style={getBuVisualStyle(entry.bu)}
+                  >
+                    <div className="partner-grid-card-top">
+                      <span className="partner-grid-card-eyebrow">
+                        <BusinessUnitFlag
+                          businessUnit={businessUnit}
+                          className="bu-flag partner-grid-flag"
+                        />
+                        <span>{getDirectionLabel(entry.type)}</span>
+                      </span>
+
+                      {isAdmin ? (
+                        <label className="partner-select-toggle" onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedPartnerKeySet.has(getPartnerGroupKey(entry))}
+                            onChange={() => onTogglePartnerSelection(entry)}
+                          />
+                          <span>{t("select", "Select")}</span>
+                        </label>
+                      ) : null}
+                    </div>
+
+                    <button
+                      className="partner-grid-card-launch"
+                      type="button"
+                      onClick={() => onBrowsePartner(entry)}
+                    >
+                      <div className="partner-grid-card-body">
+                        <strong>{entry.label}</strong>
+                      </div>
+
+                      <div className="partner-grid-card-bottom">
+                        <span className="partner-grid-card-arrow">
+                          <AppIcon type="forward" />
+                        </span>
+                      </div>
+                    </button>
+
+                    {isAdmin ? (
+                      <div className="partner-grid-card-admin">
+                        <button
+                          className="secondary-button compact-button"
+                          type="button"
+                          onClick={() => onEditPartner(entry)}
+                          disabled={adminBusy}
+                        >
+                          {t("editEntry", "Edit")}
+                        </button>
+                        <button
+                          className="secondary-button compact-button admin-danger-button"
+                          type="button"
+                          onClick={() => onDeletePartner(entry)}
+                          disabled={adminBusy}
+                        >
+                          {t("deleteEntry", "Delete")}
+                        </button>
+                      </div>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            )
           ) : (
-            <EmptyState
-              title={t("noEntries", "No partners found.")}
-              detail="Try another filter."
-            />
+            <EmptyState title={t("noEntries", "No partners found.")} detail="Try another filter." />
           )}
         </section>
       </section>
@@ -1743,203 +2833,170 @@ function BusinessUnitDirectory({
   );
 }
 
-function LoginScreen({
-  language,
-  onAdminLogin,
-  onLogin,
-  onSelectLanguage,
-  onToggleTheme,
-  themeMode,
-  t
+function AdminCommandCenter({
+  adminActionBusy,
+  currentBusinessUnit,
+  onExitAdmin,
+  onOpenBulkManager,
+  onOpenBusinessUnitManager,
+  onOpenManager,
+  selectedPartner,
+  t,
+  targetRef
 }) {
-  const assetBase = process.env.PUBLIC_URL || "";
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [adminUsername, setAdminUsername] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [adminBusy, setAdminBusy] = useState(false);
-  const [adminError, setAdminError] = useState("");
-  const [notificationMessage, setNotificationMessage] = useState("");
+  return (
+    <section className="admin-command-center" ref={targetRef}>
+      <div className="admin-command-copy">
+        <span className="section-kicker">{t("adminMode", "Admin mode")}</span>
+        <strong>Control center</strong>
+        <small>
+          {selectedPartner?.label
+            ? selectedPartner.label
+            : currentBusinessUnit?.label || "Directory controls"}
+        </small>
+      </div>
 
-  useEffect(() => {
-    const controller = new AbortController();
+      <div className="admin-command-actions">
+        <button className="secondary-button compact-button" type="button" onClick={onOpenManager}>
+          <AppIcon type="plus" />
+          <span>{t("openManager", "Add New Partner")}</span>
+        </button>
+        <button
+          className="secondary-button compact-button"
+          type="button"
+          onClick={onOpenBusinessUnitManager}
+        >
+          <AppIcon type="office" />
+          <span>{t("openBusinessUnitManager", "Add New Business Unit")}</span>
+        </button>
+        <button className="secondary-button compact-button" type="button" onClick={onOpenBulkManager}>
+          <AppIcon type="upload" />
+          <span>{t("bulkUpdate", "Bulk update")}</span>
+        </button>
+        <button
+          className="secondary-button compact-button admin-danger-button"
+          type="button"
+          onClick={onExitAdmin}
+          disabled={adminActionBusy}
+        >
+          <AppIcon type="logout" />
+          <span>{t("logout", "Exit admin")}</span>
+        </button>
+      </div>
+    </section>
+  );
+}
 
-    async function loadNotificationMessage() {
-      try {
-        const response = await fetch(`${assetBase}/notification.txt`, {
-          cache: "no-store",
-          signal: controller.signal
-        });
+function PartnerSearchResults({ onBrowsePartner, results, t }) {
+  return (
+    <section className="results-panel">
+      <div className="panel-header">
+        <div>
+          <span className="section-kicker">Partner search</span>
+          <strong>{results.length} matches</strong>
+        </div>
+      </div>
 
-        if (!response.ok) {
-          setNotificationMessage("");
-          return;
-        }
+      {results.length ? (
+        <div className="partner-list-modern">
+          {results.map(({ businessUnit, entry }) => (
+            <article
+              className="partner-list-card partner-list-card-search"
+              key={entry.id}
+              style={getBuVisualStyle(entry.bu)}
+            >
+              <button
+                className="partner-list-launch partner-list-launch-modern"
+                type="button"
+                onClick={() => onBrowsePartner(entry)}
+              >
+                <div className="partner-list-main">
+                  <span className="partner-grid-card-eyebrow">
+                    <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag partner-grid-flag" />
+                    <span>{businessUnit?.label || entry.bu}</span>
+                  </span>
+                  <strong>{entry.label}</strong>
+                </div>
+                <span className="partner-list-arrow">
+                  <AppIcon type="forward" />
+                </span>
+              </button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={t("noEntries", "No partners found.")} detail="Try another query." />
+      )}
+    </section>
+  );
+}
 
-        const nextMessage = (await response.text()).replace(/\s+/g, " ").trim();
-        setNotificationMessage(nextMessage);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          setNotificationMessage("");
-        }
-      }
-    }
-
-    loadNotificationMessage();
-
-    return () => controller.abort();
-  }, [assetBase]);
-
-  async function handleAdminSubmit(event) {
-    event.preventDefault();
-    setAdminBusy(true);
-    setAdminError("");
-
-    try {
-      await onAdminLogin({
-        username: adminUsername,
-        password: adminPassword
-      });
-    } catch (error) {
-      setAdminError(error.message || t("loginErrorAdmin", "Admin access details are not correct."));
-      setAdminBusy(false);
-    }
+function AdminAccessModal({
+  busy,
+  error,
+  onClose,
+  onPasswordChange,
+  onSubmit,
+  onUsernameChange,
+  open,
+  password,
+  t,
+  username
+}) {
+  if (!open) {
+    return null;
   }
 
   return (
-    <div className="login-page">
-      <header className="login-header">
-        <a
-          className="login-brand login-brand-left"
-          href="https://www.groupecat.com/"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Open Groupecat website"
-        >
-          <img src={`${assetBase}/groupecatlogo.png`} alt="Groupecat logo" />
-        </a>
-
-        <div className="login-controls">
-          <LanguageDropdown
-            className="login-language-dropdown"
-            currentLanguageId={language}
-            languages={LANGUAGES}
-            onSelect={onSelectLanguage}
-          />
-          <ThemeToggle
-            className="login-theme-toggle"
-            themeMode={themeMode}
-            onToggle={onToggleTheme}
-            label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
-          />
-          <button
-            className={`login-version-button ${adminOpen ? "active" : ""}`.trim()}
-            type="button"
-            aria-pressed={adminOpen}
-            onClick={() => {
-              setAdminOpen((previousAdminOpen) => !previousAdminOpen);
-              setAdminError("");
-            }}
-          >
-            <span className="login-version-label">{t("loginVersion", "Version 2.0")}</span>
-          </button>
+    <div className="manager-overlay admin-access-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="manager-modal admin-access-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-access-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="manager-header-copy">
+          <span className="version-chip">{t("adminMode", "Admin mode")}</span>
+          <strong id="admin-access-title">{t("adminAccessTitle", "Admin access")}</strong>
+          <p>{t("adminWelcomeCopy", "Use your admin credentials to manage links and access the portal tools.")}</p>
         </div>
-      </header>
 
-      {notificationMessage ? (
-        <section className="login-notification" role="status" aria-live="polite">
-          <span className="login-notification-badge">Alert</span>
-          <div className="login-notification-marquee">
-            <div className="login-notification-track">
-              <span>{notificationMessage}</span>
-              <span aria-hidden="true">{notificationMessage}</span>
-            </div>
+        <form className="manager-form admin-access-form" onSubmit={onSubmit}>
+          <label>
+            <span>{t("userId", "UserId")}</span>
+            <input
+              autoComplete="username"
+              type="text"
+              value={username}
+              placeholder={t("userIdPlaceholder", "Enter your UserId")}
+              onChange={(event) => onUsernameChange(event.target.value)}
+            />
+          </label>
+
+          <label>
+            <span>{t("passwordLabel", "Password")}</span>
+            <input
+              autoComplete="current-password"
+              type="password"
+              value={password}
+              placeholder={t("passwordPlaceholder", "Enter your password")}
+              onChange={(event) => onPasswordChange(event.target.value)}
+            />
+          </label>
+
+          {error ? <div className="form-error">{error}</div> : null}
+
+          <div className="form-actions">
+            <button className="secondary-button compact-button" type="button" onClick={onClose}>
+              {t("cancel", "Cancel")}
+            </button>
+            <button className="primary-button compact-button" type="submit" disabled={busy}>
+              {busy ? "Signing in..." : t("signIn", "Sign in")}
+            </button>
           </div>
-        </section>
-      ) : null}
-
-      <main className="login-stage">
-        <section className="login-hero">
-          <h1>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</h1>
-          <button className="primary-button login-button" type="button" onClick={onLogin}>
-            Login
-          </button>
-        </section>
-      </main>
-
-      {adminOpen ? (
-        <div className="admin-login-overlay" role="presentation" onClick={() => setAdminOpen(false)}>
-          <section
-            className="admin-login-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="admin-login-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="admin-login-copy">
-              <span className="version-chip">{t("adminMode", "Admin mode")}</span>
-              <strong id="admin-login-title">{t("adminAccessTitle", "Admin access")}</strong>
-              <p>{t("adminWelcomeCopy", "Use your admin credentials to manage links and access the portal tools.")}</p>
-            </div>
-
-            <form className="admin-login-form" onSubmit={handleAdminSubmit}>
-              <label>
-                <span>{t("userId", "UserId")}</span>
-                <input
-                  autoComplete="username"
-                  type="text"
-                  value={adminUsername}
-                  placeholder={t("userIdPlaceholder", "Enter your UserId")}
-                  onChange={(event) => setAdminUsername(event.target.value)}
-                />
-              </label>
-
-              <label>
-                <span>{t("passwordLabel", "Password")}</span>
-                <input
-                  autoComplete="current-password"
-                  type="password"
-                  value={adminPassword}
-                  placeholder={t("passwordPlaceholder", "Enter your password")}
-                  onChange={(event) => setAdminPassword(event.target.value)}
-                />
-              </label>
-
-              {adminError ? <div className="form-error">{adminError}</div> : null}
-
-              <div className="admin-login-actions">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => {
-                    setAdminOpen(false);
-                    setAdminError("");
-                  }}
-                >
-                  {t("backToClientLogin", "Back to client login")}
-                </button>
-                <button className="primary-button" type="submit" disabled={adminBusy}>
-                  {adminBusy ? "Signing in..." : t("signIn", "Sign in")}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      ) : null}
-
-      <footer className="login-footer">
-        <a
-          className="login-brand login-brand-right"
-          href="https://www.hcltech.com/"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Open HCL website"
-        >
-          <div className="hcl-mark">
-            <span>{t("poweredManagedBy", "Powered and maintained by")}</span>
-            <img src={`${assetBase}/hcltechlogo.png`} alt="HCL logo" />
-          </div>
-        </a>
-      </footer>
+        </form>
+      </section>
     </div>
   );
 }
@@ -1951,6 +3008,7 @@ function DirectoryManager({
   onChange,
   onClose,
   onDelete,
+  onOpenBusinessUnitManager,
   onSubmit,
   open,
   saving,
@@ -1995,6 +3053,15 @@ function DirectoryManager({
                 </option>
               ))}
             </select>
+            <button
+              className="secondary-button compact-button manager-helper-button"
+              type="button"
+              onClick={onOpenBusinessUnitManager}
+              disabled={saving}
+            >
+              <AppIcon type="office" />
+              <span>{t("openBusinessUnitManager", "Add New Business Unit")}</span>
+            </button>
           </label>
 
           <label>
@@ -2058,31 +3125,296 @@ function DirectoryManager({
   );
 }
 
-function SearchPanel({ query, setQuery, t }) {
+function BusinessUnitManager({
+  error,
+  onChange,
+  onClose,
+  onSubmit,
+  open,
+  saving,
+  t,
+  values
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="manager-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="manager-modal business-unit-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="business-unit-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="panel-header manager-header">
+          <div className="manager-header-copy">
+            <span className="version-chip">{t("openBusinessUnitManager", "Add New Business Unit")}</span>
+            <strong id="business-unit-title">
+              {t("businessUnitManagerTitle", "Create business unit")}
+            </strong>
+            <p>
+              {t(
+                "businessUnitManagerCopy",
+                "Add a business unit here and it will be saved through the existing directory data service. No backend code update is needed."
+              )}
+            </p>
+          </div>
+
+          <button className="secondary-button compact-button" type="button" onClick={onClose}>
+            {t("cancel", "Cancel")}
+          </button>
+        </div>
+
+        <form className="manager-form business-unit-form" onSubmit={onSubmit}>
+          <label>
+            <span>{t("businessUnitCode", "BU code")}</span>
+            <input
+              type="text"
+              value={values.id}
+              placeholder={t("businessUnitCodePlaceholder", "de")}
+              onChange={(event) => onChange("id", event.target.value)}
+              disabled={saving}
+            />
+            <small className="form-note">
+              {t("businessUnitCodeHint", "Use letters, numbers, - or _. Example: de")}
+            </small>
+          </label>
+
+          <label>
+            <span>{t("businessUnitName", "Business unit name")}</span>
+            <input
+              type="text"
+              value={values.name}
+              placeholder={t("businessUnitNamePlaceholder", "Germany")}
+              onChange={(event) => onChange("name", event.target.value)}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <span>{t("businessUnitLabel", "Business unit label")}</span>
+            <input
+              type="text"
+              value={values.label}
+              placeholder={t("businessUnitLabelPlaceholder", "BU DE")}
+              onChange={(event) => onChange("label", event.target.value)}
+              disabled={saving}
+            />
+          </label>
+
+          <label>
+            <span>{t("businessUnitFlag", "Flag or short badge")}</span>
+            <input
+              type="text"
+              value={values.flag}
+              placeholder={t("businessUnitFlagPlaceholder", "=ç¬=ç¬")}
+              onChange={(event) => onChange("flag", event.target.value)}
+              disabled={saving}
+            />
+            <small className="form-note">
+              {t("businessUnitFlagHint", "Optional. Leave empty to auto-generate a badge from the BU code.")}
+            </small>
+          </label>
+
+          <label className="manager-field-full">
+            <span>{t("businessUnitFlagId", "Flag asset id")}</span>
+            <input
+              type="text"
+              value={values.flagId}
+              placeholder={t("businessUnitFlagIdPlaceholder", "de")}
+              onChange={(event) => onChange("flagId", event.target.value)}
+              disabled={saving}
+            />
+            <small className="form-note">
+              {t(
+                "businessUnitFlagIdHint",
+                "Optional. Use this only if a matching SVG already exists in public/flags."
+              )}
+            </small>
+          </label>
+
+          {error ? <div className="form-error">{error}</div> : null}
+
+          <div className="form-actions">
+            <button className="secondary-button compact-button" type="button" onClick={onClose} disabled={saving}>
+              {t("cancel", "Cancel")}
+            </button>
+            <button className="primary-button compact-button" type="submit" disabled={saving}>
+              {saving ? t("saving", "Saving...") : t("saveBusinessUnit", "Save business unit")}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function BulkPartnerManager({
+  error,
+  file,
+  onClose,
+  onDownloadTemplate,
+  onFileChange,
+  onSubmit,
+  open,
+  saving,
+  t
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="manager-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="manager-modal bulk-manager-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bulk-manager-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="panel-header manager-header">
+          <div className="manager-header-copy">
+            <span className="version-chip">{t("bulkUpdate", "Bulk update")}</span>
+            <strong id="bulk-manager-title">{t("bulkUpdateTitle", "Bulk partner update")}</strong>
+            <p>
+              {t(
+                "bulkUpdateCopy",
+                "Download the CSV template, fill it with multiple partners, and upload it here. CSV and JSON files are supported."
+              )}
+            </p>
+          </div>
+
+          <button className="secondary-button compact-button" type="button" onClick={onClose}>
+            {t("cancel", "Cancel")}
+          </button>
+        </div>
+
+        <form className="manager-form bulk-manager-form" onSubmit={onSubmit}>
+          <div className="manager-field-full bulk-template-actions">
+            <button
+              className="secondary-button compact-button"
+              type="button"
+              onClick={onDownloadTemplate}
+              disabled={saving}
+            >
+              <AppIcon type="download" />
+              <span>{t("downloadTemplate", "Download template")}</span>
+            </button>
+            <small className="bulk-note">
+              {t(
+                "bulkTemplateHint",
+                "Leave id empty to add a new partner. Keep or supply id to update an existing one."
+              )}
+            </small>
+          </div>
+
+          <label className="manager-field-full">
+            <span>{t("bulkUploadFile", "Bulk update file")}</span>
+            <input
+              type="file"
+              accept=".csv,.json,text/csv,application/json"
+              onChange={onFileChange}
+              disabled={saving}
+            />
+            <small className="bulk-file-meta">
+              {file?.name
+                ? `${t("selectedFile", "Selected file")}: ${file.name}`
+                : t("bulkUploadHint", "Choose a CSV or JSON file with partner entries.")}
+            </small>
+          </label>
+
+          {error ? <div className="form-error">{error}</div> : null}
+
+          <div className="form-actions">
+            <button className="secondary-button compact-button" type="button" onClick={onClose} disabled={saving}>
+              {t("cancel", "Cancel")}
+            </button>
+            <button className="primary-button compact-button" type="submit" disabled={saving}>
+              {saving ? t("uploading", "Uploading...") : t("bulkUpdate", "Bulk update")}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+function SearchPanel({
+  fileQuery,
+  mode,
+  onFileQueryChange,
+  onModeChange,
+  onPartnerQueryChange,
+  partnerQuery,
+  t
+}) {
+  const query = mode === "partner" ? partnerQuery : fileQuery;
+  const setQuery = mode === "partner" ? onPartnerQueryChange : onFileQueryChange;
+
   return (
     <section className="search-panel">
-      <div className="search-panel-cosmic-core" aria-hidden="true" />
-      <div className="search-panel-planet search-panel-planet-one" aria-hidden="true" />
-      <div className="search-panel-planet search-panel-planet-two" aria-hidden="true" />
-      <div className="search-panel-planet search-panel-planet-three" aria-hidden="true" />
-      <div className="search-panel-orbit search-panel-orbit-one" aria-hidden="true" />
-      <div className="search-panel-orbit search-panel-orbit-two" aria-hidden="true" />
-      <div className="search-panel-orbit search-panel-orbit-three" aria-hidden="true" />
-      <div className="search-panel-ribbon search-panel-ribbon-left" aria-hidden="true" />
-      <div className="search-panel-ribbon search-panel-ribbon-right" aria-hidden="true" />
-      <div className="search-panel-spark search-panel-spark-one" aria-hidden="true" />
-      <div className="search-panel-spark search-panel-spark-two" aria-hidden="true" />
+      <div className="search-panel-glow search-panel-glow-one" aria-hidden="true" />
+      <div className="search-panel-glow search-panel-glow-two" aria-hidden="true" />
 
-      
+      <div className="search-panel-header">
+        <div>
+          <span className="section-kicker">Search</span>
+          
+        </div>
+
+        <div className="segmented-controls search-mode-switch" aria-label="Search mode">
+          <button
+            className={mode === "partner" ? "active" : ""}
+            type="button"
+            onClick={() => onModeChange("partner")}
+          >
+            <AppIcon type="users" />
+            <span>Partner Search</span>
+          </button>
+          <button
+            className={mode === "file" ? "active" : ""}
+            type="button"
+            onClick={() => onModeChange("file")}
+          >
+            <AppIcon type="file" />
+            <span>File Search</span>
+          </button>
+        </div>
+      </div>
+
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
-        <div className="search-input-shell">
-          <AppIcon type="search" />
+        <div className="search-input-shell search-input-shell-large">
           <input
             type="search"
             value={query}
-            placeholder={t("searchFilePlaceholder", "Search all production files")}
+            placeholder={
+              mode === "partner"
+                ? t("searchPartnerPlaceholder", "Search partner")
+                : t("searchFilePlaceholder", "Search all production files")
+            }
             onChange={(event) => setQuery(event.target.value)}
           />
+          <div className="search-input-actions">
+            {query ? (
+              <button
+                className="search-clear-button"
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label={t("clear", "Clear")}
+              >
+                <AppIcon type="close" />
+              </button>
+            ) : null}
+            <span className="search-mode-icon">
+              <AppIcon type={mode === "partner" ? "users" : "file"} />
+            </span>
+            <span className="search-mode-icon accent">
+              <AppIcon type="search" />
+            </span>
+          </div>
         </div>
       </form>
     </section>
@@ -2146,13 +3478,20 @@ function PartnerFileControls({
       </div>
 
       <div className="search-input-shell partner-search-shell">
-        <AppIcon type="search" />
         <input
           type="search"
           value={searchValue}
           placeholder={searchPlaceholder}
           onChange={(event) => setSearchValue(event.target.value)}
         />
+        <div className="search-input-actions" aria-hidden="true">
+          <span className="search-mode-icon">
+            <AppIcon type={searchMode === "file" ? "file" : "users"} />
+          </span>
+          <span className="search-mode-icon accent">
+            <AppIcon type="search" />
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -2262,7 +3601,7 @@ function DirectoryBrowser({
     return <EmptyState title="Directory unavailable" detail={browserState.error} tone="warning" />;
   }
 
-  const sortArrow = dateSortOrder === "asc" ? "↑" : "↓";
+  const sortArrow = dateSortOrder === "asc" ? "ASC" : "DESC";
   const sortDirectionLabel =
     dateSortOrder === "asc"
       ? t("sortOldestToNewest", "Oldest to newest")
@@ -2420,9 +3759,9 @@ function AppIcon({ type }) {
   if (type === "menu") {
     return (
       <svg {...commonProps}>
-        <path d="M4.5 7.5h15" />
-        <path d="M4.5 12h15" />
-        <path d="M4.5 16.5h15" />
+        <path d="M6 8h12" />
+        <path d="M6 12h12" />
+        <path d="M6 16h12" />
       </svg>
     );
   }
@@ -2481,6 +3820,59 @@ function AppIcon({ type }) {
     );
   }
 
+  if (type === "users") {
+    return (
+      <svg {...commonProps}>
+        <path d="M9 11a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 9 11Z" />
+        <path d="M15.5 9.5a2.25 2.25 0 1 0 0-4.5" />
+        <path d="M4.8 18.5a4.8 4.8 0 0 1 8.4 0" />
+        <path d="M14.2 18.5a4 4 0 0 1 5 0" />
+      </svg>
+    );
+  }
+
+  if (type === "grid") {
+    return (
+      <svg {...commonProps}>
+        <path d="M5.5 5.5h5v5h-5Z" />
+        <path d="M13.5 5.5h5v5h-5Z" />
+        <path d="M5.5 13.5h5v5h-5Z" />
+        <path d="M13.5 13.5h5v5h-5Z" />
+      </svg>
+    );
+  }
+
+  if (type === "list") {
+    return (
+      <svg {...commonProps}>
+        <path d="M8 7h11" />
+        <path d="M8 12h11" />
+        <path d="M8 17h11" />
+        <path d="M5 7h.01" />
+        <path d="M5 12h.01" />
+        <path d="M5 17h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "shield") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 4.2 18.2 6.5v4.9c0 4-2.4 6.7-6.2 8.4-3.8-1.7-6.2-4.4-6.2-8.4V6.5Z" />
+        <path d="m9.4 12 1.7 1.7 3.5-3.7" />
+      </svg>
+    );
+  }
+
+  if (type === "close") {
+    return (
+      <svg {...commonProps}>
+        <path d="M7 7 17 17" />
+        <path d="M17 7 7 17" />
+      </svg>
+    );
+  }
+
   if (type === "help") {
     return (
       <svg {...commonProps}>
@@ -2491,11 +3883,65 @@ function AppIcon({ type }) {
     );
   }
 
+  if (type === "mail") {
+    return (
+      <svg {...commonProps}>
+        <path d="M4.5 7.5h15a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z" />
+        <path d="m5.5 9 6.5 5 6.5-5" />
+      </svg>
+    );
+  }
+
+  if (type === "trash") {
+    return (
+      <svg {...commonProps}>
+        <path d="M5.5 7.5h13" />
+        <path d="M9 7.5v-2h6v2" />
+        <path d="M7.2 7.5l.8 10.5a1 1 0 0 0 1 .9h6a1 1 0 0 0 1-.9l.8-10.5" />
+        <path d="M10 10.5v5.5" />
+        <path d="M14 10.5v5.5" />
+      </svg>
+    );
+  }
+
   if (type === "plus") {
     return (
       <svg {...commonProps}>
         <path d="M12 5v14" />
         <path d="M5 12h14" />
+      </svg>
+    );
+  }
+
+  if (type === "office") {
+    return (
+      <svg {...commonProps}>
+        <path d="M5.5 20V7.5L12 4l6.5 3.5V20" />
+        <path d="M9 20v-4.5h6V20" />
+        <path d="M9 9.5h.01" />
+        <path d="M15 9.5h.01" />
+        <path d="M9 13h.01" />
+        <path d="M15 13h.01" />
+      </svg>
+    );
+  }
+
+  if (type === "upload") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 17.5V6.5" />
+        <path d="M8.5 10 12 6.5 15.5 10" />
+        <path d="M5 18.5h14" />
+      </svg>
+    );
+  }
+
+  if (type === "download") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 6.5v11" />
+        <path d="M8.5 14 12 17.5 15.5 14" />
+        <path d="M5 18.5h14" />
       </svg>
     );
   }

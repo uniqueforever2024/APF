@@ -35,10 +35,6 @@ async function fetchJson(pathname, params = {}) {
   return payload;
 }
 
-export function getArchiveStatus() {
-  return fetchJson("/api/archive-status");
-}
-
 export function listArchive(entryId, relativePath = "") {
   return fetchJson("/api/archive/list", {
     entryId,

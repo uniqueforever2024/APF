@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-05-12T14:35:31.742Z",
+  "backupCreatedAt": "2026-05-12T14:35:31.753Z",
+  "source": "json",
   "entries": [
     {
       "id": "seed-fr-scans-0",
@@ -4513,5 +4514,6 @@
       "url": "/chaine/CMG_INREFTIER",
       "backup": ""
     }
-  ]
+  ],
+  "generatedAt": "2026-05-12T14:35:31.742Z"
 }

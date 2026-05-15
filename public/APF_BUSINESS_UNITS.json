@@ -1,4 +1,41 @@
 {
-  "generatedAt": "2026-04-28T09:56:15.311Z",
-  "businessUnits": []
+  "generatedAt": "2026-05-12T14:35:31.741Z",
+  "businessUnits": [
+    {
+      "id": "hr",
+      "label": "BU HR",
+      "name": "BU HR",
+      "flag": "",
+      "flagId": "",
+      "palette": null,
+      "removed": true
+    },
+    {
+      "id": "in",
+      "label": "BU IN",
+      "name": "BU IN",
+      "flag": "",
+      "flagId": "",
+      "palette": null,
+      "removed": true
+    },
+    {
+      "id": "it",
+      "label": "BU IT",
+      "name": "BU IT",
+      "flag": "",
+      "flagId": "",
+      "palette": null,
+      "removed": true
+    },
+    {
+      "id": "si",
+      "label": "BU SI",
+      "name": "BU SI",
+      "flag": "",
+      "flagId": "",
+      "palette": null,
+      "removed": true
+    }
+  ]
 }

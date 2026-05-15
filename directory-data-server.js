@@ -3,6 +3,7 @@ const https = require("https");
 const fsSync = require("fs");
 const fs = require("fs/promises");
 const path = require("path");
+const crypto = require("crypto");
 const zlib = require("zlib");
 const {
   PORT,
@@ -52,8 +53,11 @@ const DIRECTORY_PROXY_AUTH_HEADER =
     : "";
 const ADMIN_USERNAME = String(adminAuth.username || "admin").trim().toLowerCase();
 const ADMIN_PASSWORD = String(adminAuth.password || "");
+const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const adminSessions = new Map();
 const MAX_INLINE_PREVIEW_BYTES = 64 * 1024;
 const MAX_ARCHIVE_OPEN_BYTES = 12 * 1024 * 1024;
+const CORS_ALLOW_HEADERS = "Content-Type, X-Admin-Token";
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -178,7 +182,7 @@ function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": CORS_ALLOW_HEADERS,
     "Content-Type": "application/json; charset=utf-8"
   });
   response.end(JSON.stringify(payload));
@@ -188,7 +192,7 @@ function sendHtml(response, statusCode, html) {
   response.writeHead(statusCode, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": CORS_ALLOW_HEADERS,
     "Cache-Control": "no-store, max-age=0, must-revalidate",
     Pragma: "no-cache",
     Expires: "0",
@@ -2633,7 +2637,7 @@ function sendRemoteResponse(response, remoteResource) {
   const responseHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": CORS_ALLOW_HEADERS,
     "Content-Length": String(remoteResource.body.length)
   };
   const passthroughHeaderNames = [
@@ -2888,10 +2892,60 @@ async function readRequestBody(request) {
 }
 
 function isValidAdminLogin(username, password) {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    return false;
+  }
+
   return (
     String(username || "").trim().toLowerCase() === ADMIN_USERNAME &&
     String(password || "") === ADMIN_PASSWORD
   );
+}
+
+function pruneExpiredAdminSessions() {
+  const now = Date.now();
+
+  adminSessions.forEach((session, token) => {
+    if (!session || session.expiresAt <= now) {
+      adminSessions.delete(token);
+    }
+  });
+}
+
+function createAdminSessionToken(username) {
+  pruneExpiredAdminSessions();
+
+  const token = crypto.randomBytes(24).toString("hex");
+
+  adminSessions.set(token, {
+    username,
+    expiresAt: Date.now() + ADMIN_SESSION_TTL_MS
+  });
+
+  return token;
+}
+
+function isAuthorizedAdminRequest(request) {
+  pruneExpiredAdminSessions();
+
+  const token = String(request.headers["x-admin-token"] || "").trim();
+
+  if (!token) {
+    return false;
+  }
+
+  const currentSession = adminSessions.get(token);
+
+  if (!currentSession) {
+    return false;
+  }
+
+  adminSessions.set(token, {
+    ...currentSession,
+    expiresAt: Date.now() + ADMIN_SESSION_TTL_MS
+  });
+
+  return true;
 }
 
 const server = http.createServer(async (request, response) => {
@@ -2907,7 +2961,7 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": CORS_ALLOW_HEADERS
     });
     response.end();
     return;
@@ -2929,6 +2983,14 @@ const server = http.createServer(async (request, response) => {
 
   if (requestPath === "/api/auth/login" && request.method === "POST") {
     try {
+      if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+        sendJson(response, 503, {
+          ok: false,
+          error: "Admin access is not configured on the server."
+        });
+        return;
+      }
+
       const body = await readRequestBody(request);
       const parsedBody = body ? JSON.parse(body) : {};
       const username = String(parsedBody.username || "").trim();
@@ -2942,7 +3004,8 @@ const server = http.createServer(async (request, response) => {
       sendJson(response, 200, {
         ok: true,
         role: "admin",
-        username: ADMIN_USERNAME
+        username: ADMIN_USERNAME,
+        token: createAdminSessionToken(ADMIN_USERNAME)
       });
     } catch (error) {
       console.error("POST /api/auth/login failed", error);
@@ -3007,6 +3070,14 @@ const server = http.createServer(async (request, response) => {
 
   if (requestPath === "/api/directory-data" && request.method === "POST") {
     try {
+      if (!isAuthorizedAdminRequest(request)) {
+        sendJson(response, 401, {
+          ok: false,
+          error: "Admin authentication is required to save directory data."
+        });
+        return;
+      }
+
       const body = await readRequestBody(request);
       const parsedBody = body ? JSON.parse(body) : {};
       const nextPayload = sanitizePayload(parsedBody);
@@ -3351,7 +3422,7 @@ const server = http.createServer(async (request, response) => {
         response.writeHead(200, {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Headers": CORS_ALLOW_HEADERS,
           "Content-Type": contentType,
           "Content-Length": String(fileBuffer.length),
           "Content-Disposition": `inline; filename="${encodeURIComponent(fileName)}"`

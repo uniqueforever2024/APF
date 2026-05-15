@@ -23,14 +23,6 @@ export const BU_OPTIONS = [
   { id: "ib", label: "BU IB", name: "Spain", flag: makeFlagEmoji("ES"), flagId: "es" }
 ];
 
-export const SECTION_ORDER = ["inbound", "outbound"];
-export const DEFAULT_SECTION = SECTION_ORDER[0];
-
-export const SECTION_META = {
-  inbound: { labelKey: "inbound", directoryName: "RECU" },
-  outbound: { labelKey: "outbound", directoryName: "EMIS" }
-};
-
 export const LEGACY_TYPE_MAP = {
   inbound: "inbound",
   outbound: "outbound",

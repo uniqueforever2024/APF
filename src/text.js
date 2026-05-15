@@ -1,7 +1,7 @@
 const TEXT = {
   en: {
     appTitle: "EDI LC APF",
-    appHeaderTitle: "ACCESS TO PRODUCTION FILES",
+    appHeaderTitle: "ACCESS TO PRODUCTION FILE",
     darkMode: "Dark mode",
     lightMode: "Light mode",
     headerLabel: "Quick links",
@@ -124,7 +124,7 @@ const TEXT = {
   },
   fr: {
     appTitle: "EDI LC APF",
-    appHeaderTitle: "ACCESS TO PRODUCTION FILES",
+    appHeaderTitle: "ACCESS TO PRODUCTION FILE",
     darkMode: "Mode sombre",
     lightMode: "Mode clair",
     headerLabel: "Acces rapide",
@@ -250,7 +250,7 @@ const TEXT = {
   },
   de: {
     appTitle: "EDI LC APF",
-    appHeaderTitle: "ACCESS TO PRODUCTION FILES",
+    appHeaderTitle: "ACCESS TO PRODUCTION FILE",
     darkMode: "Dunkelmodus",
     lightMode: "Hellmodus",
     headerLabel: "Schnellzugriff",
@@ -376,7 +376,7 @@ const TEXT = {
   },
   it: {
     appTitle: "EDI LC APF",
-    appHeaderTitle: "ACCESS TO PRODUCTION FILES",
+    appHeaderTitle: "ACCESS TO PRODUCTION FILE",
     darkMode: "Modalita scura",
     lightMode: "Modalita chiara",
     headerLabel: "Accesso rapido",
@@ -502,7 +502,7 @@ const TEXT = {
   },
   pl: {
     appTitle: "EDI LC APF",
-    appHeaderTitle: "ACCESS TO PRODUCTION FILES",
+    appHeaderTitle: "ACCESS TO PRODUCTION FILE",
     darkMode: "Tryb ciemny",
     lightMode: "Tryb jasny",
     headerLabel: "Szybki dostep",

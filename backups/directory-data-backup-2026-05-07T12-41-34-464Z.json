@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-05-12T14:35:31.742Z",
+  "backupCreatedAt": "2026-05-07T12:41:34.463Z",
+  "source": "json",
   "entries": [
     {
       "id": "seed-fr-scans-0",
@@ -1914,6 +1915,110 @@
       "backup": ""
     },
     {
+      "id": "seed-hr-annonces-0",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "MAZDA",
+      "url": "/B2BP/UserData/archives/RECU/MAZDA_HR/MAZDA_HR_IN/BMAP",
+      "backup": "HR.VIA.MAZDAHR.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-1",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "MICHELIN",
+      "url": "/B2BP/UserData/archives/RECU/MICHELIN2VIA_HR",
+      "backup": "PL.VIA.MICHELIN.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-2",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "ORDER PCL",
+      "url": "/B2BP/UserData/archives/RECU/ORDERPCL2VIA_HR/BMAP",
+      "backup": "HR.VIA.ORDERPCL@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-3",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "ORDERQTY_HR",
+      "url": "/B2BP/UserData/archives/RECU/ORDERQTY_HR/BMAP",
+      "backup": "HR.VIA.ORDERQTY@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-4",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "SUZUKI HR",
+      "url": "/B2BP/UserData/archives/RECU/SUZUKI2VIA_HR/BMAP",
+      "backup": "PL.VIA.SUZHR.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-5",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "VALEO_HR",
+      "url": "/B2BP/UserData/archives/RECU/VALEO_HR/BMAP",
+      "backup": "HR.VIA.VALEO.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-annonces-6",
+      "bu": "hr",
+      "type": "inbound",
+      "label": "ZUST_HR",
+      "url": "/B2BP/UserData/archives/RECU/ZUST_HR/BMAP",
+      "backup": "PL.VIA.ZUST.SHIPMENT-ORDERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-hr-extractions-0",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "MICHELIN HR (XML)",
+      "url": "/B2BP/UserData/archives/RECU/MICHELIN_HR_OUT/AMAP",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-impression-0",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "poirieda",
+      "url": "/bibwork/poirieda",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-integration-0",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "Renault - RENHR",
+      "url": "/tmp/CMG_RENHR",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-integration-1",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "SITES - Client startup",
+      "url": "/chaine/CMG_INREFTIER",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-extractions-1",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "SUZUKI HR OUT",
+      "url": "/B2BP/UserData/archives/EMIS/VIA2SUZUKI_HR",
+      "backup": ""
+    },
+    {
+      "id": "seed-hr-impression-1",
+      "bu": "hr",
+      "type": "outbound",
+      "label": "wyszynra",
+      "url": "/bibwork/wyszynra",
+      "backup": ""
+    },
+    {
       "id": "seed-ib-annonces-0",
       "bu": "ib",
       "type": "inbound",
@@ -3202,6 +3307,142 @@
       "backup": ""
     },
     {
+      "id": "seed-it-annonces-0",
+      "bu": "it",
+      "type": "inbound",
+      "label": "CEVA - CATTAD",
+      "url": "/B2BP/UserData/archives/RECU/TAD",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-annonces-1",
+      "bu": "it",
+      "type": "inbound",
+      "label": "KAWASAKI",
+      "url": "/B2BP/UserData/archives/RECU/KAWAKN",
+      "backup": "LC.KN.SHIPMENT-ORDERS.KAWASAKI@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-it-annonces-2",
+      "bu": "it",
+      "type": "inbound",
+      "label": "RENAULT Italie",
+      "url": "/B2BP/UserData/archives/RECU/RENAULTIS",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-scans-0",
+      "bu": "it",
+      "type": "inbound",
+      "label": "San colombano",
+      "url": "/B2BP/UserData/archives/RECU/SIZB",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-annonces-3",
+      "bu": "it",
+      "type": "inbound",
+      "label": "SITES - Client startup",
+      "url": "/B2BP/UserData/archives/EMIS/ITREFTIER",
+      "backup": "IT.REFERENTIEL.TIERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-it-integration-0",
+      "bu": "it",
+      "type": "outbound",
+      "label": "CEVA - CATTAD",
+      "url": "/tmp/CMG_CATTADIN",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-0",
+      "bu": "it",
+      "type": "outbound",
+      "label": "CEVA CATTAD",
+      "url": "/B2BP/UserData/archives/EMIS/coi7",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-1",
+      "bu": "it",
+      "type": "outbound",
+      "label": "Galliker",
+      "url": "/B2BP/UserData/archives/EMIS/GALLIKER",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-1",
+      "bu": "it",
+      "type": "outbound",
+      "label": "KAWASAKI K&N",
+      "url": "/tmp/CMG_KAWAEUIT",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-2",
+      "bu": "it",
+      "type": "outbound",
+      "label": "OTE",
+      "url": "/B2BP/UserData/archives/EMIS/OTE",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-3",
+      "bu": "it",
+      "type": "outbound",
+      "label": "Qualinight",
+      "url": "/B2BP/UserData/archives/EMIS/QUALINIGHT",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-2",
+      "bu": "it",
+      "type": "outbound",
+      "label": "QUALINIGHT",
+      "url": "/bibwork/CMG_INTQUAL",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-3",
+      "bu": "it",
+      "type": "outbound",
+      "label": "RENAULT IT",
+      "url": "/spool",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-extractions-4",
+      "bu": "it",
+      "type": "outbound",
+      "label": "SAIMA",
+      "url": "/B2BP/UserData/archives/EMIS/SAIMA",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-impression-0",
+      "bu": "it",
+      "type": "outbound",
+      "label": "San colombano",
+      "url": "/bibwork",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-collas-0",
+      "bu": "it",
+      "type": "outbound",
+      "label": "San colombano",
+      "url": "/bibwork/integrmg",
+      "backup": ""
+    },
+    {
+      "id": "seed-it-integration-4",
+      "bu": "it",
+      "type": "outbound",
+      "label": "SITES - Client startup",
+      "url": "/chaine/CMG_INREFTIER",
+      "backup": ""
+    },
+    {
       "id": "seed-lt-annonces-0",
       "bu": "lt",
       "type": "inbound",
@@ -4426,6 +4667,46 @@
       "backup": ""
     },
     {
+      "id": "seed-si-annonces-0",
+      "bu": "si",
+      "type": "inbound",
+      "label": "SITES - Client startup",
+      "url": "/B2BP/UserData/archives/EMIS/SIREFTIER",
+      "backup": "SI.REFERENTIEL.TIERS@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-si-annonces-1",
+      "bu": "si",
+      "type": "inbound",
+      "label": "TOYOTA",
+      "url": "/B2BP/UserData/archives/RECU/TOYOTA",
+      "backup": "PL.TOYOTA.SHIPMENT-ORDERS.SLOVENIE@lc.re7.groupecat.com"
+    },
+    {
+      "id": "seed-si-integration-0",
+      "bu": "si",
+      "type": "outbound",
+      "label": "SITES - Client startup",
+      "url": "/chaine/CMG_INREFTIER",
+      "backup": ""
+    },
+    {
+      "id": "seed-si-extractions-0",
+      "bu": "si",
+      "type": "outbound",
+      "label": "SLOVENIE",
+      "url": "/B2BP/UserData/archives/EMIS/SLOVENIE",
+      "backup": ""
+    },
+    {
+      "id": "seed-si-integration-1",
+      "bu": "si",
+      "type": "outbound",
+      "label": "TOYOTA",
+      "url": "/chaine/CMG_TOYPLINT",
+      "backup": ""
+    },
+    {
       "id": "seed-ua-annonces-0",
       "bu": "ua",
       "type": "inbound",
@@ -4512,6 +4793,15 @@
       "label": "SITES - Client startup",
       "url": "/chaine/CMG_INREFTIER",
       "backup": ""
+    },
+    {
+      "id": "entry-1778157694428-m9mnks",
+      "bu": "fr",
+      "type": "inbound",
+      "label": "Aakash",
+      "url": "/B2BP/UserData/archives/RECU",
+      "backup": "akash"
     }
-  ]
+  ],
+  "generatedAt": "2026-05-07T12:41:34.453Z"
 }

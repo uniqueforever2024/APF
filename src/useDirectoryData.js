@@ -5,8 +5,9 @@ import {
   sortBusinessUnitsAlphabetically,
   sortEntriesAlphabetically
 } from "./utils";
+import { getDirectoryApiBase } from "./apiBase";
 
-const API_BASE = process.env.REACT_APP_DIRECTORY_API || "http://localhost:3001";
+const API_BASE = getDirectoryApiBase();
 const API_URL = `${API_BASE}/api/directory-data`;
 const FALLBACK_ENTRIES_PATH = `${process.env.PUBLIC_URL || ""}/APF_NEW.json`;
 const FALLBACK_BUSINESS_UNITS_PATH = `${process.env.PUBLIC_URL || ""}/APF_BUSINESS_UNITS.json`;
@@ -30,8 +31,6 @@ function parseBusinessUnits(dataFile) {
 export default function useDirectoryData() {
   const [entries, setEntries] = useState([]);
   const [businessUnits, setBusinessUnits] = useState([]);
-  const [dataMeta, setDataMeta] = useState(null);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -49,12 +48,10 @@ export default function useDirectoryData() {
 
           setEntries(parseEntries(payload));
           setBusinessUnits(parseBusinessUnits(payload));
-          setDataMeta(payload.meta || null);
-          setLoaded(true);
           return;
         }
       } catch (error) {
-        // Fall back to bundled data when the API is unavailable.
+        void error;
       }
 
       try {
@@ -73,11 +70,6 @@ export default function useDirectoryData() {
 
         setEntries(parseEntries(entriesPayload));
         setBusinessUnits(parseBusinessUnits(businessUnitsPayload));
-        setDataMeta({
-          source: "json-fallback",
-          activeClient: "json",
-          note: "Bundled directory data is active because the local API is unavailable."
-        });
       } catch (error) {
         if (!active) {
           return;
@@ -85,11 +77,6 @@ export default function useDirectoryData() {
 
         setEntries([]);
         setBusinessUnits([]);
-        setDataMeta(null);
-      } finally {
-        if (active) {
-          setLoaded(true);
-        }
       }
     }
 
@@ -102,8 +89,6 @@ export default function useDirectoryData() {
 
   return {
     entries,
-    businessUnits,
-    dataMeta,
-    loaded
+    businessUnits
   };
 }

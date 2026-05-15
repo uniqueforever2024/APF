@@ -182,9 +182,3 @@ export function mergeBusinessUnits(defaultUnits, customUnits) {
     [...mergedUnits.values()].filter((businessUnit) => !businessUnit.removed)
   );
 }
-
-export function getEntriesForSection(entries, bu, type) {
-  return sortEntriesAlphabetically(
-    entries.filter((entry) => entry.bu === bu && normalizeLegacyType(entry.type) === type)
-  );
-}
