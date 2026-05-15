@@ -457,6 +457,38 @@ function splitArchivePath(value) {
     .filter(Boolean);
 }
 
+function getArchiveLeafName(value) {
+  const pathSegments = splitArchivePath(value);
+
+  if (!pathSegments.length) {
+    return "";
+  }
+
+  const lastSegment = String(pathSegments[pathSegments.length - 1] || "").trim();
+
+  if (/^(?:amap|bmap)(?:$|[_-].*)/i.test(lastSegment)) {
+    return String(pathSegments[pathSegments.length - 2] || lastSegment).trim();
+  }
+
+  return lastSegment;
+}
+
+function formatArchivePreviewPath(value) {
+  const pathSegments = splitArchivePath(value);
+
+  if (!pathSegments.length) {
+    return "/";
+  }
+
+  const relevantSegments = /^(?:amap|bmap)(?:$|[_-].*)/i.test(
+    String(pathSegments[pathSegments.length - 1] || "").trim()
+  )
+    ? pathSegments.slice(-4, -1)
+    : pathSegments.slice(-3);
+
+  return `/${relevantSegments.join("/")}`;
+}
+
 function getArchiveMapMatch(value) {
   const pathSegments = splitArchivePath(value);
   const mapIndex = pathSegments.findIndex((segment) => /^(?:amap|bmap)(?:$|[_-].*)/i.test(segment));
@@ -876,6 +908,8 @@ function App() {
   const menuRef = useRef(null);
   const homePartnerSearchQuery = useDeferredValue(homePartnerSearchValue);
   const searchQuery = useDeferredValue(fileSearchValue);
+  const deferredPartnerSearchValue = useDeferredValue(partnerSearchValue);
+  const deferredBrowserSearchValue = useDeferredValue(browserSearchValue);
   const {
     entries: initialEntries,
     businessUnits: initialBusinessUnits
@@ -887,13 +921,9 @@ function App() {
   const text = getText(language);
   const t = (key, fallback) => text[key] || fallback;
   const isAdmin = session?.role === "admin" && Boolean(String(session?.token || "").trim());
-  const homePartnerResults = useMemo(() => {
-    const normalizedQuery = homePartnerSearchQuery.trim().toLowerCase();
-
-    if (normalizedQuery.length < 2) {
-      return [];
-    }
-
+  const homeAccessRows = useMemo(() => {
+    const normalizedPartnerQuery =
+      homeSearchMode === "partner" ? homePartnerSearchQuery.trim().toLowerCase() : "";
     const groupedEntries = new Map();
 
     entries.forEach((entry) => {
@@ -903,20 +933,28 @@ function App() {
         entry.type,
         businessUnit?.label,
         businessUnit?.name,
-        businessUnit?.id
+        businessUnit?.id,
+        entry.url
       ]
         .join(" ")
         .toLowerCase();
 
-      if (!searchableValue.includes(normalizedQuery)) {
+      if (normalizedPartnerQuery && !searchableValue.includes(normalizedPartnerQuery)) {
         return;
       }
 
       const groupKey = getPartnerGroupKey(entry);
-      groupedEntries.set(groupKey, [...(groupedEntries.get(groupKey) || []), entry]);
+      const groupEntries = groupedEntries.get(groupKey);
+
+      if (groupEntries) {
+        groupEntries.push(entry);
+        return;
+      }
+
+      groupedEntries.set(groupKey, [entry]);
     });
 
-    return [...groupedEntries.values()]
+    const rows = [...groupedEntries.values()]
       .map((groupEntries) => {
         const entry = getPreferredPartnerEntry(groupEntries, "bmap");
 
@@ -924,19 +962,29 @@ function App() {
           return null;
         }
 
+        const businessUnit = getBusinessUnit(businessUnits, entry.bu);
+        const leafName = getArchiveLeafName(entry.url);
+
         return {
-          businessUnit: getBusinessUnit(businessUnits, entry.bu),
-          entry
+          businessUnit,
+          entry,
+          name: leafName || entry.label,
+          path: formatArchivePreviewPath(entry.url)
         };
       })
       .filter(Boolean)
-      .sort((leftResult, rightResult) =>
-        leftResult.entry.label.localeCompare(rightResult.entry.label, undefined, {
+      .sort((leftRow, rightRow) =>
+        leftRow.entry.label.localeCompare(rightRow.entry.label, undefined, {
           numeric: true,
           sensitivity: "base"
         })
       );
-  }, [businessUnits, entries, homePartnerSearchQuery]);
+
+    return {
+      rows: rows.slice(0, 8),
+      totalCount: rows.length
+    };
+  }, [businessUnits, entries, homePartnerSearchQuery, homeSearchMode]);
   const currentBusinessUnit = useMemo(
     () => businessUnits.find((businessUnit) => businessUnit.id === selectedBuId) || null,
     [businessUnits, selectedBuId]
@@ -946,7 +994,7 @@ function App() {
     [entries, selectedBuId]
   );
   const filteredBuEntries = useMemo(() => {
-    const normalizedPartnerSearch = partnerSearchValue.trim().toLowerCase();
+    const normalizedPartnerSearch = deferredPartnerSearchValue.trim().toLowerCase();
     const groupedEntries = new Map();
 
     currentBuEntries
@@ -958,7 +1006,14 @@ function App() {
       )
       .forEach((entry) => {
         const groupKey = getPartnerGroupKey(entry);
-        groupedEntries.set(groupKey, [...(groupedEntries.get(groupKey) || []), entry]);
+        const groupEntries = groupedEntries.get(groupKey);
+
+        if (groupEntries) {
+          groupEntries.push(entry);
+          return;
+        }
+
+        groupedEntries.set(groupKey, [entry]);
       });
 
     return [...groupedEntries.values()]
@@ -970,7 +1025,7 @@ function App() {
           sensitivity: "base"
         })
       );
-  }, [activeDirection, activeMapGroup, currentBuEntries, partnerSearchValue]);
+  }, [activeDirection, activeMapGroup, currentBuEntries, deferredPartnerSearchValue]);
   const selectedBusinessUnitIdSet = useMemo(
     () => new Set(selectedBusinessUnitIds),
     [selectedBusinessUnitIds]
@@ -1030,9 +1085,9 @@ function App() {
   const visibleBrowserItems = useMemo(
     () =>
       browserSearchMode === "partner"
-        ? filterBrowserItems(sortedBrowserItems, browserSearchValue)
+        ? filterBrowserItems(sortedBrowserItems, deferredBrowserSearchValue)
         : sortedBrowserItems,
-    [browserSearchMode, browserSearchValue, sortedBrowserItems]
+    [browserSearchMode, deferredBrowserSearchValue, sortedBrowserItems]
   );
   const displayedPartner =
     !browserState.loading && browserState.entry ? browserState.entry : selectedPartner;
@@ -1665,6 +1720,12 @@ function App() {
       return;
     }
 
+    const partnerName = String(managerForm.label || "").trim() || "partner";
+
+    if (!window.confirm(`Are you sure you want to delete "${partnerName}"?`)) {
+      return;
+    }
+
     setManagerSaving(true);
     setManagerError("");
 
@@ -2282,102 +2343,129 @@ function App() {
       <main className={`shell-body ${showHomeView ? "shell-body-home" : ""}`.trim()}>
         {showHomeView ? (
           <section className="home-stage">
-            <section className="bu-strip bu-strip-home">
-              <div className="panel-header panel-header-centered panel-header-home">
-                <div>
-                  <span className="section-kicker">Business Units</span>
-                </div>
-              </div>
-
-              {isAdmin ? (
-                <div className="admin-partner-toolbar">
-                  <div className="admin-partner-toolbar-copy">
-                    <strong>
-                      {selectedBusinessUnitIds.length
-                        ? `${selectedBusinessUnitIds.length} selected`
-                        : t("adminMode", "Admin mode")}
-                    </strong>
-                    <small>Business unit actions</small>
+            <div className="home-access-stack">
+              <section className="home-access-board home-access-board-units">
+                <div className="home-access-board-shell">
+                  <div className="home-access-board-copy">
+                    <strong>Business units</strong>
+                    <p>Select a business unit to access partners or files.</p>
                   </div>
 
-                  <div className="admin-partner-toolbar-actions">
-                    <button
-                      className="secondary-button compact-button"
-                      type="button"
-                      onClick={handleToggleSelectAllBusinessUnits}
-                      disabled={!businessUnits.length || adminActionBusy}
-                    >
-                      {allVisibleBusinessUnitsSelected
-                        ? t("clearSelection", "Clear selection")
-                        : t("selectAllVisible", "Select all visible")}
-                    </button>
-                    <button
-                      className="secondary-button compact-button admin-danger-button"
-                      type="button"
-                      onClick={handleDeleteSelectedBusinessUnits}
-                      disabled={!selectedBusinessUnitIds.length || adminActionBusy}
-                    >
-                      {adminActionBusy ? t("deleting", "Deleting...") : t("deleteSelected", "Delete selected")}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+                  {isAdmin ? (
+                    <div className="admin-partner-toolbar">
+                      <div className="admin-partner-toolbar-copy">
+                        <strong>
+                          {selectedBusinessUnitIds.length
+                            ? `${selectedBusinessUnitIds.length} selected`
+                            : t("adminMode", "Admin mode")}
+                        </strong>
+                        <small>Business unit actions</small>
+                      </div>
 
-              {adminActionError ? <div className="form-error inline-feedback">{adminActionError}</div> : null}
-
-              <div className="bu-strip-grid bu-strip-grid-centered bu-strip-grid-home">
-                {businessUnits.map((businessUnit) => (
-                  <article
-                    key={businessUnit.id}
-                    className={`bu-tile bu-tile-home ${
-                      selectedBusinessUnitIdSet.has(businessUnit.id) ? "selected" : ""
-                    }`.trim()}
-                    style={getBuVisualStyle(businessUnit.id)}
-                  >
-                    <div className="bu-tile-top">
-                      <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
-                      {isAdmin ? (
-                        <label
-                          className="partner-select-toggle checkbox-only"
-                          onClick={(event) => event.stopPropagation()}
+                      <div className="admin-partner-toolbar-actions">
+                        <button
+                          className="secondary-button compact-button"
+                          type="button"
+                          onClick={handleToggleSelectAllBusinessUnits}
+                          disabled={!businessUnits.length || adminActionBusy}
                         >
-                          <input
-                            aria-label={`Select ${businessUnit.label}`}
-                            type="checkbox"
-                            checked={selectedBusinessUnitIdSet.has(businessUnit.id)}
-                            onChange={() => handleToggleBusinessUnitSelection(businessUnit.id)}
-                          />
-                        </label>
-                      ) : null}
+                          {allVisibleBusinessUnitsSelected
+                            ? t("clearSelection", "Clear selection")
+                            : t("selectAllVisible", "Select all visible")}
+                        </button>
+                        <button
+                          className="secondary-button compact-button admin-danger-button"
+                          type="button"
+                          onClick={handleDeleteSelectedBusinessUnits}
+                          disabled={!selectedBusinessUnitIds.length || adminActionBusy}
+                        >
+                          {adminActionBusy
+                            ? t("deleting", "Deleting...")
+                            : t("deleteSelected", "Delete selected")}
+                        </button>
+                      </div>
                     </div>
+                  ) : null}
 
-                    <button
-                      type="button"
-                      className="bu-tile-launch"
-                      onClick={() => handleSelectBusinessUnit(businessUnit.id)}
-                    >
-                      <strong>{businessUnit.label}</strong>
-                      <small>{businessUnit.name}</small>
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </section>
+                  {adminActionError ? <div className="form-error inline-feedback">{adminActionError}</div> : null}
 
-            <SearchPanel
-              fileQuery={fileSearchValue}
-              mode={homeSearchMode}
-              onFileQueryChange={setFileSearchValue}
-              onModeChange={setHomeSearchMode}
-              onPartnerQueryChange={setHomePartnerSearchValue}
-              partnerQuery={homePartnerSearchValue}
-              t={t}
-            />
+                  <div className="home-access-board-grid">
+                    <div className="bu-strip bu-strip-home">
+                      <div className="bu-strip-grid bu-strip-grid-centered bu-strip-grid-home">
+                        {businessUnits.map((businessUnit) => (
+                          <article
+                            key={businessUnit.id}
+                            className={`bu-tile bu-tile-home ${
+                              selectedBusinessUnitIdSet.has(businessUnit.id) ? "selected" : ""
+                            }`.trim()}
+                            style={getBuVisualStyle(businessUnit.id)}
+                          >
+                            <div className="bu-tile-top">
+                              <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag" />
+                              {isAdmin ? (
+                                <label
+                                  className="partner-select-toggle checkbox-only"
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  <input
+                                    aria-label={`Select ${businessUnit.label}`}
+                                    type="checkbox"
+                                    checked={selectedBusinessUnitIdSet.has(businessUnit.id)}
+                                    onChange={() => handleToggleBusinessUnitSelection(businessUnit.id)}
+                                  />
+                                </label>
+                              ) : null}
+                            </div>
+
+                            <button
+                              type="button"
+                              className="bu-tile-launch"
+                              onClick={() => handleSelectBusinessUnit(businessUnit.id)}
+                            >
+                              <strong>{businessUnit.label}</strong>
+                              <small>{businessUnit.name}</small>
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className="home-access-board-ornament home-access-board-ornament-left" aria-hidden="true">
+                    <AppIcon type="folder" />
+                  </span>
+                  <span className="home-access-board-ornament home-access-board-ornament-right" aria-hidden="true">
+                    <AppIcon type="office" />
+                  </span>
+                </div>
+              </section>
+
+              <section className="home-access-board home-access-board-search">
+                <div className="home-access-board-shell home-access-search-shell">
+                  <div className="home-access-board-copy home-access-search-copy">
+                    <strong>Search</strong>
+                    <p>Find a partner or file directly from the portal.</p>
+                  </div>
+
+                  <SearchPanel
+                    fileQuery={fileSearchValue}
+                    mode={homeSearchMode}
+                    onFileQueryChange={setFileSearchValue}
+                    onModeChange={setHomeSearchMode}
+                    onPartnerQueryChange={setHomePartnerSearchValue}
+                    partnerQuery={homePartnerSearchValue}
+                    t={t}
+                  />
+                </div>
+              </section>
+            </div>
 
             {showHomePartnerResults ? (
-              <PartnerSearchResults
+              <HomeAccessPreview
                 onBrowsePartner={handleSelectPartner}
-                results={homePartnerResults}
+                rows={homeAccessRows.rows}
+                showFilteredState={showHomePartnerResults}
+                totalCount={homeAccessRows.totalCount}
                 t={t}
               />
             ) : null}
@@ -2866,45 +2954,92 @@ function BusinessUnitDirectory({
   );
 }
 
-function PartnerSearchResults({ onBrowsePartner, results, t }) {
+function HomeAccessPreview({ onBrowsePartner, rows, showFilteredState, t, totalCount }) {
   return (
-    <section className="results-panel">
-      <div className="panel-header">
+    <section className="results-panel home-access-preview-panel">
+      <div className="panel-header home-access-preview-header">
         <div>
-          <span className="section-kicker">Partner search</span>
-          <strong>{results.length} matches</strong>
+          <span className="section-kicker">
+            {showFilteredState ? "Partner results" : "Directory preview"}
+          </span>
+          <strong>
+            {showFilteredState
+              ? `${totalCount} match${totalCount === 1 ? "" : "es"}`
+              : `${totalCount} partner${totalCount === 1 ? "" : "s"} available`}
+          </strong>
         </div>
       </div>
 
-      {results.length ? (
-        <div className="partner-list-modern">
-          {results.map(({ businessUnit, entry }) => (
-            <article
-              className="partner-list-card partner-list-card-search"
-              key={entry.id}
-              style={getBuVisualStyle(entry.bu)}
-            >
-              <button
-                className="partner-list-launch partner-list-launch-modern"
-                type="button"
-                onClick={() => onBrowsePartner(entry)}
-              >
-                <div className="partner-list-main">
-                  <span className="partner-grid-card-eyebrow">
-                    <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag partner-grid-flag" />
-                    <span>{businessUnit?.label || entry.bu}</span>
+      {rows.length ? (
+        <>
+          <div className="home-access-table">
+            <div className="home-access-table-head">
+              <span>Name</span>
+              <span>Partner</span>
+              <span>BU</span>
+              <span>Type</span>
+              <span>Path</span>
+              <span className="home-access-table-head-action">Open</span>
+            </div>
+
+            <div className="home-access-table-body">
+              {rows.map(({ businessUnit, entry, name, path }) => (
+                <button
+                  className="home-access-table-row"
+                  key={entry.id}
+                  style={getBuVisualStyle(entry.bu)}
+                  type="button"
+                  onClick={() => onBrowsePartner(entry)}
+                >
+                  <span className="home-access-table-cell home-access-table-name">
+                    <span className="home-access-file-icon">
+                      <AppIcon type="folder" />
+                    </span>
+                    <span className="home-access-name-copy">
+                      <strong>{name}</strong>
+                    </span>
                   </span>
-                  <strong>{entry.label}</strong>
-                </div>
-                <span className="partner-list-arrow">
-                  <AppIcon type="forward" />
-                </span>
-              </button>
-            </article>
-          ))}
-        </div>
+
+                  <span className="home-access-table-cell">
+                    <span className="home-access-partner-pill">{entry.label}</span>
+                  </span>
+
+                  <span className="home-access-table-cell">
+                    <span className="bu-pill home-access-bu-pill">
+                      <BusinessUnitFlag businessUnit={businessUnit} className="bu-flag bu-pill-flag" />
+                      <span>{businessUnit?.label || entry.bu}</span>
+                    </span>
+                  </span>
+
+                  <span className="home-access-table-cell">
+                    <span className={`home-access-type-badge ${entry.type === "outbound" ? "outbound" : ""}`.trim()}>
+                      {getDirectionLabel(entry.type)}
+                    </span>
+                  </span>
+
+                  <span className="home-access-table-cell home-access-table-path">{path}</span>
+
+                  <span className="home-access-table-cell home-access-table-action">
+                    <span className="partner-list-arrow">
+                      <AppIcon type="forward" />
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="home-access-table-footer">
+            <span>
+              Showing 1 to {rows.length} of {totalCount} partner{totalCount === 1 ? "" : "s"}
+            </span>
+          </div>
+        </>
       ) : (
-        <EmptyState title={t("noEntries", "No partners found.")} detail="Try another query." />
+        <EmptyState
+          title={t("noEntries", "No partners found.")}
+          detail={showFilteredState ? "Try another query." : "No partner preview is available yet."}
+        />
       )}
     </section>
   );
@@ -3127,7 +3262,7 @@ function DirectoryManager({
 
           {error ? <div className="form-error">{error}</div> : null}
 
-          <div className="form-actions">
+          <div className="form-actions partner-manager-actions">
             {mode === "edit" ? (
               <button className="secondary-button compact-button danger" type="button" onClick={onDelete} disabled={saving}>
                 {t("deleteEntry", "Remove")}
@@ -3381,6 +3516,9 @@ function SearchPanel({
     <section className="search-panel">
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
         <div className="search-input-shell search-input-shell-large">
+          <span className="search-leading-icon" aria-hidden="true">
+            <AppIcon type="search" />
+          </span>
           <input
             type="search"
             value={query}
