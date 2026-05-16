@@ -165,8 +165,8 @@ const directoryProxy = {
 };
 
 const adminAuth = {
-  username: readStringEnv("APF_ADMIN_USERNAME", "admin").toLowerCase(),
-  password: readStringEnv("APF_ADMIN_PASSWORD", "admin123")
+  username: readStringEnv("APF_ADMIN_USERNAME").toLowerCase(),
+  password: readStringEnv("APF_ADMIN_PASSWORD")
 };
 
 const archiveServer = {

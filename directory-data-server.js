@@ -51,7 +51,7 @@ const DIRECTORY_PROXY_AUTH_HEADER =
         `${DIRECTORY_PROXY_USERNAME}:${DIRECTORY_PROXY_PASSWORD}`
       ).toString("base64")}`
     : "";
-const ADMIN_USERNAME = String(adminAuth.username || "admin").trim().toLowerCase();
+const ADMIN_USERNAME = String(adminAuth.username || "").trim().toLowerCase();
 const ADMIN_PASSWORD = String(adminAuth.password || "");
 const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const adminSessions = new Map();

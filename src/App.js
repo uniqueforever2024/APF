@@ -11,6 +11,7 @@ import { getText } from "./text";
 import useDirectoryData from "./useDirectoryData";
 import { mergeBusinessUnits, normalizeEntry } from "./utils";
 import LanguageDropdown from "./components/LanguageDropdown";
+import AssetIcon from "./components/IconAsset";
 import ThemeToggle from "./components/ThemeToggle";
 
 const AUTH_STORAGE_KEY = "apf_v2_auth_session";
@@ -22,6 +23,8 @@ const ADMIN_LOGIN_API_URL = `${DIRECTORY_API_BASE}/api/auth/login`;
 const BULK_TEMPLATE_FILE_NAME = "apf-partner-bulk-template.csv";
 const BULK_TEMPLATE_HEADERS = ["id", "bu", "type", "label", "url", "backup"];
 const SUPPORT_EMAIL = "HCL-EDI-TEAM@hcltech.com";
+const SUPPORT_CC_EMAIL = "akash.satapathy@hcltech.com";
+const HOME_SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?cc=${encodeURIComponent(SUPPORT_CC_EMAIL)}`;
 const EMPTY_BROWSER_STATE = {
   loading: false,
   error: "",
@@ -50,53 +53,53 @@ const EMPTY_FILE_PREVIEW_STATE = {
 };
 const DEFAULT_CLIENT_SESSION = {
   role: "client",
-  username: "portal-user"
+  username: ""
 };
 const DEFAULT_BU_VISUAL = {
-  accent: "#89a8ff",
-  soft: "rgba(137, 168, 255, 0.12)",
-  glow: "rgba(137, 168, 255, 0.18)"
+  accent: "#3b86ff",
+  soft: "rgba(59, 134, 255, 0.14)",
+  glow: "rgba(59, 134, 255, 0.22)"
 };
 const BU_VISUALS = {
   fr: {
-    accent: "#7eaef8",
-    soft: "rgba(126, 174, 248, 0.12)",
-    glow: "rgba(126, 174, 248, 0.18)"
+    accent: "#3f7fff",
+    soft: "rgba(63, 127, 255, 0.14)",
+    glow: "rgba(63, 127, 255, 0.22)"
   },
   hr: {
-    accent: "#7fbfb5",
-    soft: "rgba(127, 191, 181, 0.12)",
-    glow: "rgba(127, 191, 181, 0.18)"
+    accent: "#4d8fe3",
+    soft: "rgba(77, 143, 227, 0.14)",
+    glow: "rgba(77, 143, 227, 0.22)"
   },
   ib: {
-    accent: "#8ea6f0",
-    soft: "rgba(142, 166, 240, 0.12)",
-    glow: "rgba(142, 166, 240, 0.18)"
+    accent: "#5978ee",
+    soft: "rgba(89, 120, 238, 0.14)",
+    glow: "rgba(89, 120, 238, 0.22)"
   },
   it: {
-    accent: "#7fc9a8",
-    soft: "rgba(127, 201, 168, 0.12)",
-    glow: "rgba(127, 201, 168, 0.18)"
+    accent: "#2f97b8",
+    soft: "rgba(47, 151, 184, 0.14)",
+    glow: "rgba(47, 151, 184, 0.22)"
   },
   lt: {
-    accent: "#b6b98c",
-    soft: "rgba(182, 185, 140, 0.12)",
-    glow: "rgba(182, 185, 140, 0.18)"
+    accent: "#5f87d5",
+    soft: "rgba(95, 135, 213, 0.14)",
+    glow: "rgba(95, 135, 213, 0.22)"
   },
   pl: {
-    accent: "#a491df",
-    soft: "rgba(164, 145, 223, 0.12)",
-    glow: "rgba(164, 145, 223, 0.18)"
+    accent: "#6e7bf4",
+    soft: "rgba(110, 123, 244, 0.14)",
+    glow: "rgba(110, 123, 244, 0.22)"
   },
   si: {
-    accent: "#88bad0",
-    soft: "rgba(136, 186, 208, 0.12)",
-    glow: "rgba(136, 186, 208, 0.18)"
+    accent: "#4c8fc1",
+    soft: "rgba(76, 143, 193, 0.14)",
+    glow: "rgba(76, 143, 193, 0.22)"
   },
   ua: {
-    accent: "#8dbfff",
-    soft: "rgba(141, 191, 255, 0.12)",
-    glow: "rgba(141, 191, 255, 0.18)"
+    accent: "#2d8cff",
+    soft: "rgba(45, 140, 255, 0.14)",
+    glow: "rgba(45, 140, 255, 0.22)"
   }
 };
 
@@ -310,7 +313,7 @@ function readStoredSession() {
 
       return {
         role: "admin",
-        username: String(parsedValue?.username || "admin").trim().toLowerCase() || "admin",
+        username: String(parsedValue?.username || "").trim().toLowerCase(),
         token
       };
     }
@@ -487,6 +490,12 @@ function formatArchivePreviewPath(value) {
     : pathSegments.slice(-3);
 
   return `/${relevantSegments.join("/")}`;
+}
+
+function formatDirectoryLocationPath(value) {
+  const pathSegments = splitArchivePath(value);
+
+  return pathSegments.length ? `/${pathSegments.join("/")}` : "/";
 }
 
 function getArchiveMapMatch(value) {
@@ -814,8 +823,18 @@ function getPreviousBrowsePath(currentRelativePath) {
   );
 }
 
-function getDirectionLabel(direction) {
-  return String(direction || "").toLowerCase() === "outbound" ? "Outbound" : "Inbound";
+function getDirectionLabel(direction, t, variant = "full") {
+  const isOutbound = String(direction || "").toLowerCase() === "outbound";
+
+  if (variant === "short") {
+    return isOutbound
+      ? t?.("directionOutboundShort", "OUT") || "OUT"
+      : t?.("directionInboundShort", "IN") || "IN";
+  }
+
+  return isOutbound
+    ? t?.("directionOutbound", "Outbound") || "Outbound"
+    : t?.("directionInbound", "Inbound") || "Inbound";
 }
 
 function BusinessUnitFlag({ businessUnit, className = "bu-flag" }) {
@@ -1055,14 +1074,21 @@ function App() {
     () => new Set(selectedPartnerMapEntries.map(getMapGroup)),
     [selectedPartnerMapEntries]
   );
+  const activeBrowserEntry = useMemo(() => {
+    if (!browserState.entry || !selectedPartner) {
+      return null;
+    }
+
+    return browserState.entry.id === selectedPartner.id ? browserState.entry : null;
+  }, [browserState.entry, selectedPartner]);
   const activePartnerMapEntry = useMemo(
     () => findPartnerMapEntry(currentBuEntries, selectedPartner, activeMapGroup),
     [activeMapGroup, currentBuEntries, selectedPartner]
   );
   const currentBrowserPath = useMemo(
     () =>
-      String(browserState.currentPath || browserState.entry?.rootPath || selectedPartner?.url || ""),
-    [browserState.currentPath, browserState.entry?.rootPath, selectedPartner?.url]
+      String(browserState.currentPath || activeBrowserEntry?.rootPath || selectedPartner?.url || ""),
+    [activeBrowserEntry?.rootPath, browserState.currentPath, selectedPartner?.url]
   );
   const currentBrowserMapGroup = useMemo(
     () => getPathMapGroup(currentBrowserPath),
@@ -1090,7 +1116,7 @@ function App() {
     [browserSearchMode, deferredBrowserSearchValue, sortedBrowserItems]
   );
   const displayedPartner =
-    !browserState.loading && browserState.entry ? browserState.entry : selectedPartner;
+    !browserState.loading && activeBrowserEntry ? activeBrowserEntry : selectedPartner;
   const canBrowseForward = browseForwardStack.length > 0;
   const showHomeView = !selectedBuId && !selectedPartner;
   const isArchiveFileSearchEnabled =
@@ -1438,6 +1464,11 @@ function App() {
     setSelectedPartnerKeys([]);
   }
 
+  function clearBrowserViewState() {
+    setBrowserState(EMPTY_BROWSER_STATE);
+    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
+  }
+
   function handleCloseAdminLogin() {
     setAdminLoginOpen(false);
     setAdminUsername("");
@@ -1500,7 +1531,7 @@ function App() {
 
     setSession({
       role: "admin",
-      username: payload.username || String(credentials?.username || "").trim().toLowerCase() || "admin",
+      username: String(payload.username || credentials?.username || "").trim().toLowerCase(),
       token: adminToken
     });
   }
@@ -2070,6 +2101,7 @@ function App() {
   }
 
   function handleReturnHome() {
+    clearBrowserViewState();
     setSelectedBuId("");
     setSelectedPartnerId("");
     setPartnerSearchValue("");
@@ -2083,6 +2115,7 @@ function App() {
   }
 
   function handleSelectBusinessUnit(businessUnitId) {
+    clearBrowserViewState();
     setSelectedBuId(businessUnitId);
     setSelectedPartnerId("");
     setPartnerSearchValue("");
@@ -2095,12 +2128,20 @@ function App() {
   }
 
   function handleSelectPartner(entry) {
+    clearBrowserViewState();
     setSelectedBuId(entry.bu);
     setSelectedPartnerId(entry.id);
     setActiveDirection(entry.type);
     setActiveMapGroup(getMapGroup(entry));
     setBrowserSearchValue("");
     resetBrowseNavigation();
+    clearSearchState();
+  }
+
+  function handleReturnToPartnerList() {
+    clearBrowserViewState();
+    setSelectedPartnerId("");
+    setBrowserSearchValue("");
     clearSearchState();
   }
 
@@ -2117,9 +2158,9 @@ function App() {
 
     const nextPartner = findPartnerMapEntry(currentBuEntries, selectedPartner, mapGroup);
 
+    clearBrowserViewState();
     setActiveMapGroup(mapGroup);
     setBrowserSearchValue("");
-    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     clearSearchState();
     resetBrowseNavigation(nextBrowsePath);
 
@@ -2198,6 +2239,7 @@ function App() {
   function handleBrowseSearchResult(result) {
     const matchedEntry = entries.find((entry) => entry.id === result.entryId) || null;
 
+    clearBrowserViewState();
     setSelectedBuId(result.bu);
     setSelectedPartnerId(result.entryId);
     setBrowserSearchValue("");
@@ -2206,7 +2248,6 @@ function App() {
       setActiveMapGroup(getMapGroup(matchedEntry));
     }
     resetBrowseNavigation(result.directory || "");
-    setFilePreviewState(EMPTY_FILE_PREVIEW_STATE);
     clearSearchState();
   }
 
@@ -2238,119 +2279,115 @@ function App() {
         <div className="topbar-title">
           <img className="topbar-logo" src={`${assetBase}/groupecatlogo.png`} alt="Groupecat" />
           <div className="topbar-heading-copy">
-            
-            <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILE")}</strong>
+            <strong>{t("appHeaderTitle", "ACCESS TO PRODUCTION FILES")}</strong>
           </div>
         </div>
 
         <div className="topbar-actions">
           {isAdmin ? <span className="status-badge warning">{t("adminMode", "Admin mode")}</span> : null}
-          <LanguageDropdown
-            currentLanguageId={language}
-            languages={LANGUAGES}
-            onSelect={setLanguage}
-          />
-          <ThemeToggle
-            themeMode={themeMode}
-            onToggle={() =>
-              setThemeMode((previousThemeMode) =>
-                previousThemeMode === "dark" ? "light" : "dark"
-              )
-            }
-            label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
-          />
-          <button
-            className="icon-action-button"
-            type="button"
-            aria-label={t("home", "Home")}
-            title={t("home", "Home")}
-            onClick={handleReturnHome}
-          >
-            <AppIcon type="home" />
-          </button>
-          <div className="menu-shell" ref={menuRef}>
+          <div className="topbar-utility-cluster">
+            <LanguageDropdown
+              currentLanguageId={language}
+              languages={LANGUAGES}
+              onSelect={setLanguage}
+            />
+            <ThemeToggle
+              themeMode={themeMode}
+              onToggle={() =>
+                setThemeMode((previousThemeMode) =>
+                  previousThemeMode === "dark" ? "light" : "dark"
+                )
+              }
+              label={themeMode === "dark" ? t("lightMode", "Light mode") : t("darkMode", "Dark mode")}
+            />
             <button
-              className={`icon-action-button menu-trigger-button ${menuOpen ? "active" : ""}`.trim()}
+              className="icon-action-button"
               type="button"
-              aria-label="Open menu"
-              title="Open menu"
-              onClick={() => setMenuOpen((previousMenuOpen) => !previousMenuOpen)}
+              aria-label={t("home", "Home")}
+              title={t("home", "Home")}
+              onClick={handleReturnHome}
             >
-              <AppIcon type="menu" />
+              <AppIcon type="home" />
             </button>
+            <div className="menu-shell" ref={menuRef}>
+              <button
+                className={`icon-action-button menu-trigger-button ${menuOpen ? "active" : ""}`.trim()}
+                type="button"
+                aria-label="Open menu"
+                title="Open menu"
+                onClick={() => setMenuOpen((previousMenuOpen) => !previousMenuOpen)}
+              >
+                <AppIcon type="menu" />
+              </button>
 
-            {menuOpen ? (
-              <div className="menu-popover menu-popover-minimal">
-                <a
-                  className="menu-item"
-                  href={`mailto:${SUPPORT_EMAIL}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <AppIcon type="mail" />
-                  <span className="menu-item-copy">
-                    <span className="menu-item-label">Help</span>
-                  </span>
-                </a>
-
-                {isAdmin ? (
-                  <>
-                    <div className="menu-divider" aria-hidden="true" />
-
-                    <button className="menu-item" type="button" onClick={handleOpenCreateManager}>
-                      <AppIcon type="plus" />
-                      <span className="menu-item-copy">
-                        <span className="menu-item-label">{t("openManager", "Add New Partner")}</span>
-                      </span>
-                    </button>
-
-                    <button className="menu-item" type="button" onClick={handleOpenBusinessUnitManager}>
-                      <AppIcon type="office" />
-                      <span className="menu-item-copy">
-                        <span className="menu-item-label">
-                          {t("openBusinessUnitManager", "Add New Business Unit")}
-                        </span>
-                      </span>
-                    </button>
-
-                    <button className="menu-item" type="button" onClick={handleOpenBulkManager}>
-                      <AppIcon type="upload" />
-                      <span className="menu-item-copy">
-                        <span className="menu-item-label">{t("bulkUpdate", "Bulk update")}</span>
-                      </span>
-                    </button>
-
-                    <button className="menu-item menu-item-danger" type="button" onClick={handleLogout}>
-                      <AppIcon type="logout" />
-                      <span className="menu-item-copy">
-                        <span className="menu-item-label">{t("logout", "Logout")}</span>
-                      </span>
-                    </button>
-                  </>
-                ) : (
-                  <button className="menu-item" type="button" onClick={handleOpenAdminMode}>
-                    <AppIcon type="shield" />
+              {menuOpen ? (
+                <div className="menu-popover menu-popover-minimal">
+                  <a
+                    className="menu-item"
+                    href={`mailto:${SUPPORT_EMAIL}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <AppIcon type="mail" />
                     <span className="menu-item-copy">
-                      <span className="menu-item-label">{t("adminMode", "Admin mode")}</span>
+                      <span className="menu-item-label">Help</span>
                     </span>
-                  </button>
-                )}
-              </div>
-            ) : null}
+                  </a>
+
+                  {isAdmin ? (
+                    <>
+                      <div className="menu-divider" aria-hidden="true" />
+
+                      <button className="menu-item" type="button" onClick={handleOpenCreateManager}>
+                        <AppIcon type="plus" />
+                        <span className="menu-item-copy">
+                          <span className="menu-item-label">{t("openManager", "Add New Partner")}</span>
+                        </span>
+                      </button>
+
+                      <button className="menu-item" type="button" onClick={handleOpenBusinessUnitManager}>
+                        <AppIcon type="office" />
+                        <span className="menu-item-copy">
+                          <span className="menu-item-label">
+                            {t("openBusinessUnitManager", "Add New Business Unit")}
+                          </span>
+                        </span>
+                      </button>
+
+                      <button className="menu-item" type="button" onClick={handleOpenBulkManager}>
+                        <AppIcon type="upload" />
+                        <span className="menu-item-copy">
+                          <span className="menu-item-label">{t("bulkUpdate", "Bulk update")}</span>
+                        </span>
+                      </button>
+
+                      <button className="menu-item menu-item-danger" type="button" onClick={handleLogout}>
+                        <AppIcon type="logout" />
+                        <span className="menu-item-copy">
+                          <span className="menu-item-label">{t("logout", "Logout")}</span>
+                        </span>
+                      </button>
+                    </>
+                  ) : (
+                    <button className="menu-item" type="button" onClick={handleOpenAdminMode}>
+                      <AppIcon type="shield" />
+                      <span className="menu-item-copy">
+                        <span className="menu-item-label">{t("adminMode", "Admin mode")}</span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </header>
 
       <main className={`shell-body ${showHomeView ? "shell-body-home" : ""}`.trim()}>
         {showHomeView ? (
-          <section className="home-stage">
-            <div className="home-access-stack">
+          <section className="home-stage home-stage-clean">
+            <div className="home-access-stack home-access-stack-clean">
               <section className="home-access-board home-access-board-units">
-                <div className="home-access-board-shell">
-                  <div className="home-access-board-copy">
-                    <strong>Business units</strong>
-                    <p>Select a business unit to access partners or files.</p>
-                  </div>
-
+                <div className="home-access-board-shell home-access-board-shell-navigator">
                   {isAdmin ? (
                     <div className="admin-partner-toolbar">
                       <div className="admin-partner-toolbar-copy">
@@ -2430,23 +2467,11 @@ function App() {
                       </div>
                     </div>
                   </div>
-
-                  <span className="home-access-board-ornament home-access-board-ornament-left" aria-hidden="true">
-                    <AppIcon type="folder" />
-                  </span>
-                  <span className="home-access-board-ornament home-access-board-ornament-right" aria-hidden="true">
-                    <AppIcon type="office" />
-                  </span>
                 </div>
               </section>
 
               <section className="home-access-board home-access-board-search">
-                <div className="home-access-board-shell home-access-search-shell">
-                  <div className="home-access-board-copy home-access-search-copy">
-                    <strong>Search</strong>
-                    <p>Find a partner or file directly from the portal.</p>
-                  </div>
-
+                <div className="home-search-card home-search-card-home">
                   <SearchPanel
                     fileQuery={fileSearchValue}
                     mode={homeSearchMode}
@@ -2484,6 +2509,13 @@ function App() {
                 t={t}
               />
             ) : null}
+
+            <div className="home-stage-footer">
+              <p className="home-stage-legal">{`\u00A9 ${new Date().getFullYear()} Groupecat.com. All rights reserved.`}</p>
+              <a className="home-stage-support-link" href={HOME_SUPPORT_MAILTO}>
+                Support
+              </a>
+            </div>
           </section>
         ) : null}
 
@@ -2546,7 +2578,7 @@ function App() {
                     <span>{t("deleteEntry", "Delete")}</span>
                   </button>
                 ) : null}
-                <button className="secondary-button" type="button" onClick={() => setSelectedPartnerId("")}>
+                <button className="secondary-button" type="button" onClick={handleReturnToPartnerList}>
                   <AppIcon type="back" />
                   <span>{t("backToList", "Back to list")}</span>
                 </button>
@@ -2559,6 +2591,7 @@ function App() {
               activeMapGroup={currentBrowserMapGroup || activeMapGroup}
               canGoForward={canBrowseForward}
               canGoUp={browserState.canGoUp}
+              currentPath={formatDirectoryLocationPath(currentBrowserPath)}
               mapTargets={mapBrowseTargets}
               onBrowseNext={handleBrowseNextDirectory}
               onBrowsePrevious={handleBrowsePreviousDirectory}
@@ -2688,7 +2721,7 @@ function BusinessUnitDirectory({
 }) {
   const businessUnitTitle = [
     String(businessUnit?.name || businessUnit?.label || "Business unit").toUpperCase(),
-    getDirectionLabel(activeDirection).toUpperCase()
+    getDirectionLabel(activeDirection, t).toUpperCase()
   ].join(" ");
   const selectedPartnerKeySet = new Set(selectedPartnerKeys);
 
@@ -2724,14 +2757,14 @@ function BusinessUnitDirectory({
               type="button"
               onClick={() => setActiveDirection("inbound")}
             >
-              Inbound
+              {getDirectionLabel("inbound", t)}
             </button>
             <button
               className={activeDirection === "outbound" ? "active" : ""}
               type="button"
               onClick={() => setActiveDirection("outbound")}
             >
-              Outbound
+              {getDirectionLabel("outbound", t)}
             </button>
           </div>
 
@@ -2821,20 +2854,22 @@ function BusinessUnitDirectory({
                     style={getBuVisualStyle(entry.bu)}
                   >
                     <button
-                      className="partner-list-launch partner-list-launch-modern"
+                      className="partner-list-launch partner-list-launch-modern partner-entry-row"
                       type="button"
                       onClick={() => onBrowsePartner(entry)}
                     >
-                      <div className="partner-list-main">
-                        <span className="partner-grid-card-eyebrow">
-                          <BusinessUnitFlag
-                            businessUnit={businessUnit}
-                            className="bu-flag partner-grid-flag"
-                          />
-                          <span>{getDirectionLabel(entry.type)}</span>
-                        </span>
-                        <strong>{entry.label}</strong>
-                      </div>
+                      <BusinessUnitFlag
+                        businessUnit={businessUnit}
+                        className="bu-flag partner-grid-flag"
+                      />
+                      <strong className="partner-entry-name">{entry.label}</strong>
+                      <span
+                        className={`partner-direction-pill ${
+                          entry.type === "outbound" ? "outbound" : ""
+                        }`.trim()}
+                      >
+                        {getDirectionLabel(entry.type, t, "short")}
+                      </span>
                       <span className="partner-list-arrow">
                         <AppIcon type="forward" />
                       </span>
@@ -2884,17 +2919,34 @@ function BusinessUnitDirectory({
                     key={entry.id}
                     style={getBuVisualStyle(entry.bu)}
                   >
-                    <div className="partner-grid-card-top">
-                      <span className="partner-grid-card-eyebrow">
-                        <BusinessUnitFlag
-                          businessUnit={businessUnit}
-                          className="bu-flag partner-grid-flag"
-                        />
-                        <span>{getDirectionLabel(entry.type)}</span>
+                    <button
+                      className="partner-grid-card-launch partner-entry-row"
+                      type="button"
+                      onClick={() => onBrowsePartner(entry)}
+                    >
+                      <BusinessUnitFlag
+                        businessUnit={businessUnit}
+                        className="bu-flag partner-grid-flag"
+                      />
+                      <strong className="partner-entry-name">{entry.label}</strong>
+                      <span
+                        className={`partner-direction-pill ${
+                          entry.type === "outbound" ? "outbound" : ""
+                        }`.trim()}
+                      >
+                        {getDirectionLabel(entry.type, t, "short")}
                       </span>
+                      <span className="partner-grid-card-arrow">
+                        <AppIcon type="forward" />
+                      </span>
+                    </button>
 
-                      {isAdmin ? (
-                        <label className="partner-select-toggle" onClick={(event) => event.stopPropagation()}>
+                    {isAdmin ? (
+                      <div className="partner-grid-card-admin">
+                        <label
+                          className="partner-select-toggle"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={selectedPartnerKeySet.has(getPartnerGroupKey(entry))}
@@ -2902,27 +2954,6 @@ function BusinessUnitDirectory({
                           />
                           <span>{t("select", "Select")}</span>
                         </label>
-                      ) : null}
-                    </div>
-
-                    <button
-                      className="partner-grid-card-launch"
-                      type="button"
-                      onClick={() => onBrowsePartner(entry)}
-                    >
-                      <div className="partner-grid-card-body">
-                        <strong>{entry.label}</strong>
-                      </div>
-
-                      <div className="partner-grid-card-bottom">
-                        <span className="partner-grid-card-arrow">
-                          <AppIcon type="forward" />
-                        </span>
-                      </div>
-                    </button>
-
-                    {isAdmin ? (
-                      <div className="partner-grid-card-admin">
                         <button
                           className="secondary-button compact-button"
                           type="button"
@@ -2960,12 +2991,12 @@ function HomeAccessPreview({ onBrowsePartner, rows, showFilteredState, t, totalC
       <div className="panel-header home-access-preview-header">
         <div>
           <span className="section-kicker">
-            {showFilteredState ? "Partner results" : "Directory preview"}
+            {showFilteredState ? "Partner results" : "Quick access routes"}
           </span>
           <strong>
             {showFilteredState
               ? `${totalCount} match${totalCount === 1 ? "" : "es"}`
-              : `${totalCount} partner${totalCount === 1 ? "" : "s"} available`}
+              : `${totalCount} partner route${totalCount === 1 ? "" : "s"} available`}
           </strong>
         </div>
       </div>
@@ -3013,7 +3044,7 @@ function HomeAccessPreview({ onBrowsePartner, rows, showFilteredState, t, totalC
 
                   <span className="home-access-table-cell">
                     <span className={`home-access-type-badge ${entry.type === "outbound" ? "outbound" : ""}`.trim()}>
-                      {getDirectionLabel(entry.type)}
+                      {getDirectionLabel(entry.type, t)}
                     </span>
                   </span>
 
@@ -3038,7 +3069,7 @@ function HomeAccessPreview({ onBrowsePartner, rows, showFilteredState, t, totalC
       ) : (
         <EmptyState
           title={t("noEntries", "No partners found.")}
-          detail={showFilteredState ? "Try another query." : "No partner preview is available yet."}
+          detail={showFilteredState ? "Try another query." : "No partner route preview is available yet."}
         />
       )}
     </section>
@@ -3230,8 +3261,8 @@ function DirectoryManager({
 
           <ManagerField iconType="grid" label={t("section", "Section")}>
             <select value={values.type} onChange={(event) => onChange("type", event.target.value)}>
-              <option value="inbound">Inbound</option>
-              <option value="outbound">Outbound</option>
+              <option value="inbound">{getDirectionLabel("inbound", t)}</option>
+              <option value="outbound">{getDirectionLabel("outbound", t)}</option>
             </select>
           </ManagerField>
 
@@ -3517,7 +3548,7 @@ function SearchPanel({
       <form className="search-form" onSubmit={(event) => event.preventDefault()}>
         <div className="search-input-shell search-input-shell-large">
           <span className="search-leading-icon" aria-hidden="true">
-            <AppIcon type="search" />
+            <AppIcon type="scan" />
           </span>
           <input
             type="search"
@@ -3565,6 +3596,7 @@ function PartnerFileControls({
   activeMapGroup,
   canGoForward,
   canGoUp,
+  currentPath,
   mapTargets,
   onBrowseNext,
   onBrowsePrevious,
@@ -3581,56 +3613,65 @@ function PartnerFileControls({
 
   return (
     <div className="partner-file-controls">
-      <div className="partner-file-controls-left">
-        <div className="segmented-controls" aria-label="Map">
-          {["bmap", "amap"].map((mapGroup) => (
-            <button
-              className={activeMapGroup === mapGroup ? "active" : ""}
-              disabled={mapTargets?.[mapGroup] === undefined}
-              key={mapGroup}
-              type="button"
-              onClick={() => onSelectMapGroup(mapGroup)}
-            >
-              {mapGroup.toUpperCase()}
-            </button>
-          ))}
+      <div className="partner-file-toolbar">
+        <div className="partner-file-control-cluster">
+          <div className="segmented-controls" aria-label="Map">
+            {["bmap", "amap"].map((mapGroup) => (
+              <button
+                className={activeMapGroup === mapGroup ? "active" : ""}
+                disabled={mapTargets?.[mapGroup] === undefined}
+                key={mapGroup}
+                type="button"
+                onClick={() => onSelectMapGroup(mapGroup)}
+              >
+                {mapGroup.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="secondary-button compact-button partner-directory-nav-button"
+            disabled={!canGoUp}
+            type="button"
+            aria-label={t("previousDirectory", "Previous directory")}
+            title={t("previousDirectory", "Previous directory")}
+            onClick={onBrowsePrevious}
+          >
+            <AppIcon type="back" />
+          </button>
+
+          <button
+            className="secondary-button compact-button partner-directory-nav-button"
+            disabled={!canGoForward}
+            type="button"
+            aria-label={t("nextDirectory", "Next directory")}
+            title={t("nextDirectory", "Next directory")}
+            onClick={onBrowseNext}
+          >
+            <AppIcon type="forward" />
+          </button>
         </div>
 
-        <button
-          className="secondary-button compact-button"
-          disabled={!canGoUp}
-          type="button"
-          onClick={onBrowsePrevious}
-        >
-          <AppIcon type="back" />
-          <span>{t("previousDirectory", "Previous directory")}</span>
-        </button>
+        <div className="partner-directory-path" title={currentPath}>
+          <span className="partner-directory-path-label">{t("currentPath", "Current path")}</span>
+          <strong>{currentPath}</strong>
+        </div>
 
-        <button
-          className="secondary-button compact-button"
-          disabled={!canGoForward}
-          type="button"
-          onClick={onBrowseNext}
-        >
-          <AppIcon type="forward" />
-          <span>{t("nextDirectory", "Next directory")}</span>
-        </button>
-      </div>
-
-      <div className="search-input-shell partner-search-shell">
-        <input
-          type="search"
-          value={searchValue}
-          placeholder={searchPlaceholder}
-          onChange={(event) => setSearchValue(event.target.value)}
-        />
-        <div className="search-input-actions" aria-hidden="true">
-          <span className="search-mode-icon">
-            <AppIcon type={searchMode === "file" ? "file" : "users"} />
-          </span>
-          <span className="search-mode-icon accent">
-            <AppIcon type="search" />
-          </span>
+        <div className="search-input-shell partner-search-shell partner-search-shell-inline">
+          <input
+            type="search"
+            value={searchValue}
+            placeholder={searchPlaceholder}
+            onChange={(event) => setSearchValue(event.target.value)}
+          />
+          <div className="search-input-actions" aria-hidden="true">
+            <span className="search-mode-icon">
+              <AppIcon type={searchMode === "file" ? "file" : "users"} />
+            </span>
+            <span className="search-mode-icon accent">
+              <AppIcon type="search" />
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -3881,259 +3922,7 @@ function EmptyState({ title, detail, tone = "neutral" }) {
 }
 
 function AppIcon({ type }) {
-  const commonProps = {
-    viewBox: "0 0 24 24",
-    "aria-hidden": "true",
-    focusable: "false"
-  };
-
-  if (type === "home") {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 10.5 12 4l8 6.5" />
-        <path d="M6.5 9.5v10h11v-10" />
-      </svg>
-    );
-  }
-
-  if (type === "menu") {
-    return (
-      <svg {...commonProps}>
-        <path d="M6 8h12" />
-        <path d="M6 12h12" />
-        <path d="M6 16h12" />
-      </svg>
-    );
-  }
-
-  if (type === "logout") {
-    return (
-      <svg {...commonProps}>
-        <path d="M10 5.5H7.5A1.5 1.5 0 0 0 6 7v10a1.5 1.5 0 0 0 1.5 1.5H10" />
-        <path d="M14 8.5 18 12l-4 3.5" />
-        <path d="M9.5 12H18" />
-      </svg>
-    );
-  }
-
-  if (type === "search") {
-    return (
-      <svg {...commonProps}>
-        <circle cx="10.5" cy="10.5" r="5.2" />
-        <path d="M15 15 19 19" />
-      </svg>
-    );
-  }
-
-  if (type === "back") {
-    return (
-      <svg {...commonProps}>
-        <path d="M14.5 6.5 8.5 12l6 5.5" />
-        <path d="M9 12h8" />
-      </svg>
-    );
-  }
-
-  if (type === "forward") {
-    return (
-      <svg {...commonProps}>
-        <path d="M9.5 6.5 15.5 12l-6 5.5" />
-        <path d="M15 12H7" />
-      </svg>
-    );
-  }
-
-  if (type === "folder") {
-    return (
-      <svg {...commonProps}>
-        <path d="M3.5 7.5h6l1.5 2H20a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5a1 1 0 0 1 1-1Z" />
-      </svg>
-    );
-  }
-
-  if (type === "file") {
-    return (
-      <svg {...commonProps}>
-        <path d="M7 3.5h7l4 4v13H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" />
-        <path d="M14 3.5v4h4" />
-      </svg>
-    );
-  }
-
-  if (type === "users") {
-    return (
-      <svg {...commonProps}>
-        <path d="M9 11a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 9 11Z" />
-        <path d="M15.5 9.5a2.25 2.25 0 1 0 0-4.5" />
-        <path d="M4.8 18.5a4.8 4.8 0 0 1 8.4 0" />
-        <path d="M14.2 18.5a4 4 0 0 1 5 0" />
-      </svg>
-    );
-  }
-
-  if (type === "grid") {
-    return (
-      <svg {...commonProps}>
-        <path d="M5.5 5.5h5v5h-5Z" />
-        <path d="M13.5 5.5h5v5h-5Z" />
-        <path d="M5.5 13.5h5v5h-5Z" />
-        <path d="M13.5 13.5h5v5h-5Z" />
-      </svg>
-    );
-  }
-
-  if (type === "list") {
-    return (
-      <svg {...commonProps}>
-        <path d="M8 7h11" />
-        <path d="M8 12h11" />
-        <path d="M8 17h11" />
-        <path d="M5 7h.01" />
-        <path d="M5 12h.01" />
-        <path d="M5 17h.01" />
-      </svg>
-    );
-  }
-
-  if (type === "shield") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 4.2 18.2 6.5v4.9c0 4-2.4 6.7-6.2 8.4-3.8-1.7-6.2-4.4-6.2-8.4V6.5Z" />
-        <path d="m9.4 12 1.7 1.7 3.5-3.7" />
-      </svg>
-    );
-  }
-
-  if (type === "close") {
-    return (
-      <svg {...commonProps}>
-        <path d="M7 7 17 17" />
-        <path d="M17 7 7 17" />
-      </svg>
-    );
-  }
-
-  if (type === "help") {
-    return (
-      <svg {...commonProps}>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M9.8 9.6a2.4 2.4 0 0 1 4.4 1.35c0 1.8-2.2 2-2.2 3.4" />
-        <path d="M12 17.2h.01" />
-      </svg>
-    );
-  }
-
-  if (type === "mail") {
-    return (
-      <svg {...commonProps}>
-        <path d="M4.5 7.5h15a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z" />
-        <path d="m5.5 9 6.5 5 6.5-5" />
-      </svg>
-    );
-  }
-
-  if (type === "trash") {
-    return (
-      <svg {...commonProps}>
-        <path d="M5.5 7.5h13" />
-        <path d="M9 7.5v-2h6v2" />
-        <path d="M7.2 7.5l.8 10.5a1 1 0 0 0 1 .9h6a1 1 0 0 0 1-.9l.8-10.5" />
-        <path d="M10 10.5v5.5" />
-        <path d="M14 10.5v5.5" />
-      </svg>
-    );
-  }
-
-  if (type === "plus") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 5v14" />
-        <path d="M5 12h14" />
-      </svg>
-    );
-  }
-
-  if (type === "code") {
-    return (
-      <svg {...commonProps}>
-        <path d="m9 8-4 4 4 4" />
-        <path d="m15 8 4 4-4 4" />
-        <path d="M13 6.5 11 17.5" />
-      </svg>
-    );
-  }
-
-  if (type === "tag") {
-    return (
-      <svg {...commonProps}>
-        <path d="M11 4.5H6.5a1 1 0 0 0-1 1V10l7.5 7.5a1 1 0 0 0 1.4 0l3.1-3.1a1 1 0 0 0 0-1.4Z" />
-        <path d="M8.5 8.5h.01" />
-      </svg>
-    );
-  }
-
-  if (type === "flag") {
-    return (
-      <svg {...commonProps}>
-        <path d="M6.5 19V5.5" />
-        <path d="M6.5 6h8l-1.5 3 1.5 3h-8" />
-      </svg>
-    );
-  }
-
-  if (type === "image") {
-    return (
-      <svg {...commonProps}>
-        <rect x="4.5" y="5.5" width="15" height="13" rx="2" />
-        <path d="m7.5 15 3-3 2.5 2.5 2-2 2 2.5" />
-        <path d="M15.5 9.5h.01" />
-      </svg>
-    );
-  }
-
-  if (type === "lock") {
-    return (
-      <svg {...commonProps}>
-        <rect x="6.5" y="10.5" width="11" height="8" rx="2" />
-        <path d="M9 10.5V8.8a3 3 0 1 1 6 0v1.7" />
-      </svg>
-    );
-  }
-
-  if (type === "office") {
-    return (
-      <svg {...commonProps}>
-        <path d="M5.5 20V7.5L12 4l6.5 3.5V20" />
-        <path d="M9 20v-4.5h6V20" />
-        <path d="M9 9.5h.01" />
-        <path d="M15 9.5h.01" />
-        <path d="M9 13h.01" />
-        <path d="M15 13h.01" />
-      </svg>
-    );
-  }
-
-  if (type === "upload") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 17.5V6.5" />
-        <path d="M8.5 10 12 6.5 15.5 10" />
-        <path d="M5 18.5h14" />
-      </svg>
-    );
-  }
-
-  if (type === "download") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 6.5v11" />
-        <path d="M8.5 14 12 17.5 15.5 14" />
-        <path d="M5 18.5h14" />
-      </svg>
-    );
-  }
-
-  return null;
+  return <AssetIcon name={type} />;
 }
 
 export default App;

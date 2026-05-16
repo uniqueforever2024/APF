@@ -1,9 +1,9 @@
 export const LANGUAGES = [
-  { id: "en", label: "EN", nativeLabel: "English" },
-  { id: "fr", label: "FR", nativeLabel: "Francais" },
-  { id: "de", label: "DE", nativeLabel: "Deutsch" },
-  { id: "it", label: "IT", nativeLabel: "Italiano" },
-  { id: "pl", label: "PL", nativeLabel: "Polski" }
+  { id: "en", label: "EN", nativeLabel: "English", flag: makeFlagEmoji("GB") },
+  { id: "fr", label: "FR", nativeLabel: "Francais", flag: makeFlagEmoji("FR") },
+  { id: "de", label: "DE", nativeLabel: "Deutsch", flag: makeFlagEmoji("DE") },
+  { id: "it", label: "IT", nativeLabel: "Italiano", flag: makeFlagEmoji("IT") },
+  { id: "pl", label: "PL", nativeLabel: "Polski", flag: makeFlagEmoji("PL") }
 ];
 
 function makeFlagEmoji(countryCode) {

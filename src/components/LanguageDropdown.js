@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import AssetIcon from "./IconAsset";
 
 function LanguageDropdown({ currentLanguageId, languages, onSelect, className = "" }) {
   const [open, setOpen] = useState(false);
@@ -42,12 +43,6 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
     return null;
   }
 
-  const getLanguageCode = (language) =>
-    String(language?.label || language?.id || "")
-      .trim()
-      .slice(0, 2)
-      .toUpperCase();
-
   return (
     <div
       ref={rootRef}
@@ -60,9 +55,11 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
         aria-expanded={open}
         onClick={() => setOpen((previous) => !previous)}
       >
-        <GlobeIcon />
-        <span className="language-dropdown-current">
-          {getLanguageCode(currentLanguage)}
+        <span className="language-dropdown-globe" aria-hidden="true">
+          <AssetIcon name="globe" />
+        </span>
+        <span className="language-dropdown-caret" aria-hidden="true">
+          <AssetIcon name="chevron-down" />
         </span>
       </button>
 
@@ -79,25 +76,12 @@ function LanguageDropdown({ currentLanguageId, languages, onSelect, className = 
                 setOpen(false);
               }}
             >
-              <span className="language-dropdown-code">
-                {getLanguageCode(language)}
-              </span>
               <span className="language-dropdown-name">{language.nativeLabel}</span>
             </button>
           ))}
         </div>
       ) : null}
     </div>
-  );
-}
-
-function GlobeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M4 12h16" />
-      <path d="M12 4c2.2 2.2 3.4 5 3.4 8s-1.2 5.8-3.4 8c-2.2-2.2-3.4-5-3.4-8s1.2-5.8 3.4-8Z" />
-    </svg>
   );
 }
 
